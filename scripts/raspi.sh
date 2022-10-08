@@ -50,8 +50,6 @@ raspi_update() {
       raspi_install
       echo "REBOOTING ==========================================="
       raspi watcher
-      # sudo reboot
-    else
       exit 0
     fi
   else
