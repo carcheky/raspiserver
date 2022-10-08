@@ -107,7 +107,7 @@ docker_start() {
   if [ $(docker compose up -d --build) ]; then
     sudo chmod 777 /var/run/docker.sock
   else
-    docker_install
+    install_docker
   fi
 }
 runremote() {
