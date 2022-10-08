@@ -49,7 +49,6 @@ raspi_update() {
       git pull --force
       raspi_install
       echo "REBOOTING ==========================================="
-      raspi start
       raspi watcher
       # sudo reboot
     else
