@@ -35,5 +35,5 @@ services:
       - /media/carcheky/HDCCK/raspiserver/data/jellyfin/movies:/data/movies
       - /media/carcheky/HDCCK/raspiserver/data/jellyfin/tvshows:/data/tvshows
       # - /opt/vc/lib:/opt/vc/lib
-    devices:
-      - /dev/vchiq:/dev/vchi
+    # devices:
+    #   - /dev/vchiq:/dev/vchi
