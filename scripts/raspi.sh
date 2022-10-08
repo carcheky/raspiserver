@@ -1,6 +1,5 @@
 #!/bin/bash
 lockfile="/tmp/raspi.lock.d"
-alias docker='sudo docker'
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # set -eux
 install_git() {
@@ -102,6 +101,7 @@ EOF
   fi
 }
 docker_start() {
+  alias docker='sudo docker'
   # echo "[7/7] docker_start ===================================="
   if [ $(docker compose up -d --build) ]; then
     sudo chmod 777 /var/run/docker.sock
