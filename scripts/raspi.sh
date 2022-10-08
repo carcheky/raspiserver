@@ -130,13 +130,12 @@ help() {
   cat /usr/local/bin/raspi | grep '()'
 }
 watcher() {
+  doingthing raspi_update
   while true; do
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
       docker_start
       docker ps
       sleep 5
-    else
-      raspi_update
     fi
   done
 }
