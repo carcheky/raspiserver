@@ -132,10 +132,11 @@ help() {
 watcher() {
   while true; do
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
-      doingthing raspi_update
       docker_start
       docker ps
       sleep 5
+    else
+      raspi_update
     fi
   done
 }
