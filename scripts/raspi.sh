@@ -133,7 +133,7 @@ watcher() {
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
       docker_start
       docker ps
-      sleep 60
+      sleep 600
     else
       raspi_update
     fi
