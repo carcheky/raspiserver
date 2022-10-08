@@ -103,7 +103,7 @@ EOF
 docker_start() {
   # alias docker='sudo docker'
   # echo "[7/7] docker_start ===================================="
-  if [ $(docker compose up -d --build) ]; then
+  if [ $(docker compose up -d --build --remove-orphans) ]; then
     sudo chmod 777 /var/run/docker.sock
   else
     docker_install
