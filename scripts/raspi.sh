@@ -94,7 +94,6 @@ EOF
     docker ps
     raspi watcher
     " >>~/.zshrc
-    cat ~/.zshrc
     rm get-docker.sh
     # sudo groupadd docker
     # sudo usermod -aG docker ${USER}
