@@ -75,8 +75,8 @@ raspi_mount() {
     sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
   fi
 }
-install_docker() {
-  # echo "[6/7] install_docker ===================================="
+docker_install() {
+  # echo "[6/7] docker_install ===================================="
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sh get-docker.sh
@@ -107,7 +107,7 @@ docker_start() {
   if [ $(docker compose up -d --build) ]; then
     sudo chmod 777 /var/run/docker.sock
   else
-    install_docker
+    docker_install
   fi
 }
 runremote() {
@@ -141,7 +141,7 @@ watcher() {
   done
 }
 logic() {
-  doingthing install_docker
+  doingthing docker_install
   doingthing raspi_mount
   docker_start
 }
