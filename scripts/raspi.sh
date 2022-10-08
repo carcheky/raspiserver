@@ -79,7 +79,7 @@ docker_install() {
   # echo "[6/7] docker_install ===================================="
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
+    sudo sh get-docker.sh
     ########## BEGIN ##########
     sudo sh -eux <<EOF
 # Install newuidmap & newgidmap binaries
