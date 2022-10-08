@@ -89,11 +89,11 @@ EOF
     echo "
     export PATH=/usr/bin:\$PATH
     export DOCKER_HOST=unix:///run/user/1000/docker.sock
-    alias docker='docker'
     docker ps
     raspi watcher
     " >>~/.zshrc
     rm get-docker.sh
+    # alias docker='docker'
     # sudo groupadd docker
     # sudo usermod -aG docker ${USER}
     echo ${USER}
@@ -101,7 +101,7 @@ EOF
   fi
 }
 docker_start() {
-  alias docker='sudo docker'
+  # alias docker='sudo docker'
   # echo "[7/7] docker_start ===================================="
   if [ $(docker compose up -d --build) ]; then
     sudo chmod 777 /var/run/docker.sock
