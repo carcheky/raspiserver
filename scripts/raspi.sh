@@ -136,6 +136,8 @@ watcher() {
       docker_start
       docker ps
       sleep 60
+    else
+      raspi_update
     fi
   done
 }
