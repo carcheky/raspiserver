@@ -124,7 +124,7 @@ remote() {
 retry() {
   cd ~/raspiserver
   docker compose down
-  docker-system prune -af
+  docker system prune -af
   sudo apt -y remove --purge "docker*" containerd runc
   sudo rm -fr \
     ~/raspiserver \
