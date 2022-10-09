@@ -3,14 +3,12 @@ lockfile="/tmp/raspi.lock.d"
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # set -eux
 install_git() {
-  # echo "[1/7] install_git ===================================="
   if [ ! $(which git) ]; then
     sudo apt update
     sudo apt install git uidmap -y
   fi
 }
 install_zsh() {
-  # echo "[2/7] install_zsh ===================================="
   if [ ! $(which zsh) ]; then
     sudo apt install zsh -y
 
@@ -31,7 +29,6 @@ install_zsh() {
   fi
 }
 raspi_clone() {
-  # echo "[3/7] raspi_clone ===================================="
   install_git
   install_zsh
   if [ ! -d ~/raspiserver ]; then
@@ -40,7 +37,6 @@ raspi_clone() {
   fi
 }
 raspi_update() {
-  # echo "[4/7] raspi_update ===================================="
   if cd ~/raspiserver; then
     if [ $(git rev-parse HEAD) != $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
       echo "UPDATING ==========================================="
