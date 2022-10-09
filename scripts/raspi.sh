@@ -73,7 +73,6 @@ _install() {
     sudo reboot
   fi
 }
-
 _install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
