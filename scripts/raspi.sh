@@ -50,10 +50,6 @@ install_basics() {
     raspi
 
     " >>~/.zshrc
-    echo "
-    
-    alias runremote=""
-    " >>~/.bashrc
   fi
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
