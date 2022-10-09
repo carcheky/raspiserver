@@ -94,6 +94,7 @@ checking_updates() {
   echo ${current}
   echo ${remote} 
   if [ $current != $remote ]; then
+    set -eux
     echo "actualizando..."
     git config pull.ff on 
     git reset --hard 
