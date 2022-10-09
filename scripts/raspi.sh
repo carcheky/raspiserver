@@ -26,6 +26,7 @@ install_basics() {
     sed -i s/'plugins=(git)'/'plugins=(git z docker composer zsh_carcheky)'/g ~/.zshrc
     echo "
     export PATH=/usr/bin:\$PATH
+    
     # export DOCKER_HOST=unix:///run/user/1000/docker.sock
     export DOCKER_HOST=unix:///var/run/docker.sock
     
