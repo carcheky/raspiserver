@@ -44,7 +44,7 @@ clone() {
     install_raspi_bin
   fi
 }
-update() {
+checking_update() {
   if cd ~/raspiserver; then
     if [ $(git rev-parse HEAD) != $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
       echo "UPDATING ==========================================="
@@ -112,7 +112,7 @@ watcher() {
       docker ps
       sleep 15
     else
-      update
+      _doingthing checking_update
     fi
   done
 }
