@@ -77,8 +77,8 @@ run() {
       _doingthing install_raspi_bin
     fi
     if touch "/tmp/raspi.lock.d"; then
-      _doingthing docker_run
       _doingthing hd_mount
+      _doingthing docker_run
       rm "/tmp/raspi.lock.d"
     fi
     sleep 5
