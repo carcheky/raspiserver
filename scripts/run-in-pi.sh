@@ -10,5 +10,5 @@ echo \"${key}\" > .ssh/authorized_keys
 ssh -oStrictHostKeyChecking=no carcheky@cckpi.local ${command}
 while true; do 
   ssh carcheky@cckpi.local; 
-  sleep 2
+  sleep 1
 done   
