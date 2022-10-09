@@ -91,15 +91,14 @@ run() {
 checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-  if [ "${current}" != "${remote}" ]; then
-    set -eux
+  if [ $current = $remote ]; then
+    echo "no se encontraron actualizaciones"
+  else
     echo "actualizando..."
     git config pull.ff on 
     git reset --hard 
     git pull --force 
     install_raspi_bin
-  else
-    echo "no se encontraron actualizaciones"
   fi
 }
 mount_hd() {
