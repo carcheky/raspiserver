@@ -71,7 +71,7 @@ install_raspi_bin() {
   exit 0
 }
 install() {
-  _doingthing install_basics
+  install_basics
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     install_raspi_bin
@@ -83,16 +83,16 @@ run() {
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     echo $current
     echo $remote
-    _doingthing checking_updates
-    _doingthing docker_run
+    checking_updates
+    docker_run
   else
-    _doingthing install
+    install
   fi
 }
 checking_updates() {
   if [ $current = $remote ]; then
-  #   sleep .2
-  # else
+    #   sleep .2
+    # else
     git config pull.ff on
     git reset --hard
     git pull --force
@@ -115,12 +115,7 @@ docker_run() {
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
-_doingthing() {
-  CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
-  echo -n "${@}..."
-  $(${@})
-  echo -e "\\r${CHECK_MARK} ${@}"
-}
+
 retry() {
   sudo apt -y remove --purge "docker*"
   sudo rm -fr \
