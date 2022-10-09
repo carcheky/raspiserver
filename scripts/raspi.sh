@@ -72,10 +72,12 @@ _install() {
     sudo usermod -aG docker $USER
     sudo reboot
   fi
+
 }
 _install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
+  docker compose stop
   sudo reboot
   exit 0
 }
@@ -133,7 +135,7 @@ retry() {
   sleep 1 && echo -en "\\r Reinstalando en 1..."
   echo ""
   remote
-  sudo reboot
+  reboot
 }
 help() {
   cat /usr/bin/raspi | grep '{'
