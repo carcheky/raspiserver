@@ -60,7 +60,7 @@ install() {
       curl \
       gnupg \
       lsb-release
-    
+    sudo mkdir -p /etc/apt/keyrings
   fi
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
