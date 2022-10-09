@@ -51,7 +51,7 @@ checking_updates() {
       install_raspi_bin
     else
       init
-      sleep 15
+      sleep 5
     fi
   else
     _doingthing raspi_install
