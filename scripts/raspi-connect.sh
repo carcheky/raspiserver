@@ -17,6 +17,6 @@ raspiserver_install() {
 # raspiserver_install
 
 while true; do
-  ssh carcheky@cckpi.local
-  # ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  # ssh carcheky@cckpi.local
+  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 done
