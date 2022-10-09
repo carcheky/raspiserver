@@ -69,12 +69,6 @@ docker_install() {
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
-    # ########## BEGIN ##########
-    # sudo sh -eux <<EOF
-    # # Install newuidmap & newgidmap binaries
-    # apt-get install -y uidmap
-    # EOF
-    # ########## END ##########
     dockerd-rootless-setuptool.sh install --force
     echo "
     export PATH=/usr/bin:\$PATH
@@ -84,11 +78,13 @@ docker_install() {
     alias docker='sudo docker'
     " >>~/.zshrc
     rm get-docker.sh
-    # sudo groupadd docker
-    # sudo usermod -aG docker ${USER}
     echo ${USER}
+    alias docker='sudo docker'
     docker run alpine echo hola mundo
+  else
+    docker compose up -d --build --remove-orphans &>/dev/null
   fi
+    sudo chmod 777 /var/run/docker.sock
 }
 docker_start() {
   docker compose up -d --build --remove-orphans &>/dev/null
