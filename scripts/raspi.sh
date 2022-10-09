@@ -80,10 +80,12 @@ docker_run() {
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
-    dockerd-rootless-setuptool.sh install --force
+    # dockerd-rootless-setuptool.sh install --force
     echo "
     export PATH=/usr/bin:\$PATH
-    export DOCKER_HOST=unix:///run/user/1000/docker.sock
+    # export DOCKER_HOST=unix:///run/user/1000/docker.sock
+    export DOCKER_HOST=unix:///var/run/docker.sock
+    sudo chmod 777 /var/run/docker.sock
     docker ps
     raspi watcher
     alias docker='sudo docker'
