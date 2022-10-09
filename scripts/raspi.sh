@@ -85,7 +85,7 @@ _install_raspi_bin() {
   exit 0
 }
 run() {
-  if cd ~/raspiserver; then
+  if cd ~/raspiserver &>/dev/null; then
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     update
