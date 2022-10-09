@@ -14,7 +14,7 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 # aliases
 alias docker='sudo docker'
 
-install() {
+_install() {
   if [ ! $(which git) ]; then
     sudo apt update
     sudo apt install git vim uidmap -y
@@ -90,7 +90,7 @@ run() {
     update
     docker_run
   else
-    install
+    _install
   fi
 }
 update() {
