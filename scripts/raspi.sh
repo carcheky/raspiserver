@@ -2,7 +2,7 @@
 lockfile="/tmp/raspi.lock.d"
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # set -eux
-install_git() {
+install_basics() {
   sudo apt update
   if [ ! $(which git) ]; then
     sudo apt install git -y
@@ -10,7 +10,6 @@ install_git() {
   if [ ! $(which uidmap) ]; then
     sudo apt install uidmap -y
   fi
-  
 }
 install_zsh() {
   if [ ! $(which zsh) ]; then
@@ -33,7 +32,7 @@ install_zsh() {
   fi
 }
 raspi_clone() {
-  install_git
+  install_basics
   install_zsh
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
