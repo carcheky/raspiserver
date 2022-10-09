@@ -1,4 +1,5 @@
 #!/bin/bash
+
 echo "
 ██████╗  █████╗ ███████╗██████╗ ██╗
 ██╔══██╗██╔══██╗██╔════╝██╔══██╗██║
@@ -15,6 +16,7 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 alias docker='sudo docker'
 
 _install() {
+  sudo dpkg --configure -a
   if [ ! $(which git) ]; then
     sudo apt update
     sudo apt install git vim uidmap -y
@@ -123,7 +125,6 @@ retry() {
   cd ~/raspiserver
   docker compose down
   docker-system prune -af
-  sudo dpkg --configure -a
   sudo apt -y remove --purge "docker*" containerd runc
   sudo rm -fr \
     ~/raspiserver \
