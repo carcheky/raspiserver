@@ -140,7 +140,7 @@ help() {
 watcher() {
   while true; do
     run
-    # sleep 5
+    sleep 5
   done
 }
 install
