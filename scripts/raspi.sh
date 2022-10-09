@@ -70,13 +70,13 @@ run() {
   if cd ~/raspiserver; then
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-    checking_updates
+    update
     docker_run
   else
     install
   fi
 }
-checking_updates() {
+update() {
   if [ $current = $remote ]; then
     echo "no hay actualizaciones nuevas"
   else
