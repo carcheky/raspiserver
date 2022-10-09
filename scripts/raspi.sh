@@ -108,7 +108,7 @@ _reinstall() {
   sudo reboot
 }
 help() {
-  cat /usr/local/bin/raspi | grep '()'
+  cat /usr/local/bin/raspi | grep '{'
 }
 watcher() {
   while true; do
