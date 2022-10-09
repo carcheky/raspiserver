@@ -3,6 +3,10 @@ key=$(cat ~/.ssh/id_rsa.pub)
 command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
 
 add_key() {
+  while ! ssh carcheky@cckpi.local ; do
+    sleep 1
+  done
+  echo hola
   sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
   ssh -oStrictHostKeyChecking=no carcheky@cckpi.local $command
 }
