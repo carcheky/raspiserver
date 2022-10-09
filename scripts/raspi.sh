@@ -140,7 +140,7 @@ help() {
 watcher() {
   while true; do
     run
-    sleep 60
+    sleep 6
   done
 }
 ${@:-watcher}
