@@ -3,7 +3,7 @@ key=$(cat ~/.ssh/id_rsa.pub)
 command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
 
 add_key() {
-  while ! ssh carcheky@cckpi.local ; do
+  while ! ssh carcheky@cckpi.local ls; do
     sleep 1
   done
   echo hola
