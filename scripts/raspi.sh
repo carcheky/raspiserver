@@ -43,7 +43,6 @@ _install() {
     if [ \$(which docker) ]; then
       alias docker='sudo docker'
       docker ps
-      sudo chmod 777 /var/run/docker.sock /run/user/1000/docker.sock
     fi
 
     raspi
@@ -113,8 +112,7 @@ mount_hd() {
 }
 docker_run() {
   if mount_hd; then
-    docker-compose up -d --remove-orphans --pull
-    sudo chmod 777 /var/run/docker.sock
+    docker-compose up -d --remove-orphans --force-recreate
   fi
 }
 remote() {
