@@ -34,10 +34,10 @@ install_raspi_bin() {
   sudo reboot
 }
 raspi_install() {
-  install_basics
+  _doingthing install_basics
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    install_raspi_bin
+    _doingthing install_raspi_bin
   fi
 }
 raspi_run() {
