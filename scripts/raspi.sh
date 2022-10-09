@@ -111,7 +111,6 @@ help() {
   cat /usr/local/bin/raspi | grep '()'
 }
 watcher() {
-  cd ~/raspiserver
   while true; do
     checking_updates
   done
