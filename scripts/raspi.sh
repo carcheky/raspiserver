@@ -50,7 +50,7 @@ raspi_update() {
       git pull --force
       raspi_install
       echo "REBOOTING ==========================================="
-      raspi watcher
+      /usr/local/bin/raspi watcher
       exit 0
     fi
   else
