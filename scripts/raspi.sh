@@ -66,7 +66,8 @@ install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
-  remote
+  raspi run
+  sudo reboot
   exit 0
 }
 install() {
