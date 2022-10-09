@@ -57,6 +57,16 @@ checking_updates() {
     _doingthing raspi_install
   fi
 }
+check_update() {
+  current=$(git rev-parse HEAD)
+  remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+  if [ $current != $remote ]; then
+UPDATE_AVAILABLE
+  else
+UPDATE_AVAILABLE
+  fi
+
+}
 hd_mount() {
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
