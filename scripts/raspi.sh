@@ -12,10 +12,7 @@ echo "
 # update date
 date
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-current=$(git rev-parse HEAD)
-remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-echo $current
-echo $remote
+
 # aliases
 alias docker='sudo docker'
 
@@ -82,6 +79,10 @@ install() {
 } &>/dev/null
 run() {
   if cd ~/raspiserver; then
+    current=$(git rev-parse HEAD)
+    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+    echo $current
+    echo $remote
     _doingthing checking_updates
     _doingthing docker_run
   else
@@ -94,10 +95,10 @@ checking_updates() {
   else
     git config pull.ff on
     git reset --hard
-    git pull --force 
+    git pull --force
     install_raspi_bin
   fi
-} 
+}
 mount_hd() {
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
