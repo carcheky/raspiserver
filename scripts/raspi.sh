@@ -72,12 +72,12 @@ docker_install() {
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
-    ########## BEGIN ##########
-    sudo sh -eux <<EOF
-# Install newuidmap & newgidmap binaries
-apt-get install -y uidmap
-EOF
-    ########## END ##########
+    # ########## BEGIN ##########
+    # sudo sh -eux <<EOF
+    # # Install newuidmap & newgidmap binaries
+    # apt-get install -y uidmap
+    # EOF
+    # ########## END ##########
     dockerd-rootless-setuptool.sh install --force
     echo "
     export PATH=/usr/bin:\$PATH
