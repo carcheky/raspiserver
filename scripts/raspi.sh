@@ -49,6 +49,9 @@ checking_updates() {
       git reset --hard
       git pull --force
       install_raspi_bin
+    else
+      init
+      sleep 15
     fi
   else
     _doingthing raspi_install
@@ -102,13 +105,7 @@ help() {
 watcher() {
   cd ~/raspiserver
   while true; do
-    if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
-      _doingthing "checking updates"
-      init
-      sleep 15
-    else
-      _doingthing checking_updates
-    fi
+    checking_updates
   done
 }
 init() {
