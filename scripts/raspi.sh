@@ -72,6 +72,8 @@ docker_install() {
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
+    sudo apt update
+    sudo apt install uidmap -y
     # ########## BEGIN ##########
     # sudo sh -eux <<EOF
     # # Install newuidmap & newgidmap binaries
