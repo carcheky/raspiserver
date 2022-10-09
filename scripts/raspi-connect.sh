@@ -12,8 +12,8 @@ raspiserver_install() {
   ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 }
 
-  add_key
 while true; do
+  add_key
   # ssh carcheky@cckpi.local
-  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  raspiserver_install
 done
