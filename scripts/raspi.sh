@@ -42,9 +42,7 @@ raspi_install() {
 }
 checking_updates() {
   if cd ~/raspiserver; then
-    current=$(git rev-parse HEAD)
-    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-    if [ $current != $remote ]; then
+    if check_update; then
       git config pull.ff on
       git reset --hard
       git pull --force
