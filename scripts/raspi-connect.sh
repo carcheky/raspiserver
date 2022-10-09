@@ -4,7 +4,8 @@ command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authoriz
 
 add_key() {
   while ! ssh carcheky@cckpi.local ls; do
-    comrp
+  echo -n "comprobando..."
+  echo -e "comprobando2"
     sleep 1
   done
   sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
