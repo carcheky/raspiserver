@@ -121,7 +121,7 @@ watcher() {
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
       logic
       docker ps
-      sleep 6
+      sleep 15
     else
       raspi_update
     fi
