@@ -3,14 +3,12 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 # set -eux
 alias update=raspirun
 install_basics() {
-  if [ ! $(which docker) ]; then
-    sudo apt update
-    sudo apt install uidmap -y
-  fi
   if [ ! $(which git) ]; then
-    sudo apt install git -y
+    sudo apt update
+    sudo apt install git uidmap -y
   fi
   if [ ! $(which zsh) ]; then
+    sudo apt update
     sudo apt install zsh -y
     if [ ! -d ~/.oh-my-zsh ]; then
       sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
