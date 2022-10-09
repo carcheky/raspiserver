@@ -31,7 +31,7 @@ install_basics() {
     sed -i s/'plugins=(git)'/'plugins=(git z docker composer zsh_carcheky)'/g ~/.zshrc
   fi
 }
-install() {
+_install_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
@@ -40,7 +40,7 @@ clone() {
   install_basics
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    install
+    _install_bin
   fi
 }
 update() {
@@ -50,7 +50,7 @@ update() {
       git config pull.ff on
       git reset --hard
       git pull --force
-      install
+      _install_bin
       echo "REBOOTING ==========================================="
       /usr/local/bin/raspi watcher
       exit 0
