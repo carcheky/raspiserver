@@ -60,7 +60,7 @@ raspi_run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
     echo $UPDATE_AVAILABLE
-    if [ $UPDATE_AVAILABLE = true ]; then
+    if [ "$UPDATE_AVAILABLE" = "true" ]; then
       git config pull.ff on
       git reset --hard
       git pull --force
