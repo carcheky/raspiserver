@@ -1,6 +1,7 @@
 #!/bin/bash
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # set -eux
+alias update=raspirun
 install_basics() {
   if [ ! $(which docker) ]; then
     sudo apt update
