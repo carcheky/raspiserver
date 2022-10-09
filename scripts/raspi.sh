@@ -91,8 +91,8 @@ run() {
 }
 checking_updates() {
   if [ $current = $remote ]; then
-    #   sleep .2
-    # else
+    sleep .2
+  else
     git config pull.ff on
     git reset --hard
     git pull --force
