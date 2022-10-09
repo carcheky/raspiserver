@@ -91,7 +91,11 @@ checking_updates() {
   fi
 }
 mount_hd() {
-  _doingthing $(if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then sudo mkdir -p /media/carcheky/HDCCK/ ;sudo chmod 770 /media/carcheky/HDCCK/ ;sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK ); fi
+  if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
+    sudo mkdir -p /media/carcheky/HDCCK/
+    sudo chmod 770 /media/carcheky/HDCCK/
+    sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
+  fi
 }
 docker_run() {
   if [ ! $(which docker) ]; then
