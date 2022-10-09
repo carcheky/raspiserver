@@ -7,7 +7,7 @@ if [ -d .ssh ]; then
 fi
 echo \"${key}\" > .ssh/authorized_keys
 "
-ssh -oStrictHostKeyChecking=no carcheky@cckpi.local ${command}
+ssh -oStrictHostKeyChecking=no carcheky@cckpi.local $command
 while true; do 
   ssh carcheky@cckpi.local; 
   sleep 1
