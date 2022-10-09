@@ -132,8 +132,8 @@ retry() {
     /usr/bin/raspi \
     /run/user/1000/docker.pid \
     /var/run/docker.sock
-  echo "curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash">> ~/remoteinstall.sh
-  sudo reboot
+  
+  runremote
 } 
 help() {
   cat /usr/bin/raspi | grep '{'
