@@ -40,6 +40,14 @@ install_basics() {
 
     " >>~/.zshrc
   fi
+  if [ ! $(which docker) ]; then
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sudo sh get-docker.sh
+    # dockerd-rootless-setuptool.sh install --force
+    rm get-docker.sh
+    alias docker='sudo docker'
+    docker run alpine echo hola mundo
+  fi
 } 3>/dev/null
 install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
