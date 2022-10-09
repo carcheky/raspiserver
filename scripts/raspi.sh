@@ -63,7 +63,6 @@ install() {
 install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
-  raspi run
   sudo reboot
   exit 0
 }
