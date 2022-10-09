@@ -6,6 +6,7 @@ add_key() {
   while true; do
   echo -e "comprobando..."
   sleep 1
+  bash bash scripts/raspi-connect.sh
   done
   sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
 
