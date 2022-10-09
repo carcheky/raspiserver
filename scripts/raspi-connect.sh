@@ -17,5 +17,5 @@ add_key
 # raspiserver_install
 while true; do
   ssh carcheky@cckpi.local
-  sleep 1
+  sleep 3
 done
