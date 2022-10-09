@@ -12,8 +12,6 @@ install_basics() {
   if [ ! $(which uidmap) ]; then
     sudo apt install uidmap -y
   fi
-}
-install_zsh() {
   if [ ! $(which zsh) ]; then
     sudo apt install zsh -y
 
@@ -33,17 +31,17 @@ install_zsh() {
     sed -i s/'plugins=(git)'/'plugins=(git z docker composer zsh_carcheky)'/g ~/.zshrc
   fi
 }
-raspi_install() {
+install() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
 }
-raspi_clone() {
+clone() {
   install_basics
   install_zsh
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    raspi_install
+    install
   fi
 }
 update() {
@@ -53,13 +51,13 @@ update() {
       git config pull.ff on
       git reset --hard
       git pull --force
-      raspi_install
+      install
       echo "REBOOTING ==========================================="
       /usr/local/bin/raspi watcher
       exit 0
     fi
   else
-    raspi_clone
+    clone
     raspi watcher
     exit 0
   fi
