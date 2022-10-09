@@ -27,14 +27,15 @@ install_basics() {
     export PATH=/usr/bin:\$PATH
     # export DOCKER_HOST=unix:///run/user/1000/docker.sock
     export DOCKER_HOST=unix:///var/run/docker.sock
-    sudo chmod 777 /var/run/docker.sock
-    docker ps
     
-    if [];then
+    if [ $(which docker) ]; then
       alias docker='sudo docker'
+      sudo chmod 777 /var/run/docker.sock
+      docker ps
     fi
+
     raspi watcher
-    
+
     " >>~/.zshrc
   fi
 }
