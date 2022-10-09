@@ -58,7 +58,7 @@ install_basics() {
     rm get-docker.sh
     docker run alpine echo hola mundo
   fi
-} &>/dev/null
+} 
 install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
