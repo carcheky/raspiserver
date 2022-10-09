@@ -118,7 +118,6 @@ help() {
   cat /usr/local/bin/raspi | grep '()'
 }
 watcher() {
-  update
   cd ~/raspiserver
   while true; do
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
