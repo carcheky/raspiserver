@@ -55,6 +55,12 @@ install() {
     # sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
     # rm get-docker.sh
+    sudo apt-get install \
+      ca-certificates \
+      curl \
+      gnupg \
+      lsb-release
+    
   fi
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
@@ -106,7 +112,7 @@ remote() {
 }
 retry() {
   sudo dpkg --configure -a
-  sudo apt -y remove --purge "docker*"  containerd runc
+  sudo apt -y remove --purge "docker*" containerd runc
   sudo rm -fr \
     ~/raspiserver \
     ~/.oh-my-zsh \
