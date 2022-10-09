@@ -9,7 +9,7 @@ services:
       - 9000:9000
       - 8000:8000
       - 9443:9443
-    # restart: always
+    restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /media/carcheky/HDCCK/raspiserver/data/portainer/data:/data 
@@ -23,7 +23,7 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
       - JELLYFIN_PublishedServerUrl=192.168.0.5 #optional
-    # restart: always
+    restart: always
     ports:
       - 8096:8096
       - 7359:7359/udp #optional
