@@ -10,7 +10,6 @@ echo "
 "
 
 # update date
-date
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 
 # aliases
@@ -115,7 +114,6 @@ docker_run() {
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
-
 retry() {
   sudo apt -y remove --purge "docker*"
   sudo rm -fr \
