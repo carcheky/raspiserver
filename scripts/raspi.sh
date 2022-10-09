@@ -12,7 +12,7 @@ install_basics() {
     sudo apt update
     sudo apt install git uidmap -y
   fi
-  if [ ! $(which zsh) ]; then
+  if [ ! -f ~/.zshrc ]; then
     sudo apt update
     sudo apt install zsh -y
     if [ ! -d ~/.oh-my-zsh ]; then
