@@ -118,7 +118,7 @@ _doingthing() {
   echo -e "\\r${CHECK_MARK} ${@}"
 }
 _reinstall() {
-  sudo apt -y remove --purge "docker*" zsh
+  sudo apt -y remove --purge "docker*"
   sudo rm -fr \
     ~/raspiserver \
     ~/.oh-my-zsh \
