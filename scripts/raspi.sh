@@ -79,6 +79,10 @@ install() {
 } 
 run() {
   if cd ~/raspiserver; then
+    current=$(git rev-parse HEAD)
+    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+    echo ${current}
+    echo ${remote} 
     _doingthing checking_updates
     if touch "/tmp/raspi.lock.d"; then
       _doingthing docker_run
@@ -90,10 +94,6 @@ run() {
   fi
 }
 checking_updates() {
-  current=$(git rev-parse HEAD)
-  remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-  echo ${current}
-  echo ${remote} 
   if [ $current != $remote ]; then
     git config pull.ff on 
     git reset --hard 
