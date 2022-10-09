@@ -52,8 +52,8 @@ update() {
       git pull --force
       _install_bin
       # echo "REBOOTING ==========================================="
-      # /usr/local/bin/raspi watcher
-      # exit 0
+      /usr/local/bin/raspi watcher
+      exit 0
     fi
   else
     echo "CLONING ==========================================="
