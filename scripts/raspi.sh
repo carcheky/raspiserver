@@ -112,7 +112,7 @@ mount_hd() {
 }
 docker_run() {
   if mount_hd; then
-    docker-compose up -d --remove-orphans --force-recreate
+    docker-compose up -d --remove-orphans
   fi
 }
 remote() {
