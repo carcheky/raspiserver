@@ -21,7 +21,7 @@ raspiserver_install() {
 }
 
 add_key
-raspiserver_install
+# raspiserver_install
 
 while true; do
   while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit 0 &>/dev/null; do
