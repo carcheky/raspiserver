@@ -90,7 +90,7 @@ docker_run() {
 runremote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
-remove_lock() {
+_remove_lock() {
   rm "${lockfile}"
 }
 _doingthing() {
@@ -126,7 +126,7 @@ init() {
     _doingthing docker_run
     _doingthing mount_hd
     _doingthing docker_start
-    remove_lock
+    _remove_lock
   fi
 }
 ${@:-watcher}
