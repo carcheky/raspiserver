@@ -144,4 +144,4 @@ watcher() {
     sleep 6
   done
 }
-${@:-watcher}
+${@:-run}
