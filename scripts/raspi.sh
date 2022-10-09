@@ -93,10 +93,10 @@ checking_updates() {
   else
     git config pull.ff on
     git reset --hard
-    git pull --force
+    git pull --force 
     install_raspi_bin
   fi
-} &>/dev/null
+} 
 mount_hd() {
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
