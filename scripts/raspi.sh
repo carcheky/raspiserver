@@ -35,7 +35,8 @@ install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
-  /usr/local/bin/raspi watcher
+  # /usr/local/bin/raspi watcher
+  runremote
 }
 clone() {
   install_basics
@@ -65,7 +66,7 @@ mount_hd() {
     sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
   fi
 }
-docker_install() {
+docker_run() {
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
@@ -85,10 +86,6 @@ docker_install() {
     docker compose up -d --build --remove-orphans &>/dev/null
   fi
     sudo chmod 777 /var/run/docker.sock
-}
-docker_start() {
-  docker compose up -d --build --remove-orphans &>/dev/null
-  sudo chmod 777 /var/run/docker.sock
 }
 runremote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
@@ -119,7 +116,7 @@ watcher() {
   done
 }
 logic() {
-  doingthing docker_install
+  doingthing docker_run
   doingthing mount_hd
   doingthing docker_start
 }
