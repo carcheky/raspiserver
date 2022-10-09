@@ -140,7 +140,10 @@ doingthing() {
   $(${@}) &>/dev/null
   echo -e "\\r${CHECK_MARK} ${@}"
 }
-reinstall(){
-  
+reinstall() {
+  sudo apt -y remove --purge "docker*" zsh
+  sudo rm -fr /usr/local/bin/raspi raspiserver .oh-my-zsh .zshrc .docker /run/user/1000/docker.pid
+  curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
+  raspi watcher
 }
 ${@:-watcher}
