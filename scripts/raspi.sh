@@ -92,10 +92,11 @@ checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current != $remote ]; then
-    echo "updating..."
-    git config pull.ff on
-    git reset --hard
-    git pull --force
+    echo $current
+    echo $remote 
+    git config pull.ff on &>/dev/null
+    git reset --hard &>/dev/null
+    git pull --force &>/dev/null
     _doingthing install_raspi_bin
   fi
 }
