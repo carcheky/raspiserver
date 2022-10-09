@@ -91,13 +91,9 @@ run() {
 checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-  echo "==========================================================================="
-  echo "current version: $current"
-  echo "   last version: $remote"
   if [ $current = $remote ]; then
-    echo "no se encontraron actualizaciones"
+    exit 0
   else
-    echo "actualizando a $remote desde $current..."
     git config pull.ff on 
     git reset --hard 
     git pull --force 
@@ -123,7 +119,7 @@ remote() {
 _doingthing() {
   CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
   echo -n "${@}..."
-  $( "${@}" )
+  $( ${@} )
   echo -e "\\r${CHECK_MARK} ${@}"
 }
 retry() {
