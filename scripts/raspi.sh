@@ -4,7 +4,6 @@
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 
 # aliases
-alias update='raspi_run'
 alias docker='sudo docker'
 
 install_basics() {
@@ -59,14 +58,14 @@ install_raspi_bin() {
   # runremote
   sudo reboot
 }
-raspi_install() {
+install() {
   _doingthing install_basics
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     _doingthing install_raspi_bin
   fi
 }
-raspi_run() {
+run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
     echo $UPDATE_AVAILABLE
@@ -84,7 +83,7 @@ raspi_run() {
     fi
     sleep 5
   else
-    _doingthing raspi_install
+    _doingthing install
   fi
 }
 checking_updates() {
@@ -143,8 +142,8 @@ help() {
 }
 watcher() {
   while true; do
-    raspi_run
+    run
   done
 }
-raspi_install
+install
 ${@:-watcher}
