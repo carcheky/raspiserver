@@ -4,11 +4,11 @@ add_key() {
   # while ! ssh carcheky@cckpi.local ls &>/dev/null ; do
   while true; do
     echo -en "\\r comprobando."
-    sleep .5
+    sleep .2
     echo -en "\\r comprobando.."
-    sleep .5
+    sleep .2
     echo -en "\\r comprobando..."
-    sleep .5
+    sleep .2
   done
   sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
 
