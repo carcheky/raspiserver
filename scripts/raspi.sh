@@ -96,7 +96,7 @@ mount_hd() {
 }
 docker_run() {
   if mount_hd; then
-    docker compose up -d --build --remove-orphans
+    docker compose up -d --build --remove-orphans --progress plain
     sudo chmod 777 /var/run/docker.sock
   fi
 }
