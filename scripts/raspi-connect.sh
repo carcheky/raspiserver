@@ -1,7 +1,7 @@
 #!/bin/bash
 
 add_key() {
-  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local sleep 1 &>/dev/null ; do
+  while ! $(ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit 0) &>/dev/null ; do
     sleep .1 && echo -en "\\r comprobando..."
     sleep .1 && echo -en "\\r .comprobando.."
     sleep .1 && echo -en "\\r ..comprobando."
