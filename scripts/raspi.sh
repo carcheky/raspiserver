@@ -58,7 +58,7 @@ checking_update() {
     clone
   fi
 }
-mount_hd() {
+hd_mount() {
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
     sudo chmod 770 /media/carcheky/HDCCK/
@@ -123,7 +123,7 @@ init() {
   echo ${lockfile}
   if touch "${lockfile}"; then
     _doingthing docker_run
-    _doingthing mount_hd
+    _doingthing hd_mount
     _doingthing docker_start
     rm "${lockfile}"
   fi
