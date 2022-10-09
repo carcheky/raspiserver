@@ -40,7 +40,7 @@ install_basics() {
 
     " >>~/.zshrc
   fi
-} &>/dev/null
+} 3>/dev/null
 install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
