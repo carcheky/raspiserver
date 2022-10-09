@@ -33,7 +33,7 @@ install_raspi_bin() {
   # runremote
   sudo reboot
 }
-clone() {
+raspi_install() {
   install_basics
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
@@ -51,7 +51,7 @@ checking_updates() {
       install_raspi_bin
     fi
   else
-    clone
+    _doingthing raspi_install
   fi
 }
 hd_mount() {
@@ -119,5 +119,5 @@ init() {
     rm "${lockfile}"
   fi
 }
-clone
+raspi_install
 ${@:-watcher}
