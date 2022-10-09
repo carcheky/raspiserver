@@ -89,6 +89,7 @@ run() {
   fi
 }
 checking_updates() {
+  echo -e
   if [ $current = $remote ]; then
     sleep .2
   else
