@@ -81,7 +81,6 @@ run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
     if touch "/tmp/raspi.lock.d"; then
-      mount_hd
       _doingthing docker_run
       rm "/tmp/raspi.lock.d"
     fi
@@ -110,8 +109,10 @@ mount_hd() {
   fi
 } &>/dev/null
 docker_run() {
-  docker compose up -d --build --remove-orphans 
-  sudo chmod 777 /var/run/docker.sock
+  if mount_hd ; then
+    docker compose up -d --build --remove-orphans 
+    sudo chmod 777 /var/run/docker.sock
+  fi
 } &>/dev/null
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
