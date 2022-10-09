@@ -140,4 +140,7 @@ doingthing() {
   $(${@}) &>/dev/null
   echo -e "\\r${CHECK_MARK} ${@}"
 }
+reinstall(){
+  
+}
 ${@:-watcher}
