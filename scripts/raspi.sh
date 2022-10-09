@@ -130,7 +130,7 @@ watcher() {
 logic() {
   doingthing docker_install
   doingthing raspi_mount
-  docker_start
+  doingthing docker_start
 }
 doingthing() {
   CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
