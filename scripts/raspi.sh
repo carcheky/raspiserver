@@ -73,7 +73,7 @@ install() {
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     install_raspi_bin
   fi
-} &>/dev/null
+} 
 run() {
   if cd ~/raspiserver; then
     current=$(git rev-parse HEAD)
