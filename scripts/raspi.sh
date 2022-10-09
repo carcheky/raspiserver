@@ -17,7 +17,7 @@ alias docker='sudo docker'
 install_basics() {
   if [ ! $(which git) ]; then
     sudo apt update
-    sudo apt install git uidmap -y
+    sudo apt install git vim uidmap -y
   fi
   if [ ! -f ~/.zshrc ]; then
     sudo apt update
