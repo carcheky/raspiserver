@@ -36,6 +36,7 @@ install_basics() {
     sudo chsh -s $(which zsh)
     sed -i s/'plugins=(git)'/'plugins=(git z composer zsh_carcheky)'/g ~/.zshrc
     echo "
+    
     export PATH=/usr/bin:\$PATH
     
     export DOCKER_HOST=unix:///var/run/docker.sock
@@ -43,10 +44,10 @@ install_basics() {
     if [ $(which docker) ]; then
       alias docker='sudo docker'
       sudo chmod 777 /var/run/docker.sock /run/user/1000/docker.sock
-      docker ps
+
     fi
 
-    raspi watcher
+    raspi
 
     " >>~/.zshrc
     echo "
