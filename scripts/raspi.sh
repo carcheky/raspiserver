@@ -69,7 +69,7 @@ install_raspi_bin() {
   sudo chmod +x /usr/bin/raspi
   remote
   exit 0
-} &>/dev/null
+}
 install() {
   _doingthing install_basics
   if [ ! -d ~/raspiserver ]; then
@@ -131,14 +131,12 @@ retry() {
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
-    /usr/bin/raspi \
     /run/user/1000/docker.pid \
     /var/run/docker.sock
-  
   sleep 1 && echo -en "\\r Reinstalando en 3..."
   sleep 1 && echo -en "\\r Reinstalando en 2..."
   sleep 1 && echo -en "\\r Reinstalando en 1..."
-  runremote
+  remote
 } 
 help() {
   cat /usr/bin/raspi | grep '{'
