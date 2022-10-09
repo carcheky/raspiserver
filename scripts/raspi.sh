@@ -95,7 +95,7 @@ checking_updates() {
     echo "no se encontraron actualizaciones"
     echo "version: $current"
   else
-    echo "actualizando a $remote..."
+    echo "actualizando a $remote desde $current..."
     git config pull.ff on 
     git reset --hard 
     git pull --force 
