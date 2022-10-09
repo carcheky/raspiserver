@@ -59,7 +59,6 @@ update() {
   fi
 }
 mount_hd() {
-  # echo "[5/7] mount_hd ===================================="
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
     sudo chmod 770 /media/carcheky/HDCCK/
@@ -67,7 +66,6 @@ mount_hd() {
   fi
 }
 docker_install() {
-  # echo "[6/7] docker_install ===================================="
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
