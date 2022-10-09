@@ -34,5 +34,5 @@ while true; do
     sleep .1 && echo -en "\\r .conectando.."
     sleep .1 && echo -en "\\r conectando..."
   done
-  ssh carcheky@cckpi.local
+  ssh carcheky@cckpi.local raspiserver_install
 done
