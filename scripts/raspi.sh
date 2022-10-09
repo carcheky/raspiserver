@@ -14,7 +14,6 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 # aliases
 alias docker='sudo docker'
 
-set -eux
 install_basics() {
   if [ ! $(which git) ]; then
     sudo apt update
