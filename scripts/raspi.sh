@@ -68,6 +68,8 @@ install() {
     sudo apt update
     sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
     sudo groupadd docker
+    sudo usermod -aG docker $USER
+    sudo reboot
   fi
 
   if [ ! -d ~/raspiserver ]; then
