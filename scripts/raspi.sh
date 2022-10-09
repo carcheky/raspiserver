@@ -3,10 +3,14 @@ lockfile="/tmp/raspi.lock.d"
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # set -eux
 install_git() {
+  sudo apt update
   if [ ! $(which git) ]; then
-    sudo apt update
-    sudo apt install git uidmap -y
+    sudo apt install git -y
   fi
+  if [ ! $(which uidmap) ]; then
+    sudo apt install uidmap -y
+  fi
+  
 }
 install_zsh() {
   if [ ! $(which zsh) ]; then
@@ -72,8 +76,6 @@ docker_install() {
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
-    sudo apt update
-    sudo apt install uidmap -y
     # ########## BEGIN ##########
     # sudo sh -eux <<EOF
     # # Install newuidmap & newgidmap binaries
