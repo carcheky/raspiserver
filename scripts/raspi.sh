@@ -69,7 +69,7 @@ run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
     if touch "/tmp/raspi.lock.d"; then
-      _doingthing hd_mount
+      mount_hd
       _doingthing docker_run
       rm "/tmp/raspi.lock.d"
     fi
@@ -90,12 +90,8 @@ checking_updates() {
     _doingthing install_raspi_bin
   fi
 }
-hd_mount() {
-  if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
-    sudo mkdir -p /media/carcheky/HDCCK/
-    sudo chmod 770 /media/carcheky/HDCCK/
-    sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
-  fi
+mount_hd() {
+  _doingthing if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then (sudo mkdir -p /media/carcheky/HDCCK/ ;sudo chmod 770 /media/carcheky/HDCCK/ ;sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK) ; fi
 }
 docker_run() {
   if [ ! $(which docker) ]; then
