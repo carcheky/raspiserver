@@ -50,12 +50,12 @@ raspi_update() {
       raspi_install
       echo "REBOOTING ==========================================="
       raspi watcher
-      exit 0
+      # exit 0
     fi
   else
     raspi_clone
     raspi watcher
-    exit 0
+    # exit 0
   fi
 }
 raspi_install() {
