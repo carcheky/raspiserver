@@ -116,6 +116,8 @@ watcher() {
     fi
   done
 }
+
+
 init() {
   lockfile="/tmp/raspi.lock.d"
   echo ${lockfile}
