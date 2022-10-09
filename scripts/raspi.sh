@@ -52,22 +52,22 @@ install_basics() {
     rm get-docker.sh
     docker run alpine echo hola mundo
   fi
-}
+} &>/dev/null
 install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
   # /usr/bin/raspi watcher
-  # runremote
-  sudo reboot
-}
+  raspi
+  exit 0
+} &>/dev/null
 install() {
   _doingthing install_basics
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     _doingthing install_raspi_bin
   fi
-}
+} 
 run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
@@ -89,7 +89,6 @@ checking_updates() {
     git config pull.ff on
     git reset --hard
     git pull --force
-    sleep 3
     _doingthing install_raspi_bin
   fi
 }
@@ -99,11 +98,11 @@ mount_hd() {
     sudo chmod 770 /media/carcheky/HDCCK/
     sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
   fi
-}
+} &>/dev/null
 docker_run() {
-  docker compose up -d --build --remove-orphans &>/dev/null
+  docker compose up -d --build --remove-orphans 
   sudo chmod 777 /var/run/docker.sock
-}
+} &>/dev/null
 runremote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
@@ -123,8 +122,9 @@ _reinstall() {
     /usr/bin/raspi \
     /run/user/1000/docker.pid \
     /var/run/docker.sock
+  echo "curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash">> ~/remoteinstall.sh
   sudo reboot
-}
+} 
 help() {
   cat /usr/bin/raspi | grep '{'
 }
