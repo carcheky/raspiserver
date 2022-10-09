@@ -15,7 +15,7 @@ add_key() {
 
   key=$(cat ~/.ssh/id_rsa.pub)
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
-  ssh -oStrictHostKeyChecking=no carcheky@cckpi.local if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys
+  ssh -oStrictHostKeyChecking=no carcheky@cckpi.local "${command}"
 }
 raspiserver_install() {
   ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
