@@ -18,10 +18,10 @@ _install() {
     sudo apt update
     sudo apt install git vim uidmap -y
   fi
-    if [ ! -d ~/raspiserver ]; then
+  if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     _install_raspi_bin
-  fi 
+  fi
   if [ ! -f ~/.zshrc ]; then
     sudo apt update
     sudo apt install zsh -y
@@ -72,7 +72,6 @@ _install() {
     sudo usermod -aG docker $USER
     sudo reboot
   fi
-
 }
 _install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
