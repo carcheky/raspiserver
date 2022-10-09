@@ -40,7 +40,7 @@ install_basics() {
     
     export DOCKER_HOST=unix:///var/run/docker.sock
     
-    if [ $(which docker) ]; then
+    if [ \$(which docker) ]; then
       alias docker='sudo docker'
       sudo chmod 777 /var/run/docker.sock /run/user/1000/docker.sock
     fi
