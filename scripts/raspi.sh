@@ -57,10 +57,10 @@ install() {
   fi
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    install_raspi_bin
+    _install_raspi_bin
   fi
 }
-install_raspi_bin() {
+_install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
   sudo reboot
@@ -84,7 +84,7 @@ update() {
     git config pull.ff on
     git reset --hard
     git pull --force
-    install_raspi_bin
+    _install_raspi_bin
   fi
 }
 mount_hd() {
