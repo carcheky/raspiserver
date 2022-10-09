@@ -117,7 +117,6 @@ watcher() {
 }
 init() {
   lockfile="/tmp/raspi.lock.d"
-  echo ${lockfile}
   if touch "${lockfile}"; then
     _doingthing docker_run
     _doingthing hd_mount
