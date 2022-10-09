@@ -51,10 +51,10 @@ install() {
     " >>~/.zshrc
   fi
   if [ ! $(which docker) ]; then
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
+    # curl -fsSL https://get.docker.com -o get-docker.sh
+    # sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
-    rm get-docker.sh
+    # rm get-docker.sh
   fi
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
@@ -106,7 +106,7 @@ remote() {
 }
 retry() {
   sudo dpkg --configure -a
-  sudo apt -y remove --purge "docker*"
+  sudo apt -y remove --purge "docker*"  containerd runc
   sudo rm -fr \
     ~/raspiserver \
     ~/.oh-my-zsh \
