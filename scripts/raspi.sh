@@ -89,11 +89,9 @@ run() {
   fi
 }
 checking_updates() {
-  sleep .1 && echo -en "\\r ..conectando."
+  echo -en "\\r comprobando actualizaciones..."
   if [ $current = $remote ]; then
-    sleep .2
-  else
-    git config pull.ff on
+        git config comprobando actualizaciones...n
     git reset --hard
     git pull --force
     install_raspi_bin
