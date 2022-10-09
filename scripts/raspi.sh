@@ -43,9 +43,9 @@ install_basics() {
 } &>/dev/null
 install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
-  sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
-  sudo chmod +x /usr/local/bin/raspi
-  # /usr/local/bin/raspi watcher
+  sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
+  sudo chmod +x /usr/bin/raspi
+  # /usr/bin/raspi watcher
   # runremote
   sudo reboot
 }
@@ -124,13 +124,13 @@ _reinstall() {
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
-    /usr/local/bin/raspi \
+    /usr/bin/raspi \
     /run/user/1000/docker.pid \
     /var/run/docker.sock
   sudo reboot
 }
 help() {
-  cat /usr/local/bin/raspi | grep '{'
+  cat /usr/bin/raspi | grep '{'
 }
 watcher() {
   while true; do
