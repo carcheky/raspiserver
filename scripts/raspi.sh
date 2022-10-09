@@ -1,7 +1,12 @@
 #!/bin/bash
+
+# update date
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-# set -eux
+
+# aliases
 alias update='raspi_run'
+alias docker='sudo docker'
+
 install_basics() {
   if [ ! $(which git) ]; then
     sudo apt update
@@ -43,10 +48,9 @@ install_basics() {
     sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
     rm get-docker.sh
-    alias docker='sudo docker'
     docker run alpine echo hola mundo
   fi
-} 3>/dev/null
+} 
 install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
