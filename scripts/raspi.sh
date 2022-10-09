@@ -104,6 +104,7 @@ remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
 retry() {
+  sudo dpkg --configure -a
   sudo apt -y remove --purge "docker*"
   sudo rm -fr \
     ~/raspiserver \
