@@ -97,7 +97,7 @@ checking_updates() {
     git config pull.ff on 
     git reset --hard 
     git pull --force 
-    _doingthing install_raspi_bin
+    install_raspi_bin
   else
     echo "no se encontraron actualizaciones"
   fi
