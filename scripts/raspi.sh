@@ -101,13 +101,13 @@ mount_hd() {
     sudo chmod 770 /media/carcheky/HDCCK/
     sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
   fi
-} &>/dev/null
+} 
 docker_run() {
   if mount_hd; then
     docker compose up -d --build --remove-orphans
     sudo chmod 777 /var/run/docker.sock
   fi
-} &>/dev/null
+} 
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
