@@ -1,8 +1,8 @@
 #!/bin/bash
 
 add_key() {
-  # while ! ssh carcheky@cckpi.local ls &>/dev/null ; do
-  while true; do
+  while ! ssh carcheky@cckpi.local ls &>/dev/null ; do
+  # while true; do
     echo -en "\\r comprobando."
     sleep .1
     echo -en "\\r comprobando.."
