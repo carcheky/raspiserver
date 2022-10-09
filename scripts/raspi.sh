@@ -38,14 +38,12 @@ _install() {
     export PATH=/usr/bin:\$PATH
     
     export DOCKER_HOST=unix:///var/run/docker.sock
-    sleep 15
     if [ \$(which docker) ]; then
+      sleep 15
       alias docker='sudo docker'
       cd /home/carcheky/raspiserver && docker compose restart
       docker ps
     fi
-
-    raspi
 
     " >>~/.zshrc
   fi
