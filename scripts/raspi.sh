@@ -122,7 +122,6 @@ init() {
   if touch "${lockfile}"; then
     _doingthing docker_run
     _doingthing hd_mount
-    _doingthing docker_start
     rm "${lockfile}"
   fi
 }
