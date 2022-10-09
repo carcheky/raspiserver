@@ -62,8 +62,8 @@ update() {
     # exit 0
   fi
 }
-_mount() {
-  # echo "[5/7] _mount ===================================="
+mount_hd() {
+  # echo "[5/7] mount_hd ===================================="
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
     sudo chmod 770 /media/carcheky/HDCCK/
@@ -130,7 +130,7 @@ watcher() {
 }
 logic() {
   doingthing docker_install
-  doingthing _mount
+  doingthing mount_hd
   doingthing docker_start
 }
 doingthing() {
