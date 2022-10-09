@@ -133,6 +133,9 @@ retry() {
     /run/user/1000/docker.pid \
     /var/run/docker.sock
   
+  sleep 1 && echo -en "\\r Reinstalando en 3..."
+  sleep 1 && echo -en "\\r Reinstalando en 2..."
+  sleep 1 && echo -en "\\r Reinstalando en 1..."
   runremote
 } 
 help() {
