@@ -119,11 +119,11 @@ _doingthing() {
 _reinstall() {
   sudo apt -y remove --purge "docker*" zsh
   sudo rm -fr \
+    ~/raspiserver \
+    ~/.oh-my-zsh \
+    ~/.zshrc \
+    ~/.docker \
     /usr/local/bin/raspi \
-    raspiserver \
-    .oh-my-zsh \
-    .zshrc \
-    .docker \
     /run/user/1000/docker.pid \
     /var/run/docker.sock
   sudo reboot
