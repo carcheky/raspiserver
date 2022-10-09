@@ -74,7 +74,7 @@ install() {
   _doingthing install_basics
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    _doingthing install_raspi_bin
+    install_raspi_bin
   fi
 } 
 run() {
