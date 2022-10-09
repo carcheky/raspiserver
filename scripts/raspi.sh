@@ -120,7 +120,7 @@ _doingthing() {
   $(${@}) &>/dev/null
   echo -e "\\r${CHECK_MARK} ${@}"
 }
-_reinstall() {
+retry() {
   sudo apt -y remove --purge "docker*"
   sudo rm -fr \
     ~/raspiserver \
