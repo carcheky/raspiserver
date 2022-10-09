@@ -123,7 +123,7 @@ remote() {
 _doingthing() {
   CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
   echo -n "${@}..."
-  $( ${@} )
+  $( "${@}" )
   echo -e "\\r${CHECK_MARK} ${@}"
 }
 retry() {
