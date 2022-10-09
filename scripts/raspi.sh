@@ -4,24 +4,19 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 install_basics() {
   if [ ! $(which docker) ]; then
     sudo apt update
+    sudo apt install uidmap -y
   fi
   if [ ! $(which git) ]; then
     sudo apt install git -y
   fi
-  if [ ! $(which uidmap) ]; then
-    sudo apt install uidmap -y
-  fi
   if [ ! $(which zsh) ]; then
     sudo apt install zsh -y
-
     if [ ! -d ~/.oh-my-zsh ]; then
       sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     fi
-
     if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k ]; then
       git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
     fi
-
     if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky ]; then
       git clone --depth=1 https://gitlab.com/carcheky/zsh_carcheky.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky
     fi
