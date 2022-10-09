@@ -81,7 +81,6 @@ _install_raspi_bin() {
 }
 run() {
   if cd ~/raspiserver &>/dev/null; then
-
     update
     docker_run
   else
