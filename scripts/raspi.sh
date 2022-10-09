@@ -14,7 +14,7 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 # aliases
 alias docker='sudo docker'
 
-install_basics() {
+install() {
   if [ ! $(which git) ]; then
     sudo apt update
     sudo apt install git vim uidmap -y
@@ -55,7 +55,11 @@ install_basics() {
     # dockerd-rootless-setuptool.sh install --force
     rm get-docker.sh
   fi
-} 
+  if [ ! -d ~/raspiserver ]; then
+    git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
+    install_raspi_bin
+  fi
+}
 install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
@@ -63,13 +67,6 @@ install_raspi_bin() {
   sudo reboot
   exit 0
 }
-install() {
-  install_basics
-  if [ ! -d ~/raspiserver ]; then
-    git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    install_raspi_bin
-  fi
-} 
 run() {
   if cd ~/raspiserver; then
     current=$(git rev-parse HEAD)
@@ -97,13 +94,13 @@ mount_hd() {
     sudo chmod 770 /media/carcheky/HDCCK/
     sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
   fi
-} 
+}
 docker_run() {
   if mount_hd; then
     docker compose up -d --build --remove-orphans
     sudo chmod 777 /var/run/docker.sock
   fi
-} 
+}
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
