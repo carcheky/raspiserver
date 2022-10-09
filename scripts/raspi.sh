@@ -76,14 +76,11 @@ install() {
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     install_raspi_bin
   fi
-} 
+}
 run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
-    if touch "/tmp/raspi.lock.d"; then
-      _doingthing docker_run
-      rm "/tmp/raspi.lock.d"
-    fi
+    _doingthing docker_run
   else
     _doingthing install
   fi
@@ -94,9 +91,9 @@ checking_updates() {
   if [ $current = $remote ]; then
     exit 0
   else
-    git config pull.ff on 
-    git reset --hard 
-    git pull --force 
+    git config pull.ff on
+    git reset --hard
+    git pull --force
     install_raspi_bin
   fi
 }
@@ -108,8 +105,8 @@ mount_hd() {
   fi
 } &>/dev/null
 docker_run() {
-  if mount_hd ; then
-    docker compose up -d --build --remove-orphans 
+  if mount_hd; then
+    docker compose up -d --build --remove-orphans
     sudo chmod 777 /var/run/docker.sock
   fi
 } &>/dev/null
@@ -119,7 +116,7 @@ remote() {
 _doingthing() {
   CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
   echo -n "${@}..."
-  $( ${@} )
+  $(${@})
   echo -e "\\r${CHECK_MARK} ${@}"
 }
 retry() {
@@ -135,7 +132,7 @@ retry() {
   sleep 1 && echo -en "\\r Reinstalando en 2..."
   sleep 1 && echo -en "\\r Reinstalando en 1..."
   remote
-} 
+}
 help() {
   cat /usr/bin/raspi | grep '{'
 }
