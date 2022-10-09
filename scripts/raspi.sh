@@ -54,7 +54,6 @@ install_basics() {
     sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
     rm get-docker.sh
-    docker run alpine echo hola mundo
   fi
 } 
 install_raspi_bin() {
