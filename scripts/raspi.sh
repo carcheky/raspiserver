@@ -111,7 +111,6 @@ init() {
   if touch "${lockfile}"; then
     logic
     remove_lock
-    exit 0
   fi
 }
 help() {
