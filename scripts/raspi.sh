@@ -33,6 +33,11 @@ install_zsh() {
     sed -i s/'plugins=(git)'/'plugins=(git z docker composer zsh_carcheky)'/g ~/.zshrc
   fi
 }
+raspi_install() {
+  # sudo cp ~/raspiserver/rc.local /etc/rc.local
+  sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
+  sudo chmod +x /usr/local/bin/raspi
+}
 raspi_clone() {
   install_basics
   install_zsh
@@ -58,11 +63,6 @@ raspi_update() {
     raspi watcher
     exit 0
   fi
-}
-raspi_install() {
-  # sudo cp ~/raspiserver/rc.local /etc/rc.local
-  sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
-  sudo chmod +x /usr/local/bin/raspi
 }
 raspi_mount() {
   # echo "[5/7] raspi_mount ===================================="
