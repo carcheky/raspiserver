@@ -40,9 +40,10 @@ raspi_install() {
     install_raspi_bin
   fi
 }
-checking_updates() {
+raspi_run() {
   if cd ~/raspiserver; then
-    if check_update; then
+    _doingthing checking_updates
+    if $UPDATE_AVAILABLE; then
       git config pull.ff on
       git reset --hard
       git pull --force
@@ -55,7 +56,7 @@ checking_updates() {
     _doingthing raspi_install
   fi
 }
-check_update() {
+checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current != $remote ]; then
@@ -112,7 +113,7 @@ help() {
 }
 watcher() {
   while true; do
-    checking_updates
+    raspi_run
   done
 }
 init() {
