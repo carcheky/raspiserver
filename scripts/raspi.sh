@@ -85,7 +85,7 @@ docker_run() {
   else
     docker compose up -d --build --remove-orphans &>/dev/null
   fi
-    sudo chmod 777 /var/run/docker.sock
+  sudo chmod 777 /var/run/docker.sock
 }
 runremote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
@@ -93,12 +93,17 @@ runremote() {
 remove_lock() {
   rm "${lockfile}"
 }
-init() {
-  echo ${lockfile}
-  if touch "${lockfile}"; then
-    logic
-    remove_lock
-  fi
+_doingthing() {
+  CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
+  echo -n "${@}..."
+  $(${@}) &>/dev/null
+  echo -e "\\r${CHECK_MARK} ${@}"
+}
+_reinstall() {
+  sudo apt -y remove --purge "docker*" zsh
+  sudo rm -fr /usr/local/bin/raspi raspiserver .oh-my-zsh .zshrc .docker /run/user/1000/docker.pid
+  curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
+  raspi watcher
 }
 help() {
   cat /usr/local/bin/raspi | grep '()'
@@ -115,21 +120,13 @@ watcher() {
     fi
   done
 }
-logic() {
-  doingthing docker_run
-  doingthing mount_hd
-  doingthing docker_start
-}
-doingthing() {
-  CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
-  echo -n "${@}..."
-  $(${@}) &>/dev/null
-  echo -e "\\r${CHECK_MARK} ${@}"
-}
-reinstall() {
-  sudo apt -y remove --purge "docker*" zsh
-  sudo rm -fr /usr/local/bin/raspi raspiserver .oh-my-zsh .zshrc .docker /run/user/1000/docker.pid
-  curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
-  raspi watcher
+init() {
+  echo ${lockfile}
+  if touch "${lockfile}"; then
+    _doingthing docker_run
+    _doingthing mount_hd
+    _doingthing docker_start
+    remove_lock
+  fi
 }
 ${@:-watcher}
