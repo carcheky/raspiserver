@@ -69,7 +69,7 @@ run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
     echo $UPDATE_AVAILABLE
-    if [ "$UPDATE_AVAILABLE" == "true" ]; then
+    if [ $UPDATE_AVAILABLE ]; then
       echo "UPDATE AVAILABLE"
       git config pull.ff on
       git reset --hard
