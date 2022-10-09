@@ -43,7 +43,6 @@ install_basics() {
     if [ $(which docker) ]; then
       alias docker='sudo docker'
       sudo chmod 777 /var/run/docker.sock /run/user/1000/docker.sock
-
     fi
 
     raspi
