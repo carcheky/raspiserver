@@ -1,5 +1,4 @@
 #!/bin/bash
-lockfile="/tmp/raspi.lock.d"
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # set -eux
 install_basics() {
@@ -90,9 +89,6 @@ docker_run() {
 runremote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
-_remove_lock() {
-  rm "${lockfile}"
-}
 _doingthing() {
   CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
   echo -n "${@}..."
@@ -121,12 +117,13 @@ watcher() {
   done
 }
 init() {
+  lockfile="/tmp/raspi.lock.d"
   echo ${lockfile}
   if touch "${lockfile}"; then
     _doingthing docker_run
     _doingthing mount_hd
     _doingthing docker_start
-    _remove_lock
+    rm "${lockfile}"
   fi
 }
 ${@:-watcher}
