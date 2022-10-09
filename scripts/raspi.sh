@@ -134,6 +134,7 @@ retry() {
   sleep 1 && echo -en "\\r Reinstalando en 1..."
   echo ""
   remote
+  sudo reboot
 }
 help() {
   cat /usr/bin/raspi | grep '{'
