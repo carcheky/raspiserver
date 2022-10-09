@@ -24,7 +24,7 @@ add_key
 # raspiserver_install
 
 while true; do
-  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit 0 &>/dev/null; do
+  while ! ssh carcheky@cckpi.local &>/dev/null; do
     sleep .1 && echo -en "\\r conectando..."
     sleep .1 && echo -en "\\r .conectando.."
     sleep .1 && echo -en "\\r ..conectando."
