@@ -121,7 +121,18 @@ remote() {
 _doingthing() {
   CHECK_MARK="\033[0;32m\xE2\x9C\x94\033[0m"
   echo -n "${@}..."
-  $(${@})
+    current=$(git rev-parse HEAD)
+  remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+  if [ $current != $remote ]; then
+    set -eux
+    echo "actualizando..."
+    git config pull.ff on 
+    git reset --hard 
+    git pull --force 
+    install_raspi_bin
+  else
+    echo "no se encontraron actualizaciones"
+  fi
   echo -e "\\r${CHECK_MARK} ${@}"
 }
 retry() {
