@@ -3,7 +3,9 @@ lockfile="/tmp/raspi.lock.d"
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # set -eux
 install_basics() {
-  sudo apt update
+  if [ ! $(which docker) ]; then
+    sudo apt update
+  fi
   if [ ! $(which git) ]; then
     sudo apt install git -y
   fi
