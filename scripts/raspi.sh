@@ -55,7 +55,7 @@ install() {
     # sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
     # rm get-docker.sh
-    sudo apt-get install \
+    sudo apt install \
       ca-certificates \
       curl \
       gnupg \
@@ -65,8 +65,9 @@ install() {
     echo \
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
       $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-    sudo apt-get update
-    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo apt update
+    sudo apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo groupadd docker
   fi
 
   if [ ! -d ~/raspiserver ]; then
