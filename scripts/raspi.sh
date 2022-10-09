@@ -23,6 +23,19 @@ install_basics() {
     sudo usermod -s /bin/zsh carcheky
     sudo chsh -s $(which zsh)
     sed -i s/'plugins=(git)'/'plugins=(git z docker composer zsh_carcheky)'/g ~/.zshrc
+    echo "
+    export PATH=/usr/bin:\$PATH
+    # export DOCKER_HOST=unix:///run/user/1000/docker.sock
+    export DOCKER_HOST=unix:///var/run/docker.sock
+    sudo chmod 777 /var/run/docker.sock
+    docker ps
+    
+    if [];then
+      alias docker='sudo docker'
+    fi
+    raspi watcher
+    
+    " >>~/.zshrc
   fi
 }
 install_raspi_bin() {
@@ -82,15 +95,7 @@ docker_run() {
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
-    echo "
-    export PATH=/usr/bin:\$PATH
-    # export DOCKER_HOST=unix:///run/user/1000/docker.sock
-    export DOCKER_HOST=unix:///var/run/docker.sock
-    sudo chmod 777 /var/run/docker.sock
-    docker ps
-    raspi watcher
-    alias docker='sudo docker'
-    " >>~/.zshrc
+
     rm get-docker.sh
     echo ${USER}
     alias docker='sudo docker'
