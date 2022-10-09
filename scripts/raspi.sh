@@ -34,8 +34,9 @@ install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
-  /usr/local/bin/raspi watcher
+  # /usr/local/bin/raspi watcher
   # runremote
+  sudo reboot
 }
 clone() {
   install_basics
