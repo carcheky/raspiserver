@@ -97,7 +97,7 @@ docker_install() {
   fi
 }
 docker_start() {
-  docker compose up -d --build --remove-orphans
+  docker compose up -d --build --remove-orphans &>/dev/null
   sudo chmod 777 /var/run/docker.sock
 }
 runremote() {
