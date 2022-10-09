@@ -61,11 +61,10 @@ check_update() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current != $remote ]; then
-UPDATE_AVAILABLE=true
+    UPDATE_AVAILABLE=true
   else
-UPDATE_AVAILABLE=false
+    UPDATE_AVAILABLE=false
   fi
-
 }
 hd_mount() {
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
