@@ -51,13 +51,14 @@ update() {
       git reset --hard
       git pull --force
       _install_bin
-      echo "REBOOTING ==========================================="
-      /usr/local/bin/raspi watcher
+      # echo "REBOOTING ==========================================="
+      # /usr/local/bin/raspi watcher
       exit 0
     fi
   else
+    echo "CLONING ==========================================="
     clone
-    raspi watcher
+    # raspi watcher
     exit 0
   fi
 }
