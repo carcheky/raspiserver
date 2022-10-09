@@ -108,7 +108,7 @@ runremote() {
 remove_lock() {
   rm "${lockfile}"
 }
-start() {
+init() {
   echo ${lockfile}
   if touch "${lockfile}"; then
     logic
@@ -124,7 +124,7 @@ watcher() {
   cd ~/raspiserver
   while true; do
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
-      logic
+      init
       docker ps
       sleep 15
     else
