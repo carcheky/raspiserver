@@ -4,7 +4,7 @@
 add_key() {
   # while ! ssh carcheky@cckpi.local ls &>/dev/null ; do
   while true; do
-  echo -n "comprobando...\r"
+  echo -n "comprobando..."
   sleep 1
   bash scripts/raspi-connect.sh
   done
