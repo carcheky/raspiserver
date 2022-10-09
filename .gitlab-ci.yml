@@ -15,7 +15,7 @@ release:
   only:
     - main
   when: delayed
-  start_in: 5 minutes
+  start_in: 15 minutes
   script:
     - cp .releaserc.changelog .releaserc
     - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
