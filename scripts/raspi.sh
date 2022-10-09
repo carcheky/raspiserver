@@ -96,9 +96,9 @@ checking_updates() {
   if [ $current != $remote ]; then
     echo $current
     echo $remote 
-    git config pull.ff on &>/dev/null
-    git reset --hard &>/dev/null
-    git pull --force &>/dev/null
+    git config pull.ff on 
+    git reset --hard 
+    git pull --force 
     _doingthing install_raspi_bin
   fi
 }
