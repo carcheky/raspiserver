@@ -113,7 +113,7 @@ docker_run() {
   docker compose up -d --build --remove-orphans 
   sudo chmod 777 /var/run/docker.sock
 } &>/dev/null
-runremote() {
+remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
 }
 _doingthing() {
