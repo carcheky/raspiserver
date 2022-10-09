@@ -6,9 +6,11 @@ add_key() {
   sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
   ssh -oStrictHostKeyChecking=no carcheky@cckpi.local $command
 }
-
+raspiserver_install(){
+  ssh -oStrictHostKeyChecking=no carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+}
 add_key
-
+raspiserver_install
 while true; do
   ssh carcheky@cckpi.local
   sleep 1
