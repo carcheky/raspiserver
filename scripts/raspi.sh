@@ -68,14 +68,6 @@ install() {
 run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
-    echo $UPDATE_AVAILABLE
-    if [ $UPDATE_AVAILABLE ]; then
-      echo "UPDATE AVAILABLE"
-      git config pull.ff on
-      git reset --hard
-      git pull --force
-      _doingthing install_raspi_bin
-    fi
     if touch "/tmp/raspi.lock.d"; then
       _doingthing hd_mount
       _doingthing docker_run
@@ -90,9 +82,12 @@ checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current != $remote ]; then
-    UPDATE_AVAILABLE=true
-  else
-    UPDATE_AVAILABLE=false
+    echo "updating..."
+    git config pull.ff on
+    git reset --hard
+    git pull --force
+    sleep 3
+    _doingthing install_raspi_bin
   fi
 }
 hd_mount() {
