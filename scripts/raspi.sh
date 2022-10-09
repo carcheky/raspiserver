@@ -46,15 +46,15 @@ clone() {
 }
 checking_updates() {
   if cd ~/raspiserver; then
-    if [ $(git rev-parse HEAD) != $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
-      echo "UPDATING ==========================================="
+    current=$(git rev-parse HEAD)
+    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+    if [ $current != $remote ]; then
       git config pull.ff on
       git reset --hard
       git pull --force
       install_raspi_bin
     fi
   else
-    echo "CLONING ==========================================="
     clone
   fi
 }
