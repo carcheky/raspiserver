@@ -52,11 +52,11 @@ _install() {
     _install_raspi_bin
   fi
   if [ ! $(which docker) ]; then
-    sudo apt update
     # curl -fsSL https://get.docker.com -o get-docker.sh
     # sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
     # rm get-docker.sh
+    sudo apt update
     sudo apt install \
       ca-certificates \
       curl \
