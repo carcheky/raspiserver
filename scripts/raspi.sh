@@ -47,9 +47,13 @@ raspi_run() {
       git config pull.ff on
       git reset --hard
       git pull --force
-      install_raspi_bin
+      _doingthing install_raspi_bin
     else
-      init
+      if touch "/tmp/raspi.lock.d"; then
+        _doingthing docker_run
+        _doingthing hd_mount
+        rm "/tmp/raspi.lock.d"
+      fi
       sleep 5
     fi
   else
@@ -115,14 +119,6 @@ watcher() {
   while true; do
     raspi_run
   done
-}
-init() {
-  lockfile="/tmp/raspi.lock.d"
-  if touch "${lockfile}"; then
-    _doingthing docker_run
-    _doingthing hd_mount
-    rm "${lockfile}"
-  fi
 }
 raspi_install
 ${@:-watcher}
