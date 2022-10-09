@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## [5.0.3](https://gitlab.com/carcheky/raspiserver/compare/v5.0.2...v5.0.3) (2022-10-09)
+
+
+### Bug Fixes
+
+*  Oct 9, 2022, 10:49 AM ([2bae519](https://gitlab.com/carcheky/raspiserver/commit/2bae519fe4acced61021e71cefbf33f6197b0d41))
+*  Oct 9, 2022, 10:51 AM ([c3a5845](https://gitlab.com/carcheky/raspiserver/commit/c3a5845360d4f08f04f65ee6e5c8f6be06dc8614))
+*  Oct 9, 2022, 10:52 AM ([c336072](https://gitlab.com/carcheky/raspiserver/commit/c336072efeb2f610df45d823a37540ba85051d62))
+*  Oct 9, 2022, 10:52 AM ([62b3e13](https://gitlab.com/carcheky/raspiserver/commit/62b3e133014ba9d2e640e2c478468c471b066cd8))
+*  Oct 9, 2022, 10:54 AM ([0238456](https://gitlab.com/carcheky/raspiserver/commit/0238456f2c42ca8bdf56e1f4adeaf1ac328557ba))
+*  Oct 9, 2022, 10:57 AM ([f75e0d7](https://gitlab.com/carcheky/raspiserver/commit/f75e0d7c76af2647e4ef3e8d8e2c74e1d51d1dfb))
+*  Oct 9, 2022, 10:58 AM ([cbcda2d](https://gitlab.com/carcheky/raspiserver/commit/cbcda2dba8b9336869706180a917c6af6828a73f))
+*  Oct 9, 2022, 11:00 AM ([1aba882](https://gitlab.com/carcheky/raspiserver/commit/1aba88271eb5bfb54243fd2a46d43e2e1a0bfc6e))
+*  Oct 9, 2022, 11:00 AM ([9d9f8c7](https://gitlab.com/carcheky/raspiserver/commit/9d9f8c714e1825f0a7f6c9bc710110c500843f3c))
+*  Oct 9, 2022, 11:02 AM ([a5d6010](https://gitlab.com/carcheky/raspiserver/commit/a5d6010fc684275eef7e36ff1d18670c872a8445))
+*  Oct 9, 2022, 11:02 AM ([95a8c51](https://gitlab.com/carcheky/raspiserver/commit/95a8c514f333c9fb6e43a8b65a306b22e1f1d069))
+*  Oct 9, 2022, 11:03 AM ([9e3b5ad](https://gitlab.com/carcheky/raspiserver/commit/9e3b5addd77636899b4ab834306859b9297ccb92))
+*  Oct 9, 2022, 11:04 AM ([df98219](https://gitlab.com/carcheky/raspiserver/commit/df982191e7d72ac4b146b743463935774e4e8ffb))
+*  Oct 9, 2022, 11:04 AM ([c81933f](https://gitlab.com/carcheky/raspiserver/commit/c81933f8f14f934fa858c879b0e4035427bef3cb))
+*  Oct 9, 2022, 11:05 AM ([d0cec7d](https://gitlab.com/carcheky/raspiserver/commit/d0cec7dc1948f2a30fbf6d967cc8cbc48c4d6a48))
+*  Oct 9, 2022, 11:07 AM ([4f28542](https://gitlab.com/carcheky/raspiserver/commit/4f285426e065fe930565083b0fc698c66da0ef7a))
+
 ## [5.0.2](https://gitlab.com/carcheky/raspiserver/compare/v5.0.1...v5.0.2) (2022-10-08)
 
 
