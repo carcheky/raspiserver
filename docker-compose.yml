@@ -3,7 +3,7 @@ version: '3.7'
 services:
 # portainer
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ce
     container_name: portainer
     ports:
       - 9000:9000
@@ -16,7 +16,7 @@ services:
 
 # jellyfin
   jellyfin:
-    image: linuxserver/jellyfin:latest
+    image: linuxserver/jellyfin
     container_name: jellyfin
     environment:
       - PUID=1000
