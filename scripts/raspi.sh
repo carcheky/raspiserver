@@ -134,5 +134,4 @@ watcher() {
     sleep 5
   done
 }
-install
 ${@:-watcher}
