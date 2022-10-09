@@ -78,8 +78,6 @@ run() {
   if cd ~/raspiserver; then
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-    echo $current
-    echo $remote
     checking_updates
     docker_run
   else
