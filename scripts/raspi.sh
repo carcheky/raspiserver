@@ -90,7 +90,6 @@ run() {
   fi
 }
 checking_updates() {
-  echo -en "\\r comprobando actualizaciones..."
   if [ $current = $remote ]; then
         git config comprobando actualizaciones...n
     git reset --hard
