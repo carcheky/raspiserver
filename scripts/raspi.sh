@@ -53,13 +53,13 @@ update() {
       _install_bin
       # echo "REBOOTING ==========================================="
       # /usr/local/bin/raspi watcher
-      exit 0
+      # exit 0
     fi
   else
     echo "CLONING ==========================================="
     clone
     # raspi watcher
-    exit 0
+    # exit 0
   fi
 }
 _mount() {
