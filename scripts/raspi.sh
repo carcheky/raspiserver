@@ -76,7 +76,7 @@ install() {
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     install_raspi_bin
   fi
-}
+} &>/dev/null
 run() {
   if cd ~/raspiserver; then
     _doingthing checking_updates
@@ -96,7 +96,7 @@ checking_updates() {
     git pull --force
     install_raspi_bin
   fi
-}
+} &>/dev/null
 mount_hd() {
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
