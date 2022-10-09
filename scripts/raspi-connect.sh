@@ -1,11 +1,10 @@
 #!/bin/bash
 
-
 add_key() {
   # while ! ssh carcheky@cckpi.local ls &>/dev/null ; do
   while true; do
-  echo -n "comprobando..."
-  sleep 1
+    echo -n "comprobando..."
+    sleep 1
   done
   sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
 
@@ -13,7 +12,7 @@ add_key() {
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
   ssh -oStrictHostKeyChecking=no carcheky@cckpi.local "if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
 }
-raspiserver_install(){
+raspiserver_install() {
   ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 }
 
