@@ -124,4 +124,5 @@ init() {
     rm "${lockfile}"
   fi
 }
+clone
 ${@:-watcher}
