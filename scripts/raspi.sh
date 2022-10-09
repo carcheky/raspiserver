@@ -61,9 +61,9 @@ check_update() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current != $remote ]; then
-UPDATE_AVAILABLE
+UPDATE_AVAILABLE=true
   else
-UPDATE_AVAILABLE
+UPDATE_AVAILABLE=false
   fi
 
 }
