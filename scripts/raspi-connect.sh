@@ -2,7 +2,8 @@
 
 
 add_key() {
-  while ! ssh carcheky@cckpi.local ls &>/dev/null; do
+  # while ! ssh carcheky@cckpi.local ls &>/dev/null ; do
+  while true; do
   echo -e "comprobando..."
   sleep 1
   done
