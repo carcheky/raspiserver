@@ -91,7 +91,7 @@ run() {
 checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-  echo "========================="
+  echo "==========================================================================="
   echo "current version: $current"
   echo "   last version: $remote"
   if [ $current = $remote ]; then
