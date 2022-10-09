@@ -12,7 +12,10 @@ echo "
 # update date
 date
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-
+current=$(git rev-parse HEAD)
+remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+echo $current
+echo $remote
 # aliases
 alias docker='sudo docker'
 
@@ -86,8 +89,6 @@ run() {
   fi
 }
 checking_updates() {
-  current=$(git rev-parse HEAD)
-  remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current = $remote ]; then
     exit 0
   else
