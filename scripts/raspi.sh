@@ -84,7 +84,6 @@ run() {
       _doingthing docker_run
       rm "/tmp/raspi.lock.d"
     fi
-    sleep 5
   else
     _doingthing install
   fi
@@ -148,6 +147,7 @@ help() {
 watcher() {
   while true; do
     run
+    # sleep 5
   done
 }
 install
