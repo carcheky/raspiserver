@@ -50,7 +50,7 @@ install_basics() {
     rm get-docker.sh
     docker run alpine echo hola mundo
   fi
-} 
+}
 install_raspi_bin() {
   # sudo cp ~/raspiserver/rc.local /etc/rc.local
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
@@ -76,14 +76,13 @@ raspi_run() {
       git reset --hard
       git pull --force
       _doingthing install_raspi_bin
-    else
-      if touch "/tmp/raspi.lock.d"; then
-        _doingthing docker_run
-        _doingthing hd_mount
-        rm "/tmp/raspi.lock.d"
-      fi
-      sleep 5
     fi
+    if touch "/tmp/raspi.lock.d"; then
+      _doingthing docker_run
+      _doingthing hd_mount
+      rm "/tmp/raspi.lock.d"
+    fi
+    sleep 5
   else
     _doingthing raspi_install
   fi
