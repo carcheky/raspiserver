@@ -93,8 +93,8 @@ checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current != $remote ]; then
-    echo {$current}
-    echo {$remote} 
+    echo ${current}
+    echo ${remote} 
     git config pull.ff on 
     git reset --hard 
     git pull --force 
