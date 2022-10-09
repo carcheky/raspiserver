@@ -40,6 +40,10 @@ install_basics() {
     raspi watcher
 
     " >>~/.zshrc
+    echo "
+    
+    alias runremote=""
+    " >>~/.bashrc
   fi
   if [ ! $(which docker) ]; then
     curl -fsSL https://get.docker.com -o get-docker.sh
