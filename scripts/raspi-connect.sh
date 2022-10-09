@@ -2,6 +2,7 @@
 
 add_key() {
   while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
+    echo -en " \\r waiting"
     sleep 1
   done
   key=$(cat ~/.ssh/id_rsa.pub)
