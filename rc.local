@@ -1,8 +1,8 @@
 #!/bin/sh -e
 
-sleep 15
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 # curl https://gitlab.com/carcheky/raspi/-/raw/main/scripts/raspi.sh | bash
+sleep 15
 cd /home/carcheky/raspiserver && docker compose restart
 exit 0
 
