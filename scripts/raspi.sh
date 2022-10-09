@@ -46,7 +46,7 @@ raspi_clone() {
     raspi_install
   fi
 }
-raspi_update() {
+update() {
   if cd ~/raspiserver; then
     if [ $(git rev-parse HEAD) != $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
       echo "UPDATING ==========================================="
@@ -64,8 +64,8 @@ raspi_update() {
     exit 0
   fi
 }
-raspi_mount() {
-  # echo "[5/7] raspi_mount ===================================="
+_mount() {
+  # echo "[5/7] _mount ===================================="
   if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
     sudo mkdir -p /media/carcheky/HDCCK/
     sudo chmod 770 /media/carcheky/HDCCK/
@@ -120,7 +120,7 @@ help() {
   cat /usr/local/bin/raspi | grep '()'
 }
 watcher() {
-  raspi_update
+  update
   cd ~/raspiserver
   while true; do
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
@@ -128,13 +128,13 @@ watcher() {
       docker ps
       sleep 15
     else
-      raspi_update
+      update
     fi
   done
 }
 logic() {
   doingthing docker_install
-  doingthing raspi_mount
+  doingthing _mount
   doingthing docker_start
 }
 doingthing() {
