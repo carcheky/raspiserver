@@ -108,6 +108,7 @@ watcher() {
   cd ~/raspiserver
   while true; do
     if [ $(git rev-parse HEAD) = $(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1) ]; then
+      _doingthing "checking updates"
       init
       sleep 15
     else
