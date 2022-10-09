@@ -1,7 +1,6 @@
 #!/bin/bash
 
 add_key() {
-  sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
   while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
     sleep 1
   done
@@ -13,10 +12,8 @@ raspiserver_install() {
   ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 }
 
-# add_key
-# raspiserver_install
-
 while true; do
+  add_key
   # ssh carcheky@cckpi.local
-  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  raspiserver_install
 done
