@@ -36,7 +36,7 @@ _install() {
     echo "
     
     export PATH=/usr/bin:\$PATH
-    
+    alias reboot='sudo reboot'
     export DOCKER_HOST=unix:///var/run/docker.sock
     if [ \$(which docker) ]; then
       sleep 15
@@ -68,7 +68,6 @@ _install() {
     sudo usermod -aG docker $USER
     sudo reboot
   fi
-
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     _install_raspi_bin
@@ -77,13 +76,13 @@ _install() {
 _install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
+  docker compose stop
   sudo reboot
   exit 0
 }
 run() {
   if cd ~/raspiserver &>/dev/null; then
-    current=$(git rev-parse HEAD)
-    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+
     update
     docker_run
   else
@@ -91,6 +90,8 @@ run() {
   fi
 }
 update() {
+  current=$(git rev-parse HEAD)
+  remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current = $remote ]; then
     echo "no hay actualizaciones nuevas"
   else
@@ -143,4 +144,4 @@ watcher() {
     sleep 60
   done
 }
-${@:-watcher}
+${@:-run}
