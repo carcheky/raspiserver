@@ -38,7 +38,6 @@ install() {
 }
 clone() {
   install_basics
-  install_zsh
   if [ ! -d ~/raspiserver ]; then
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     install
