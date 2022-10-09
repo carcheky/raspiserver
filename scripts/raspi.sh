@@ -65,7 +65,7 @@ _install() {
       "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
       $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
     sudo apt update
-    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker compose-plugin
     sudo groupadd docker
     sudo usermod -aG docker $USER
     sudo reboot
@@ -113,7 +113,7 @@ mount_hd() {
 docker_run() {
   if mount_hd; then
     docker compose pull
-    docker-compose up -d --remove-orphans
+    docker compose up -d --remove-orphans
   fi
 }
 remote() {
@@ -121,7 +121,7 @@ remote() {
 }
 retry() {
   cd ~/raspiserver
-  docker-compose down
+  docker compose down
   docker-system prune -af
   sudo dpkg --configure -a
   sudo apt -y remove --purge "docker*" containerd runc
