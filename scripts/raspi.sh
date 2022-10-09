@@ -18,32 +18,6 @@ _install() {
     sudo apt update
     sudo apt install git vim uidmap -y
   fi
-  if [ ! -d ~/raspiserver ]; then
-    git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    _install_raspi_bin
-  fi
-  if [ ! $(which docker) ]; then
-    sudo apt update
-    # curl -fsSL https://get.docker.com -o get-docker.sh
-    # sudo sh get-docker.sh
-    # dockerd-rootless-setuptool.sh install --force
-    # rm get-docker.sh
-    sudo apt install \
-      ca-certificates \
-      curl \
-      gnupg \
-      lsb-release
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
-    sudo apt update
-    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    sudo groupadd docker
-    sudo usermod -aG docker $USER
-    sudo reboot
-  fi
   if [ ! -f ~/.zshrc ]; then
     sudo apt update
     sudo apt install zsh -y
@@ -73,6 +47,33 @@ _install() {
 
     " >>~/.zshrc
   fi
+  if [ ! -d ~/raspiserver ]; then
+    git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
+    _install_raspi_bin
+  fi
+  if [ ! $(which docker) ]; then
+    sudo apt update
+    # curl -fsSL https://get.docker.com -o get-docker.sh
+    # sudo sh get-docker.sh
+    # dockerd-rootless-setuptool.sh install --force
+    # rm get-docker.sh
+    sudo apt install \
+      ca-certificates \
+      curl \
+      gnupg \
+      lsb-release
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+    sudo apt update
+    sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo groupadd docker
+    sudo usermod -aG docker $USER
+    sudo reboot
+  fi
+
 }
 _install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
