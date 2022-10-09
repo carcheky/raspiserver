@@ -76,7 +76,6 @@ _install() {
 _install_raspi_bin() {
   sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/bin/raspi
   sudo chmod +x /usr/bin/raspi
-  docker compose stop
   sudo reboot
   exit 0
 }
