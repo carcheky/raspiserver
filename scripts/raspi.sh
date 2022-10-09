@@ -89,7 +89,7 @@ run() {
   fi
 }
 checking_updates() {
-  echo -e
+  sleep .1 && echo -en "\\r ..conectando."
   if [ $current = $remote ]; then
     sleep .2
   else
