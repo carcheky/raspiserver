@@ -91,9 +91,10 @@ run() {
 checking_updates() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+  echo "current version: $current"
+  echo "   last version: $remote"
   if [ $current = $remote ]; then
     echo "no se encontraron actualizaciones"
-    echo "version: $current"
   else
     echo "actualizando a $remote desde $current..."
     git config pull.ff on 
