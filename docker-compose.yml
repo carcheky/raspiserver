@@ -14,3 +14,4 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /raspi/MOUNTED_HD/raspiserver/data/portainer/data:/data 
+    command: --admin-password 
