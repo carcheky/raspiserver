@@ -41,3 +41,4 @@ rm -fr /tmp/raspi-connect.sh
 while ! curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >/tmp/raspi-connect.sh ; do
   sleep 1
 done
+bash /tmp/raspi-connect.sh
