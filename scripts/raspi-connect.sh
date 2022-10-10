@@ -23,11 +23,13 @@ run() {
     echo -en " \\r waiting script..."
   done
   # ssh carcheky@cckpi.local
+echo "###################################################################################"
+
   raspiserver_install
 }
 
 run
 
 echo "###################################################################################"
-sleep 15
-bash scripts/raspi-connect.sh
+# sleep 15
+# bash scripts/raspi-connect.sh
