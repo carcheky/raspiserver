@@ -1,7 +1,7 @@
 #!/bin/bash
 
 add_key() {
-  ssh-keygen -f "/home/user/.ssh/known_hosts" -R "cckpi.local" 
+  sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
   while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit ; do
     echo -en " \\r waiting key.."
     sleep 1
