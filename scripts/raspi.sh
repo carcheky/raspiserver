@@ -134,13 +134,14 @@ retry() {
     /usr/bin/raspi \
     /usr/local/bin/raspi \
     /raspi/
-    ~/.oh-my-zsh \
+  ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
     /run/user/1000/docker.pid \
     /var/run/docker.sock
   # remote
   # sudo reboot
+  exit 0
 }
 help() {
   cat /usr/local/bin/raspi | grep '{'
