@@ -13,6 +13,7 @@ add_key() {
     ssh ${USER}@${HOST} sudo apt update
     ssh ${USER}@${HOST} sudo apt upgrade -y
     ssh ${USER}@${HOST} touch /tmp/updated
+  fi
   echo ""
 }
 
