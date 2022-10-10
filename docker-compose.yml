@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+# portainer
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    ports:
+      - 9000:9000
+      - 8000:8000
+      - 9443:9443
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /media/carcheky/HDCCK/raspiserver/data/portainer/data:/data 
