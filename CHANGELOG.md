@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [5.0.15](https://gitlab.com/carcheky/raspiserver/compare/v5.0.14...v5.0.15) (2022-10-10)
+
+
+### Bug Fixes
+
+*  Oct 10, 2022, 4:42 PM ([1752e11](https://gitlab.com/carcheky/raspiserver/commit/1752e11da5a27755f09b689aebb4e38e1d631aeb))
+
 ## [5.0.14](https://gitlab.com/carcheky/raspiserver/compare/v5.0.13...v5.0.14) (2022-10-10)
 
 
