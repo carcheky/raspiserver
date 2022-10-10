@@ -28,7 +28,7 @@ read option
 
 if [[ $option == "r" ]]; then
   echo reinstalando
-  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run  -s -- retry'
+  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
   run
   run
   exit 0
