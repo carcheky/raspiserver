@@ -138,7 +138,7 @@ retry() {
   sleep 1 && echo -en "\\r Reinstalando en 2..."
   sleep 1 && echo -en "\\r Reinstalando en 1..."
   echo ""
-  remote
+  # remote
   reboot
 }
 help() {
