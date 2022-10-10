@@ -136,7 +136,7 @@ mount_hd() {
 }
 docker_run() {
   if mount_hd; then
-    docker compose up -d --remove-orphans --build
+    docker compose up -d --remove-orphans --build --force-recreate
   fi
 }
 remote() {
