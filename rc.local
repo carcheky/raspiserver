@@ -2,7 +2,7 @@
 
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 
-sudo mount -L HDCCK /raspi/MOUNTED_HD;
-raspi watcher &
+sudo mount -L HDCCK /raspi/MOUNTED_HD
+bash /usr/local/bin/raspi watcher &
 
 exit 0
