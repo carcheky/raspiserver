@@ -38,6 +38,8 @@ read option
 
 if [[ $option == "r" ]]; then
   echo reinstalando
-  ssh carcheky@192.168.68.136 raspi retry
+  ssh carcheky@192.168.68.136 
+  # ssh carcheky@192.168.68.136 raspi run
+  # ssh carcheky@192.168.68.136 raspi retry
 fi
 bash scripts/raspi-connect.sh
