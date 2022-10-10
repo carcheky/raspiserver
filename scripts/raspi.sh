@@ -126,6 +126,7 @@ update() {
     git config pull.ff on >/dev/null
     git reset --hard >/dev/null
     git pull --force >/dev/null
+    docker_run
     _install_raspi_bin
   fi
 }
@@ -143,9 +144,7 @@ mount_hd() {
   done
 }
 docker_run() {
-  while ! -d /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config ; do
-    mount_hd
-  done
+  mount_hd
   docker compose up -d --remove-orphans
 }
 remote() {
