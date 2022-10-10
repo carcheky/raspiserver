@@ -88,7 +88,7 @@ _install() {
   fi
 }
 _install_raspi_bin() {
-  sudo cp -fr "/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
+  sudo cp -fr "/raspi/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   sudo reboot
   exit 0
