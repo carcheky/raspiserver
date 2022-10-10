@@ -10,7 +10,7 @@ add_key() {
   ssh -oStrictHostKeyChecking=no carcheky@cckpi.local ${command}
 }
 raspiserver_install() {
-  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash'
 }
 
 add_key
