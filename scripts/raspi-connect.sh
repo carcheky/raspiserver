@@ -5,7 +5,7 @@ command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authoriz
 
 add_key() {
   sudo rm -fr /home/user/.ssh/known_hosts /home/user/.ssh/known_hosts.old /home/user/.ssh/authorized_keys /mnt/c/Users/carch/.ssh/known_hosts
-  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ${command} ; do
+  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ${command}; do
     echo "waiting key..."
     sleep 1
   done
@@ -19,13 +19,12 @@ run() {
   done
   echo "###################################################################################"
 
-  
 }
-echo "___________________________________________________________________________________"
 
 
 add_key
 
+echo "___________________________________________________________________________________"
 echo "press key to run, enter 'r' to uninstall first"
 read option
 
@@ -39,4 +38,4 @@ fi
 
 run
 
-curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >> raspi-connect.sh && bash raspi-connect.sh
+curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >>raspi-connect.sh && bash raspi-connect.sh
