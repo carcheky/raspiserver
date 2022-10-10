@@ -30,6 +30,9 @@ run() {
 }
 
 run
+run
+run
+run
 
 echo "###################################################################################"
 
@@ -40,7 +43,8 @@ if [[ $option == "r" ]]; then
   echo reinstalando
   ssh carcheky@192.168.68.136 raspi retry
 fi
-# ssh carcheky@192.168.68.136 
+
+# ssh carcheky@192.168.68.136
 # ssh carcheky@192.168.68.136 raspi run
 # sleep 160
 bash scripts/raspi-connect.sh
