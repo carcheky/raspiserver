@@ -171,6 +171,7 @@ remote() {
 }
 ## retry: uninstall and exit
 retry() {
+  sudo dpkg --configure -a
   if [ $(which docker) ]; then
     sudo systemctl stop docker
   fi
