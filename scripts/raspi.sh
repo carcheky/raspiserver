@@ -129,7 +129,9 @@ mount_hd() {
   if [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; then
     sudo mkdir -p /raspi/MOUNTED_HD/
     sudo chmod 770 /raspi/MOUNTED_HD/
-    sudo mount -L HDCCK /raspi/MOUNTED_HD
+    while sudo mount -L HDCCK /raspi/MOUNTED_HD; do
+      sleep 1
+    done
   fi
 }
 docker_run() {
