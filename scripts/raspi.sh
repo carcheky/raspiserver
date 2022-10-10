@@ -133,8 +133,8 @@ retry() {
   sudo rm -fr \
     /usr/bin/raspi \
     /usr/local/bin/raspi \
-    /raspi/
-  ~/.oh-my-zsh \
+    /raspi/ \
+    ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
     /run/user/1000/docker.pid \
