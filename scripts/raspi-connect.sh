@@ -12,7 +12,7 @@ add_key() {
   if [ ! -f ssh ${USER}@${HOST}:/tmp/updated ]; then
     ssh ${USER}@${HOST} sudo apt update
     ssh ${USER}@${HOST} sudo apt upgrade -y
-    ssh ${USER}@${HOST} sudo touch /tmp/updated
+    ssh ${USER}@${HOST} touch /tmp/updated
   echo ""
 }
 
