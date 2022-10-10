@@ -32,8 +32,6 @@ run() {
 run
 
 echo "###################################################################################"
-# sleep 15
-
 echo "press key to rerun, enter 'r' to retry"
 read option
 
