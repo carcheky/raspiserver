@@ -7,6 +7,6 @@ while ! sudo mount -L HDCCK /raspi/MOUNTED_HD; do
   sleep 1
 done
 
-raspi run &
+raspi watcher &
 
 exit 0
