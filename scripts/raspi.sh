@@ -129,7 +129,7 @@ mount_hd() {
   if [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; then
     sudo mkdir -p /raspi/MOUNTED_HD/
     sudo chmod 777 /raspi/MOUNTED_HD/
-    sudo systemctl start docker
+    sudo systemctl restart docker
     while ! sudo mount -L HDCCK /raspi/MOUNTED_HD; do
       echo nop
       sleep 1
