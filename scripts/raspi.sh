@@ -22,21 +22,24 @@ _install() {
     sudo mkdir /raspi
   fi
   if [ $(which git) ]; then
-    echo "git ya está instalado"
+    echo "- git ya está instalado"
   else
+    echo "- instalando git..."
     sudo apt update
     sudo apt install git vim -y
   fi
   if [ -d /raspi/raspiserver ]; then
-    echo "raspiserver ya está instalado"
+    echo "- raspiserver ya está instalado"
   else
+    echo "- instalando raspiserver..."
     sudo chmod 777 /raspi
     git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
     _install_raspi_bin
   fi
   if [ -d ~/.oh-my-zsh ]; then
-    echo "zsh ya está instalado"
+    echo "- zsh ya está instalado"
   else
+    echo "- instalando zsh..."
     sudo apt update
     sudo apt install zsh -y
     if [ ! -d ~/.oh-my-zsh ]; then
@@ -68,8 +71,9 @@ _install() {
     " >>~/.zshrc
   fi
   if [ $(which docker) ]; then
-    echo "docker ya está instalado"
+    echo "- docker ya está instalado"
   else
+    echo "- instalando docker..."
     # curl -fsSL https://get.docker.com -o get-docker.sh
     # sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
@@ -88,20 +92,20 @@ _install() {
     sudo apt update
     sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
     if [ $(getent group docker) ]; then
-      echo "group docker exists."
+      echo "- group docker exists."
     else
-      echo "group docker does not exist."
+      echo "- group docker does not exist."
       sudo groupadd docker
     fi
     sudo usermod -aG docker $USER
-    echo "necesita reinicio"
+    echo "- necesita reinicio"
     sudo reboot
   fi
 }
 _install_raspi_bin() {
   sudo cp -fr "/raspi/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
-  echo "necesita reinicio"
+  echo "- necesita reinicio"
   sudo reboot
   exit 0
 }
@@ -116,9 +120,9 @@ update() {
   current=$(git rev-parse HEAD)
   remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
   if [ $current = $remote ]; then
-    echo "no hay actualizaciones nuevas"
+    echo "- no hay actualizaciones nuevas"
   else
-    echo "actualizando"
+    echo "- actualizando"
     git config pull.ff on >/dev/null
     git reset --hard >/dev/null
     git pull --force >/dev/null
