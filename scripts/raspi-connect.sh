@@ -27,5 +27,7 @@ run() {
 }
 
 run
-sleep 5
+
+echo "FIN"
+sleep 15
 bash scripts/raspi-connect.sh
