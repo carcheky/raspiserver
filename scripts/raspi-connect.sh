@@ -31,7 +31,7 @@ echo "##########################################################################
 
 
 
-echo "press key to rerun, enter 'r' to retry"
+echo "press key to run, enter 'r' to uninstall first"
 read option
 
 if [[ $option == "r" ]]; then
