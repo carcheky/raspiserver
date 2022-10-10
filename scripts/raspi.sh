@@ -116,17 +116,19 @@ run() {
   fi
 }
 update() {
-  current=$(git rev-parse HEAD)
-  remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-  if [ $current = $remote ]; then
-    echo "- no hay actualizaciones nuevas"
-  else
-    echo "- actualizando"
-    git config pull.ff on >/dev/null
-    git reset --hard >/dev/null
-    git pull --force >/dev/null
-    docker_run
-    _install_raspi_bin
+  if cd /raspi/raspiserver; then
+    current=$(git rev-parse HEAD)
+    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+    if [ $current = $remote ]; then
+      echo "- no hay actualizaciones nuevas"
+    else
+      echo "- actualizando"
+      git config pull.ff on >/dev/null
+      git reset --hard >/dev/null
+      git pull --force >/dev/null
+      docker_run
+      _install_raspi_bin
+    fi
   fi
 }
 mount_hd() {
