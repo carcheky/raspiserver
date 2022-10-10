@@ -31,11 +31,10 @@ if [[ $option == "r" ]]; then
   ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
   run
   run
-  exit 0
 fi
 
 run
 rm -fr /tmp/raspi-connect.sh
-while ! curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >>/tmp/raspi-connect.sh ; do
+while ! curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >/tmp/raspi-connect.sh ; do
   bash /tmp/raspi-connect.sh
 done
