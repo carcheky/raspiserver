@@ -17,7 +17,7 @@ raspiserver_install() {
 
 run() {
   add_key
-  while ! ssh carcheky@cckpi.local exit &>/dev/null; do
+  while ! ssh carcheky@cckpi.local ls &>/dev/null; do
     echo -en " \\r waiting script.."
     sleep 1
     echo -en " \\r waiting script..."
