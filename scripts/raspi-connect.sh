@@ -14,13 +14,17 @@ raspiserver_install() {
   ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 }
 
-add_key
-while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
-  echo -en " \\r waiting script.."
-  sleep 1
-  echo -en " \\r waiting script..."
-done
-# ssh carcheky@cckpi.local
-raspiserver_install
+run() {
+  add_key
+  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
+    echo -en " \\r waiting script.."
+    sleep 1
+    echo -en " \\r waiting script..."
+  done
+  # ssh carcheky@cckpi.local
+  raspiserver_install
+}
+
+run
 sleep 5
 bash scripts/raspi-connect.sh
