@@ -2,7 +2,7 @@
 
 add_key() {
   sudo rm -fr /home/user/.ssh/known_hosts /mnt/c/Users/carch/.ssh/known_hosts
-  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit ; do
+  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit >/dev/null; do
     echo -en " \\r waiting key.."
     sleep 1
     echo -en " \\r waiting key..."
@@ -17,7 +17,7 @@ raspiserver_install() {
 
 run() {
   add_key
-  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit ; do
+  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit  >/dev/null; do
     echo -en " \\r waiting script.."
     sleep 1
     echo -en " \\r waiting script..."
