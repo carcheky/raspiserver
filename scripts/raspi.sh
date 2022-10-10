@@ -16,7 +16,7 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 
 # set -eux
 
-# sctipts de ayuda, estos se llaman desde el resto de funciones
+# helper scripts
 _install() {
   sudo dpkg --configure -a
   if [ ! -d /raspi ]; then
