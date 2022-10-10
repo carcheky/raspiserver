@@ -15,9 +15,13 @@ raspiserver_install() {
 }
 
 add_key
-while true; do
-  # ssh carcheky@cckpi.local
-  raspiserver_install
-  sleep 5
+while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
+  echo -en " \\r waiting.."
+  sleep 1
+  echo -en " \\r waiting..."
+  sleep 1
 done
+# ssh carcheky@cckpi.local
+raspiserver_install
+sleep 5
 bash scripts/raspi-connect.sh
