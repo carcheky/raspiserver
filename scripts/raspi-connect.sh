@@ -35,5 +35,5 @@ if [[ $option == "r" ]]; then
 fi
 
 run
-
-curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >>raspi-connect.sh && bash raspi-connect.sh
+rm -fr /tmp/raspi-connect.sh
+curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >>/tmp/raspi-connect.sh && bash /tmp/raspi-connect.sh
