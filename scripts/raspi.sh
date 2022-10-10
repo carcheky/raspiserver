@@ -130,7 +130,7 @@ remote() {
 }
 retry() {
   sudo umount /raspi/MOUNTED_HD
-  sudo apt -y remove --purge "docker*" containerd runc zsh git
+  sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
     /usr/bin/raspi \
     /usr/local/bin/raspi \
