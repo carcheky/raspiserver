@@ -214,7 +214,7 @@ watcher() {
 log() {
   cat /raspi/raspi.log
 }
-## log: print raspi log
+## cd: cd raspiserver folder
 cd() {
   cd /raspi/raspiserver
 }
