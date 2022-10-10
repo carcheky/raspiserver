@@ -87,7 +87,12 @@ _install() {
       $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
     sudo apt update
     sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    sudo groupadd docker
+    if [ $(getent group docker) ]; then
+      echo "group docker exists."
+    else
+      echo "group docker does not exist."
+      sudo groupadd docker
+    fi
     sudo usermod -aG docker $USER
     sudo reboot
   fi
