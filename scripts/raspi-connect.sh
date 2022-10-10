@@ -51,7 +51,7 @@ if [[ $option == "f" ]]; then
 fi
 if [[ $option == "c" ]]; then
   read var
-  ssh ${USER}@${HOST} "raspi ${var}"
+  ssh ${USER}@${HOST} raspi ${var}
 fi
 
 bash scripts/raspi-connect.sh  
