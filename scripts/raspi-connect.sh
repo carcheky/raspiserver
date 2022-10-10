@@ -5,7 +5,7 @@ command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authoriz
 
 add_key() {
   sudo rm -fr /home/user/.ssh/known_hosts /home/user/.ssh/known_hosts.old /home/user/.ssh/authorized_keys /mnt/c/Users/carch/.ssh/known_hosts
-  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ${command} &>/dev/null; do
+  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ${command} ; do
     echo -en " \\r waiting key.."
     sleep 1
     echo -en " \\r waiting key..."
@@ -14,7 +14,6 @@ add_key() {
 }
 
 run() {
-  add_key
   while ! ssh carcheky@192.168.68.136 ls &>/dev/null; do
     echo -en " \\r waiting script.."
     sleep 1
@@ -30,6 +29,7 @@ run() {
 echo "###################################################################################"
 
 
+add_key
 
 echo "press key to run, enter 'r' to uninstall first"
 read option
