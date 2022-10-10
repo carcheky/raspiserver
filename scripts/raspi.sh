@@ -54,11 +54,12 @@ _install() {
 
     " >>~/.zshrc
   fi
-  if [ -d /raspiserver ]; then
+  if [ -d /raspi/raspiserver ]; then
     echo "raspiserver ya está instalado"
   else
-    sudo git clone https://gitlab.com/carcheky/raspiserver.git "/raspiserver"
-    sudo chmod 777 /raspiserver
+    sudo mkdir /raspi
+    sudo chmod 777 /raspi
+    git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
     _install_raspi_bin
   fi
   if [ $(which docker) ]; then
@@ -94,7 +95,7 @@ _install_raspi_bin() {
 }
 run() {
   _install
-  if cd /raspiserver; then
+  if cd /raspi/raspiserver; then
     update
     docker_run
   fi
@@ -113,10 +114,10 @@ update() {
   fi
 }
 mount_hd() {
-  if [ ! -d /MOUNTED_HD/BibliotecaMultimedia/ ]; then
-    sudo mkdir -p /MOUNTED_HD/
-    sudo chmod 770 /MOUNTED_HD/
-    sudo mount -U 2862B9A862B97AE0 /MOUNTED_HD
+  if [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/ ]; then
+    sudo mkdir -p /raspi/MOUNTED_HD/
+    sudo chmod 770 /raspi/MOUNTED_HD/
+    sudo mount -U 2862B9A862B97AE0 /raspi/MOUNTED_HD
   fi
 }
 docker_run() {
@@ -132,7 +133,7 @@ retry() {
   sudo rm -fr \
     /usr/bin/raspi \
     /usr/local/bin/raspi \
-    /raspiserver \
+    /raspi/raspiserver \
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
