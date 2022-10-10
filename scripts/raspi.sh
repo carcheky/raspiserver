@@ -137,7 +137,7 @@ mount_hd() {
 docker_run() {
   mount_hd
   if [ -d /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config ]; then
-    docker compose up -d --remove-orphans --build --force-recreate
+    docker compose up -d --remove-orphans
   fi
 }
 remote() {
