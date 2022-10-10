@@ -27,13 +27,9 @@ run() {
   echo "###################################################################################"
   ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run  -s -- run'
 }
-
-run
-run
-run
-run
-
 echo "###################################################################################"
+
+
 
 echo "press key to rerun, enter 'r' to retry"
 read option
@@ -43,7 +39,9 @@ if [[ $option == "r" ]]; then
   ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run  -s -- retry'
 fi
 
-# ssh carcheky@192.168.68.136
-# ssh carcheky@192.168.68.136 raspi run
-# sleep 160
+run
+run
+run
+run
+
 bash scripts/raspi-connect.sh
