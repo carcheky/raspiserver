@@ -42,5 +42,5 @@ if [[ $option == "r" ]]; then
 fi
 # ssh carcheky@192.168.68.136 
 # ssh carcheky@192.168.68.136 raspi run
-sleep 15
+sleep 160
 bash scripts/raspi-connect.sh
