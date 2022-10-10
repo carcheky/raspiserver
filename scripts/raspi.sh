@@ -165,6 +165,13 @@ up() {
     docker compose up -d --remove-orphans
   fi
 }
+## up: docker compose restart
+restart() {
+  mount
+  if cd /raspi/raspiserver; then
+    docker compose restart
+  fi
+}
 ## remote: run this script from remote repo
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
