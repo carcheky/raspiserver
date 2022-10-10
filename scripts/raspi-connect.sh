@@ -35,13 +35,13 @@ echo "enter 'r' to reboot"
 read option
 
 if [[ $option == "r" ]]; then
-  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
+  ssh ${USER}@${HOST} sudo reboot
 fi
 if [[ $option == "r" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
 if [[ $option == "t" ]]; then
-  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
+  ssh ${USER}@${HOST} top
 fi
 run
 
