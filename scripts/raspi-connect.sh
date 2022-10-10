@@ -1,7 +1,7 @@
 #!/bin/bash
 
 add_key() {
-  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
+  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 exit &>/dev/null; do
     echo -en " \\r waiting key.."
     sleep 1
     echo -en " \\r waiting key..."
@@ -9,24 +9,24 @@ add_key() {
   sudo rm -fr /home/user/.ssh/known_hosts /home/user/.ssh/known_hosts.old /home/user/.ssh/authorized_keys /mnt/c/Users/carch/.ssh/known_hosts
   key=$(cat ~/.ssh/id_rsa.pub)
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
-  sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local ${command}
+  sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ${command}
 }
 raspiserver_install() {
-  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 }
 
 run() {
   add_key
-  while ! ssh carcheky@cckpi.local ls &>/dev/null; do
+  while ! ssh carcheky@192.168.68.136 ls &>/dev/null; do
     echo -en " \\r waiting script.."
     sleep 1
     echo -en " \\r waiting script..."
   done
-  # ssh carcheky@cckpi.local
+  # ssh carcheky@192.168.68.136
   echo "###################################################################################"
-  # ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
-  # ssh carcheky@cckpi.local 'raspi run'
-  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  # ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  # ssh carcheky@192.168.68.136 'raspi run'
+  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 }
 
 run
