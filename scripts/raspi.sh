@@ -43,7 +43,7 @@ _install() {
     
     export PATH=/usr/bin:\$PATH
     alias reboot='sudo reboot'
-    export DOCKER_HOST=unix:///var/run/docker.sock
+    # export DOCKER_HOST=unix:///var/run/docker.sock
     # if [ \$(which docker) ]; then
     #   sleep 15
     #   alias docker='sudo docker'
@@ -85,8 +85,8 @@ _install() {
   fi
 }
 _install_raspi_bin() {
-  sudo cp -fr "${raspipath}/raspiserver/scripts/raspi.sh" /usr/bin/raspi
-  sudo chmod +x /usr/bin/raspi
+  sudo cp -fr "${raspipath}/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
+  sudo chmod +x /usr/local/bin/raspi
   sudo reboot
   exit 0
 }
@@ -143,7 +143,7 @@ retry() {
   # sudo reboot
 }
 help() {
-  cat /usr/bin/raspi | grep '{'
+  cat /usr/local/bin/raspi | grep '{'
 }
 watcher() {
   while true; do
