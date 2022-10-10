@@ -28,14 +28,6 @@ _install() {
     sudo apt update
     sudo apt install git vim -y
   fi
-  if [ -d /raspi/raspiserver ]; then
-    echo "- raspiserver ya está instalado"
-  else
-    echo "- instalando raspiserver..."
-    sudo chmod 777 /raspi
-    git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
-    _install_raspi_bin
-  fi
   if [ -d ~/.oh-my-zsh ]; then
     echo "- zsh ya está instalado"
   else
@@ -98,8 +90,14 @@ _install() {
       sudo groupadd docker
     fi
     sudo usermod -aG docker $USER
-    echo "- necesita reinicio"
-    sudo reboot
+  fi
+  if [ -d /raspi/raspiserver ]; then
+    echo "- raspiserver ya está instalado"
+  else
+    echo "- instalando raspiserver..."
+    sudo chmod 777 /raspi
+    git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    _install_raspi_bin
   fi
 }
 _install_raspi_bin() {
