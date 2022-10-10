@@ -14,7 +14,6 @@ add_key() {
 
 run() {
   while ! ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'; do
-  done
     echo "waiting script,.."
     sleep 1
   done
