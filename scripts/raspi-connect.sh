@@ -34,7 +34,7 @@ run
 echo "###################################################################################"
 
 echo "press key to rerun, enter 'r' to retry"
-# read option
+read option
 
 if [[ $option == "r" ]]; then
   echo reinstalando
@@ -42,5 +42,5 @@ if [[ $option == "r" ]]; then
 fi
 # ssh carcheky@192.168.68.136 
 # ssh carcheky@192.168.68.136 raspi run
-sleep 160
+# sleep 160
 bash scripts/raspi-connect.sh
