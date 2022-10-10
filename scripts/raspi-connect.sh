@@ -13,7 +13,9 @@ add_key() {
 }
 
 run() {
-  while ! ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'; do
+  while ! while ! ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | ba; do
+    -s -- run'; do
+  done
     echo "waiting script,.."
     sleep 1
   done
@@ -36,4 +38,6 @@ fi
 
 run
 rm -fr /tmp/raspi-connect.sh
-curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >>/tmp/raspi-connect.sh && bash /tmp/raspi-connect.sh
+while ! curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >>/tmp/raspi-connect.sh ; do
+  bash /tmp/raspi-connect.sh
+done
