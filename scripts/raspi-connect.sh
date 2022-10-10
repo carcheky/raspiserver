@@ -1,8 +1,8 @@
 #!/bin/bash
 
 add_key() {
-  ssh-keygen -f "/home/user/.ssh/known_hosts" -R "cckpi.local" &>/dev/null
-  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
+  ssh-keygen -f "/home/user/.ssh/known_hosts" -R "cckpi.local" 
+  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit ; do
     echo -en " \\r waiting key.."
     sleep 1
     echo -en " \\r waiting key..."
@@ -17,7 +17,7 @@ raspiserver_install() {
 
 run() {
   add_key
-  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
+  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit ; do
     echo -en " \\r waiting script.."
     sleep 1
     echo -en " \\r waiting script..."
