@@ -29,24 +29,24 @@ add_key
 
 echo "___________________________________________________________________________________"
 echo "press key to run"
-echo "  u) uninstall first"
-echo "  b) login"
-echo "  l) launch"
-echo "  r) reboot"
+echo "  i) login"
+echo "  r) run"
+echo "  p) reboot"
+echo "  o) reinstall"
 read option
 echo "___________________________________________________________________________________"
 
-if [[ $option == "r" ]]; then
-  ssh ${USER}@${HOST} sudo reboot
-fi
-if [[ $option == "u" ]]; then
-  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
-fi
-if [[ $option == "b" ]]; then
+if [[ $option == "i" ]]; then
   ssh ${USER}@${HOST}
 fi
-if [[ $option == "l" ]]; then
+if [[ $option == "r" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'
+fi
+if [[ $option == "p" ]]; then
+  ssh ${USER}@${HOST} sudo reboot
+fi
+if [[ $option == "o" ]]; then
+  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
 
 bash scripts/raspi-connect.sh  
