@@ -94,14 +94,14 @@ _install() {
       sudo groupadd docker
     fi
     sudo usermod -aG docker $USER
-    echo "need reboot"
+    echo "necesita reinicio"
     sudo reboot
   fi
 }
 _install_raspi_bin() {
   sudo cp -fr "/raspi/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
-  echo "need reboot"
+  echo "necesita reinicio"
   sudo reboot
   exit 0
 }
