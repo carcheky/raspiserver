@@ -135,7 +135,8 @@ mount_hd() {
   fi
 }
 docker_run() {
-  if mount_hd; then
+  mount_hd
+  if ; then
     docker compose up -d --remove-orphans --build --force-recreate
   fi
 }
