@@ -27,6 +27,13 @@ _install() {
     sudo apt update
     sudo apt install git vim -y
   fi
+  if [ -d /raspi/raspiserver ]; then
+    echo "raspiserver ya está instalado"
+  else
+    sudo chmod 777 /raspi
+    git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    _install_raspi_bin
+  fi
   if [ -d ~/.oh-my-zsh ]; then
     echo "zsh ya está instalado"
   else
@@ -59,13 +66,6 @@ _install() {
     # fi
 
     " >>~/.zshrc
-  fi
-  if [ -d /raspi/raspiserver ]; then
-    echo "raspiserver ya está instalado"
-  else
-    sudo chmod 777 /raspi
-    git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
-    _install_raspi_bin
   fi
   if [ $(which docker) ]; then
     echo "docker ya está instalado"
