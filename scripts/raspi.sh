@@ -133,7 +133,7 @@ update() {
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     if [ $current = $remote ]; then
-      echo -e "\u2022 no hay actualizaciones nuevas"
+      echo -e "\u2022 no hay actualizaciones disponibles"
     else
       echo -e "\u25E6 actualizando"
       git config pull.ff on >/dev/null
