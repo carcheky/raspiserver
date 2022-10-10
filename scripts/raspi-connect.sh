@@ -44,5 +44,5 @@ if [[ $option == "l" ]]; then
   ssh ${USER}@${HOST}
 fi
 run
-
+bash scripts/raspi-connect.sh  
 
