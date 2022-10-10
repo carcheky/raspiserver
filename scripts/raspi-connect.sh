@@ -12,7 +12,7 @@ add_key() {
   done
 }
 raspiserver_install() {
-  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'
 }
 
 run() {
@@ -26,7 +26,7 @@ run() {
   echo "###################################################################################"
   echo "###################################################################################"
   echo "###################################################################################"
-  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash  -s -- run'
+  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run  -s -- run'
 }
 
 run
