@@ -33,6 +33,7 @@ echo "  e) eogin"
 echo "  r) run"
 echo "  d) deboot"
 echo "  f) feinstall"
+echo "  c) custom"
 read option
 echo "___________________________________________________________________________________"
 
@@ -47,6 +48,10 @@ if [[ $option == "d" ]]; then
 fi
 if [[ $option == "f" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
+fi
+if [[ $option == "c" ]]; then
+  read var
+  ssh ${USER}@${HOST} raspi $@
 fi
 
 bash scripts/raspi-connect.sh  
