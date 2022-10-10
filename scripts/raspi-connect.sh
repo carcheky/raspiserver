@@ -2,9 +2,9 @@
 
 add_key() {
   while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
-    echo -en " \\r waiting.."
+    echo -en " \\r waiting key.."
     sleep 1
-    echo -en " \\r waiting..."
+    echo -en " \\r waiting key..."
   done
   key=$(cat ~/.ssh/id_rsa.pub)
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
@@ -16,10 +16,9 @@ raspiserver_install() {
 
 add_key
 while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
-  echo -en " \\r waiting.."
+  echo -en " \\r waiting script.."
   sleep 1
-  echo -en " \\r waiting..."
-  sleep 1
+  echo -en " \\r waiting script..."
 done
 # ssh carcheky@cckpi.local
 raspiserver_install
