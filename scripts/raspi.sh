@@ -16,6 +16,7 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 
 # set -eux
 
+# sctipts de ayuda, estos se llaman desde el resto de funciones
 _install() {
   sudo dpkg --configure -a
   if [ ! -d /raspi ]; then
@@ -108,13 +109,15 @@ _install_raspi_bin() {
   sudo reboot
   exit 0
 }
+## run: install, update & run
 run() {
   _install
   if cd /raspi/raspiserver; then
     update
-    docker_run
+    up
   fi
 }
+## update: if update, update and reboot
 update() {
   if cd /raspi/raspiserver; then
     current=$(git rev-parse HEAD)
@@ -126,11 +129,12 @@ update() {
       git config pull.ff on >/dev/null
       git reset --hard >/dev/null
       git pull --force >/dev/null
-      docker_run
+      up
       _install_raspi_bin
     fi
   fi
 }
+## mount hard disk
 mount() {
   while [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
     sudo mkdir -p /raspi/MOUNTED_HD/
@@ -144,13 +148,18 @@ mount() {
     done
   done
 }
-docker_run() {
+## up: docker compose up -d --remove-orphans
+up() {
   mount
-  docker compose up -d --remove-orphans
+  if cd /raspi/raspiserver; then
+    docker compose up -d --remove-orphans
+  fi
 }
+## remote: run this script from remote repo
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
 }
+## retry: uninstall and exit
 retry() {
   if [ $(which docker) ]; then
     sudo systemctl stop docker
@@ -168,13 +177,13 @@ retry() {
     ~/.docker \
     /run/user/1000/docker.pid \
     /var/run/docker.sock
-  # remote
-  # sudo reboot
   exit 0
 }
+## help: print this help
 help() {
-  cat /usr/local/bin/raspi | grep '{'
+  cat /usr/local/bin/raspi | grep '##'
 }
+## watcher: keep checking repo to update if new code available
 watcher() {
   while true; do
     update
