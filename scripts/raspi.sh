@@ -146,6 +146,7 @@ remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
 }
 retry() {
+  sudo systemctl stop docker
   sudo umount /raspi/MOUNTED_HD
   sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
