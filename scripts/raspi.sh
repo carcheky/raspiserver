@@ -18,7 +18,7 @@ set -eux
 
 _install() {
   sudo dpkg --configure -a
-  if [ -d /raspi ]; then
+  if [ ! -d /raspi ]; then
     sudo mkdir /raspi
   fi
   if [ $(which git) ]; then
