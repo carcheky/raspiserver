@@ -9,6 +9,8 @@ add_key() {
     echo "waiting key..."
     sleep 1
   done
+  ssh carcheky@192.168.68.136 sudo apt update
+  ssh carcheky@192.168.68.136 sudo apt upgrade -y
   echo ""
 }
 
