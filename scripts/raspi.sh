@@ -131,7 +131,7 @@ update() {
     fi
   fi
 }
-mount_hd() {
+mount() {
   while [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
     sudo mkdir -p /raspi/MOUNTED_HD/
     sudo chmod 777 /raspi/MOUNTED_HD/
@@ -145,7 +145,7 @@ mount_hd() {
   done
 }
 docker_run() {
-  mount_hd
+  mount
   docker compose up -d --remove-orphans
 }
 remote() {
