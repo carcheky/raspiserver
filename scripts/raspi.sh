@@ -50,8 +50,8 @@ _install() {
     echo "
     
     export PATH=/usr/bin:\$PATH
-    alias docker='sudo docker'
-    alias reboot='sudo reboot'
+    # alias docker='sudo docker'
+    # alias reboot='sudo reboot'
     # export DOCKER_HOST=unix:///var/run/docker.sock
     # if [ \$(which docker) ]; then
     #   sleep 15
