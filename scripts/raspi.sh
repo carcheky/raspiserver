@@ -143,10 +143,10 @@ mount_hd() {
   done
 }
 docker_run() {
-  mount_hd
-  if [ -d /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config ]; then
-    docker compose up -d --remove-orphans
-  fi
+  while ! -d /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config ; do
+    mount_hd
+  done
+  docker compose up -d --remove-orphans
 }
 remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
