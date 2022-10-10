@@ -34,6 +34,11 @@ run
 echo "###################################################################################"
 # sleep 15
 
-echo "press key to rerun"
-read
+echo "press key to rerun, enter 'r' to retry"
+read option
+
+if [ $option = 'r' ]; then
+  reinstalando
+  ssh carcheky@192.168.68.136 raspi retry
+fi
 bash scripts/raspi-connect.sh
