@@ -51,6 +51,12 @@ _install() {
 
     " >>~/.zshrc
   fi
+  if [ -d ~/raspiserver ]; then
+    echo "raspiserver ya está instalado"
+  else
+    git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
+    _install_raspi_bin
+  fi
   if [ $(which docker) ]; then
     echo "docker ya está instalado"
   else
@@ -74,12 +80,6 @@ _install() {
     sudo groupadd docker
     sudo usermod -aG docker $USER
     sudo reboot
-  fi
-  if [ -d ~/raspiserver ]; then
-    echo "raspiserver ya está instalado"
-  else
-    git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
-    _install_raspi_bin
   fi
 }
 _install_raspi_bin() {
