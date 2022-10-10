@@ -136,10 +136,9 @@ update() {
       echo -e "\u2022 no hay actualizaciones disponibles"
     else
       echo -e "\u25E6 actualizando"
-      git config pull.ff on >/dev/null
-      git reset --hard >/dev/null
-      git pull --force >/dev/null
-      sudo chmod -R 777 .
+      sudo git config pull.ff on >/dev/null
+      sudo git reset --hard >/dev/null
+      sudo git pull --force >/dev/null
       up
       _install_raspi_bin
     fi
