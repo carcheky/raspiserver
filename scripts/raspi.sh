@@ -169,4 +169,5 @@ watcher() {
   done
   exit 0
 }
-${@:-run}
+sleep 15
+${@:-help}
