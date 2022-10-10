@@ -1,7 +1,7 @@
 #!/bin/bash
 
 add_key() {
-  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 exit &>/dev/null; do
+  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ls &>/dev/null; do
     echo -en " \\r waiting key.."
     sleep 1
     echo -en " \\r waiting key..."
