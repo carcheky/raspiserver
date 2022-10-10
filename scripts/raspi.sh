@@ -52,16 +52,9 @@ _install() {
     echo "
     
     export PATH=/usr/bin:\$PATH
-    # alias docker='sudo docker'
-    # alias reboot='sudo reboot'
-    # export DOCKER_HOST=unix:///var/run/docker.sock
-    # if [ \$(which docker) ]; then
-    #   sleep 15
-    #   alias docker='sudo docker'
-    #   cd /raspiserver && docker compose restart
-    #   docker ps
-    # fi
 
+raspiserver
+    
     " >>~/.zshrc
   fi
   if [ $(which docker) ]; then
