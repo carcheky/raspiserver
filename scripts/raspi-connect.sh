@@ -41,4 +41,4 @@ fi
 
 run
 
-curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh | bash
+curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >> raspi-connect.sh && bash raspi-connect.sh
