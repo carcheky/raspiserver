@@ -15,7 +15,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /raspi/MOUNTED_HD/raspiserver/data/portainer/data:/data
     command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
-  
+
   # jellyfin
   jellyfin:
     image: linuxserver/jellyfin
@@ -39,27 +39,27 @@ services:
       # - /opt/vc/lib:/opt/vc/lib
       # devices:
       #   - /dev/vchiq:/dev/vchi
-      
-    # # transmission
-    # transmission:
-    #   image: linuxserver/transmission:latest
-    #   container_name: transmission
-    #   environment:
-    #     - PUID=1000
-    #     - PGID=1000
-    #     - TZ=Europe/London
-    #     - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-    #     - USER=username #optional
-    #     - PASS=password #optional
-    #     - WHITELIST=iplist #optional
-    #     - PEERPORT=peerport #optional
-    #     - HOST_WHITELIST=dnsname list #optional
-    #   volumes:
-    #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
-    #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
-    #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
-    #   ports:
-    #     - 9091:9091
-    #     - 51413:51413
-    #     - 51413:51413/udp
-    #   restart: always
+
+      # # transmission
+      # transmission:
+      #   image: linuxserver/transmission:latest
+      #   container_name: transmission
+      #   environment:
+      #     - PUID=1000
+      #     - PGID=1000
+      #     - TZ=Europe/London
+      #     - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+      #     - USER=username #optional
+      #     - PASS=password #optional
+      #     - WHITELIST=iplist #optional
+      #     - PEERPORT=peerport #optional
+      #     - HOST_WHITELIST=dnsname list #optional
+      #   volumes:
+      #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
+      #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
+      #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
+      #   ports:
+      #     - 9091:9091
+      #     - 51413:51413
+      #     - 51413:51413/udp
+      #   restart: always
