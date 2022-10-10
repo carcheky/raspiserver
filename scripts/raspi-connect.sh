@@ -29,10 +29,10 @@ add_key
 
 echo "___________________________________________________________________________________"
 echo "press key to run"
-echo "enter 'u' to uninstall first"
-echo "enter 'b' to login"
-echo "enter 'l' to launch"
-echo "enter 'r' to reboot"
+echo "  'u' to uninstall first"
+echo "  'b' to login"
+echo "  'l' to launch"
+echo "  'r' to reboot"
 read option
 
 if [[ $option == "r" ]]; then
