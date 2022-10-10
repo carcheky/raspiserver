@@ -21,10 +21,10 @@ services:
       - 1900:1900/udp #optional
       - 8920:8920 #optional
     volumes:
-      - /media/carcheky/HDCCK/BibliotecaMultimedia:/BibliotecaMultimedia
-      - /media/carcheky/HDCCK/raspiserver/data/jellyfin/config:/config
-      - /media/carcheky/HDCCK/raspiserver/data/jellyfin/movies:/data/movies
-      - /media/carcheky/HDCCK/raspiserver/data/jellyfin/tvshows:/data/tvshows
+      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config:/config
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/movies:/data/movies
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/tvshows:/data/tvshows
       # - /opt/vc/lib:/opt/vc/lib
     # devices:
     #   - /dev/vchiq:/dev/vchi
@@ -46,9 +46,9 @@ services:
   #     - PEERPORT=peerport #optional
   #     - HOST_WHITELIST=dnsname list #optional
   #   volumes:
-  #     - /media/carcheky/HDCCK/raspiserver/data/transmission/data:/config
-  #     - /media/carcheky/HDCCK/raspiserver/data/transmission/downloads:/downloads
-  #     - /media/carcheky/HDCCK/raspiserver/data/transmission/watch/folder:/watch
+  #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
+  #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
+  #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
   #   ports:
   #     - 9091:9091
   #     - 51413:51413

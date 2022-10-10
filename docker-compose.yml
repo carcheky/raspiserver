@@ -13,4 +13,4 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /media/carcheky/HDCCK/raspiserver/data/portainer/data:/data 
+      - /raspi/MOUNTED_HD/raspiserver/data/portainer/data:/data 
