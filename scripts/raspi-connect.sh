@@ -28,13 +28,21 @@ run() {
 add_key
 
 echo "___________________________________________________________________________________"
-echo "press key to run, enter 'r' to uninstall first"
+echo "press key to run"
+echo "enter 'u' to uninstall first"
+echo "enter 't' to top"
+echo "enter 'r' to reboot"
 read option
 
 if [[ $option == "r" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
-
+if [[ $option == "r" ]]; then
+  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
+fi
+if [[ $option == "t" ]]; then
+  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
+fi
 run
 
 rm -fr /tmp/raspi-connect.sh
