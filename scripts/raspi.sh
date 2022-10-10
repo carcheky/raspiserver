@@ -48,16 +48,16 @@ _install() {
     # if [ \$(which docker) ]; then
     #   sleep 15
     #   alias docker='sudo docker'
-    #   cd ${raspipath}/raspiserver && docker compose restart
+    #   cd /raspiserver && docker compose restart
     #   docker ps
     # fi
 
     " >>~/.zshrc
   fi
-  if [ -d ${raspipath}/raspiserver ]; then
+  if [ -d /raspiserver ]; then
     echo "raspiserver ya está instalado"
   else
-    git clone https://gitlab.com/carcheky/raspiserver.git "${raspipath}/raspiserver"
+    git clone https://gitlab.com/carcheky/raspiserver.git "/raspiserver"
     _install_raspi_bin
   fi
   if [ $(which docker) ]; then
@@ -86,14 +86,14 @@ _install() {
   fi
 }
 _install_raspi_bin() {
-  sudo cp -fr "${raspipath}/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
+  sudo cp -fr "/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   sudo reboot
   exit 0
 }
 run() {
   _install
-  if cd ${raspipath}/raspiserver; then
+  if cd /raspiserver; then
     update
     docker_run
   fi
@@ -127,10 +127,10 @@ remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
 }
 retry() {
-  cd ${raspipath}/raspiserver
+  cd /raspiserver
   sudo apt -y remove --purge "docker*" containerd runc
   sudo rm -fr \
-    ${raspipath}/raspiserver \
+    /raspiserver \
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
@@ -149,7 +149,8 @@ help() {
 watcher() {
   while true; do
     run
-    sleep 6
+    sleep 5
   done
+  exit 0
 }
 ${@:-run}
