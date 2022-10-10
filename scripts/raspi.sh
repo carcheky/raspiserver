@@ -16,6 +16,9 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 set -eux
 _install() {
   sudo dpkg --configure -a
+  if [ -d /raspi ]; then
+    sudo mkdir /raspi
+  fi
   if [ $(which git) ]; then
     echo "git ya está instalado"
   else
