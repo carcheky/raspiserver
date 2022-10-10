@@ -115,7 +115,7 @@ _install() {
 _install_raspi_bin() {
   sudo cp -fr "/raspi/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
-  echo -e "\u25E6 necesita reinicio"
+  echo -e "\u2023 necesita reinicio"
   sudo reboot
   exit 0
 }
