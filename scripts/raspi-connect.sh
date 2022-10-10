@@ -29,23 +29,23 @@ add_key
 
 echo "___________________________________________________________________________________"
 echo "press key to run"
-echo "  i) login"
+echo "  e) login"
 echo "  r) run"
-echo "  p) reboot"
-echo "  o) reinstall"
+echo "  d) reboot"
+echo "  f) feinstall"
 read option
 echo "___________________________________________________________________________________"
 
-if [[ $option == "i" ]]; then
+if [[ $option == "e" ]]; then
   ssh ${USER}@${HOST}
 fi
 if [[ $option == "r" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'
 fi
-if [[ $option == "p" ]]; then
+if [[ $option == "d" ]]; then
   ssh ${USER}@${HOST} sudo reboot
 fi
-if [[ $option == "o" ]]; then
+if [[ $option == "f" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
 
