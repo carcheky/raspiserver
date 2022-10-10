@@ -5,17 +5,17 @@ add_key() {
   key=$(cat ~/.ssh/id_rsa.pub)
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
   sudo rm -fr /home/user/.ssh/known_hosts /home/user/.ssh/known_hosts.old /home/user/.ssh/authorized_keys /mnt/c/Users/carch/.ssh/known_hosts
-  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ${command}; do
+  while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no ${USER}@192.168.68.136 ${command}; do
     echo "waiting key..."
     sleep 1
   done
-  ssh carcheky@192.168.68.136 sudo apt update
-  ssh carcheky@192.168.68.136 sudo apt upgrade -y
+  ssh ${USER}@192.168.68.136 sudo apt update
+  ssh ${USER}@192.168.68.136 sudo apt upgrade -y
   echo ""
 }
 
 run() {
-  while ! ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'; do
+  while ! ssh ${USER}@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'; do
     echo "waiting script,.."
     sleep 1
   done
@@ -30,7 +30,7 @@ read option
 
 if [[ $option == "r" ]]; then
   echo reinstalando
-  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
+  ssh ${USER}@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
 
 run
