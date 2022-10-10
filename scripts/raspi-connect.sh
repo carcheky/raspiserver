@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eux
-
+. .env
 add_key() {
   key=$(cat ~/.ssh/id_rsa.pub)
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
