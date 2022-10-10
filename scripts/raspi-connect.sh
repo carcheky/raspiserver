@@ -32,7 +32,7 @@ echo "press key to run"
 echo "  e) login"
 echo "  r) run"
 echo "  d) reboot"
-echo "  f) feinstall"
+echo "  f) reinstall"
 read option
 echo "___________________________________________________________________________________"
 
