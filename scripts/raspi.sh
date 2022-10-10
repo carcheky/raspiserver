@@ -152,8 +152,12 @@ remote() {
   curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
 }
 retry() {
-  sudo systemctl stop docker
-  sudo umount /raspi/MOUNTED_HD
+  if [ $(which docker) ]; then
+    sudo systemctl stop docker
+  fi
+  while [ -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
+    sudo umount /raspi/MOUNTED_HD
+  done
   sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
     /usr/bin/raspi \
