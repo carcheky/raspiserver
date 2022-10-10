@@ -26,7 +26,7 @@ run() {
   echo "###################################################################################"
   echo "###################################################################################"
   echo "###################################################################################"
-  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash run'
+  ssh carcheky@192.168.68.136 'wget https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh && bash raspi.sh run && rm -fr raspi.sh'
 }
 
 run
