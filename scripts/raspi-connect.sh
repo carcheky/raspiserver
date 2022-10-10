@@ -34,8 +34,6 @@ if [[ $option == "r" ]]; then
   ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run  -s -- retry'
   run
   run
-  run
-  run
   exit 0
 fi
 
