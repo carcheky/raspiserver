@@ -9,8 +9,8 @@ add_key() {
     echo "waiting key..."
     sleep 1
   done
-  ssh ${USER}@${HOST} sudo apt update
-  ssh ${USER}@${HOST} sudo apt upgrade -y
+  # ssh ${USER}@${HOST} sudo apt update
+  # ssh ${USER}@${HOST} sudo apt upgrade -y
   echo ""
 }
 
