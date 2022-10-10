@@ -36,6 +36,6 @@ fi
 run
 
 rm -fr /tmp/raspi-connect.sh
-while ! curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >/tmp/raspi-connect.sh; do
+while ! $(curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >/tmp/raspi-connect.sh) ; do
   bash /tmp/raspi-connect.sh
 done
