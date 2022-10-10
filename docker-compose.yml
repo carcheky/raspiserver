@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
 
-# portainer
+  # portainer
   portainer:
     image: portainer/portainer-ce
     container_name: portainer
@@ -13,5 +13,53 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /raspi/MOUNTED_HD/raspiserver/data/portainer/data:/data 
+      - /raspi/MOUNTED_HD/raspiserver/data/portainer/data:/data
     command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
+  
+  # jellyfin
+  jellyfin:
+    image: linuxserver/jellyfin
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - JELLYFIN_PublishedServerUrl=192.168.0.5 #optional
+    restart: always
+    ports:
+      - 8096:8096
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+      - 8920:8920 #optional
+    volumes:
+      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config:/config
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/movies:/data/movies
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/tvshows:/data/tvshows
+      # - /opt/vc/lib:/opt/vc/lib
+      # devices:
+      #   - /dev/vchiq:/dev/vchi
+      
+    # # transmission
+    # transmission:
+    #   image: linuxserver/transmission:latest
+    #   container_name: transmission
+    #   environment:
+    #     - PUID=1000
+    #     - PGID=1000
+    #     - TZ=Europe/London
+    #     - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+    #     - USER=username #optional
+    #     - PASS=password #optional
+    #     - WHITELIST=iplist #optional
+    #     - PEERPORT=peerport #optional
+    #     - HOST_WHITELIST=dnsname list #optional
+    #   volumes:
+    #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
+    #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
+    #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
+    #   ports:
+    #     - 9091:9091
+    #     - 51413:51413
+    #     - 51413:51413/udp
+    #   restart: always
