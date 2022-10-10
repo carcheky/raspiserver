@@ -29,10 +29,10 @@ add_key
 
 echo "___________________________________________________________________________________"
 echo "press key to run"
-echo "  e) login"
+echo "  e) eogin"
 echo "  r) run"
-echo "  d) reboot"
-echo "  f) reinstall"
+echo "  d) deboot"
+echo "  f) feinstall"
 read option
 echo "___________________________________________________________________________________"
 
