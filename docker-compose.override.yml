@@ -3,8 +3,8 @@ version: '3.7'
 services:
 
   portainer:
-    image: portainer/portainer-ce
-    
+    image: hello-world
+
 # # jellyfin
 #   jellyfin:
 #     image: linuxserver/jellyfin
