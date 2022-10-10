@@ -112,10 +112,10 @@ update() {
   fi
 }
 mount_hd() {
-  if [ ! -d /media/carcheky/HDCCK/BibliotecaMultimedia/ ]; then
-    sudo mkdir -p /media/carcheky/HDCCK/
-    sudo chmod 770 /media/carcheky/HDCCK/
-    sudo mount -U 2862B9A862B97AE0 /media/carcheky/HDCCK
+  if [ ! -d /MOUNTED_HD/BibliotecaMultimedia/ ]; then
+    sudo mkdir -p /MOUNTED_HD/
+    sudo chmod 770 /MOUNTED_HD/
+    sudo mount -U 2862B9A862B97AE0 /MOUNTED_HD
   fi
 }
 docker_run() {
