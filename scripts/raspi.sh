@@ -39,6 +39,7 @@ _install() {
     sudo usermod -s /bin/zsh $USER
     sudo chsh -s $(which zsh)
     sed -i s/'plugins=(git)'/'plugins=(git z composer zsh_carcheky)'/g ~/.zshrc
+    sed -i s/'plugins=(git)'/'plugins=(git z composer zsh_carcheky)'/g ~/.zshrc
     echo "
     
     export PATH=/usr/bin:\$PATH
