@@ -177,8 +177,8 @@ help() {
 }
 watcher() {
   while true; do
-    run
-    sleep 5
+    update
+    sleep 30
   done
   exit 0
 }
