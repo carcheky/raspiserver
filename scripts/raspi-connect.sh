@@ -30,7 +30,8 @@ add_key
 echo "___________________________________________________________________________________"
 echo "press key to run"
 echo "enter 'u' to uninstall first"
-echo "enter 'l' to login"
+echo "enter 'b' to login"
+echo "enter 'l' to launch"
 echo "enter 'r' to reboot"
 read option
 
@@ -40,9 +41,12 @@ fi
 if [[ $option == "u" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
-if [[ $option == "l" ]]; then
+if [[ $option == "b" ]]; then
   ssh ${USER}@${HOST}
 fi
-run
+if [[ $option == "l" ]]; then
+  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'
+fi
+
 bash scripts/raspi-connect.sh  
 
