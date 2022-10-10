@@ -37,8 +37,8 @@ echo "##########################################################################
 echo "press key to rerun, enter 'r' to retry"
 read option
 
-if [ $option -eq "r" ]; then
-  reinstalando
+if [ $option == "r" ]; then
+  echo reinstalando
   ssh carcheky@192.168.68.136 raspi retry
 fi
 bash scripts/raspi-connect.sh
