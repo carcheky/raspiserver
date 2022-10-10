@@ -170,6 +170,7 @@ restart() {
   mount
   if cd /raspi/raspiserver; then
     docker compose restart
+    docker compose up
   fi
 }
 ## remote: run this script from remote repo
@@ -211,7 +212,7 @@ watcher() {
 }
 ## log: print raspi log
 log() {
-  tail -f /raspi/raspi.log
+  cat /raspi/raspi.log
 }
 # this line print help if no arguments
 ${@:-help}
