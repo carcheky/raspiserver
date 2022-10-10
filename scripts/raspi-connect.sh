@@ -11,9 +11,6 @@ add_key() {
     echo -en " \\r waiting key..."
   done
 }
-raspiserver_install() {
-  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'
-}
 
 run() {
   add_key
@@ -41,7 +38,7 @@ read option
 
 if [[ $option == "r" ]]; then
   echo reinstalando
-  ssh carcheky@192.168.68.136 raspi retry
+  ssh carcheky@192.168.68.136 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run  -s -- retry'
 fi
 
 # ssh carcheky@192.168.68.136
