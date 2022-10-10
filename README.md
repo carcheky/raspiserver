@@ -5,7 +5,7 @@ Download and run
 curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run
 ````
 ````
-curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh | bash
+curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh >> connect.sh && bash connect.sh
 ````
 
 to retry
