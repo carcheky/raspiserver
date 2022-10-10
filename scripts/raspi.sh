@@ -90,6 +90,7 @@ _install() {
       sudo groupadd docker
     fi
     sudo usermod -aG docker $USER
+    sudo dpkg --configure -a
   fi
   if [ -d /raspi/raspiserver ]; then
     echo "- raspiserver ya está instalado"
@@ -99,7 +100,6 @@ _install() {
     git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
     _install_raspi_bin
   fi
-  sudo dpkg --configure -a
 }
 _install_raspi_bin() {
   sudo cp -fr "/raspi/raspiserver/scripts/raspi.sh" /usr/local/bin/raspi
