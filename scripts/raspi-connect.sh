@@ -7,6 +7,7 @@ add_key() {
   sudo rm -fr /home/user/.ssh/known_hosts /home/user/.ssh/known_hosts.old /home/user/.ssh/authorized_keys /mnt/c/Users/carch/.ssh/known_hosts
   while ! sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@192.168.68.136 ${command} ; do
     echo "waiting key..."
+    sleep 1
   done
   echo ""
 }
@@ -14,6 +15,7 @@ add_key() {
 run() {
   while ! ssh carcheky@192.168.68.136 ls &>/dev/null; do
     echo "waiting script,.."
+    sleep 1
   done
   echo "###################################################################################"
   echo "###################################################################################"
