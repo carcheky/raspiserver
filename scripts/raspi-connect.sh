@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+# set -eux
 . .env
 add_key() {
   key=$(cat ~/.ssh/id_rsa.pub)
