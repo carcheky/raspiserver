@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# update date
-sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-
 # for devs
 # set -eux
 
 # helper scripts
 _install() {
+  # update date
+  sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
+  # fix any pending install
   sudo dpkg --configure -a
   if [ ! -d /raspi ]; then
     echo "
