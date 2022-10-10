@@ -9,7 +9,7 @@ add_key() {
     echo "waiting key..."
     sleep 1
   done
-  if [ ! -f ssh ${USER}@${HOST}:/tmp/updated ]; then
+  if [ ssh ${USER}@${HOST} ! -f /tmp/updated ]; then
     ssh ${USER}@${HOST} sudo apt update
     ssh ${USER}@${HOST} sudo apt upgrade -y
     ssh ${USER}@${HOST} touch /tmp/updated
