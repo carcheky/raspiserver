@@ -33,4 +33,7 @@ run
 
 echo "###################################################################################"
 # sleep 15
-# bash scripts/raspi-connect.sh
+
+echo "press key to rerun"
+read
+bash scripts/raspi-connect.sh
