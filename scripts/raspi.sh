@@ -215,8 +215,8 @@ log() {
   cat /raspi/raspi.log
 }
 ## cd: cd raspiserver folder
-cd() {
-  cd /raspi/raspiserver
+reboot() {
+  sudo reboot
 }
 # this line print help if no arguments
 ${@:-help}
