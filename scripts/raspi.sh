@@ -214,6 +214,7 @@ watcher() {
 log() {
   cat /raspi/raspi.log
 }
+## logs: docker compose logs
 logs() {
   if cd /raspi/raspiserver; then
     docker compose logs -f
