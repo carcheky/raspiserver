@@ -9,7 +9,7 @@ add_key() {
   done
   key=$(cat ~/.ssh/id_rsa.pub)
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
-  sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local ${command}
+  sshpass -p locococo ssh -oStrictHostKeyChecking=no carcheky@cckpi.local "if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
 }
 raspiserver_install() {
   ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
