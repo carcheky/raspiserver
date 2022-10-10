@@ -1,1 +1,5 @@
-.vscode export-exclude
+.vscode export-ignore
+.gitlab-ci.yml export-ignore
+.releaserc export-ignore
+.releaserc.changelog export-ignore
+raspiserver.code-workspace export-ignore
