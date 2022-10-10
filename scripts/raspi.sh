@@ -182,6 +182,5 @@ watcher() {
   done
   exit 0
 }
-mount_hd
-sleep 3
+
 ${@:-help}
