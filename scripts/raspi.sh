@@ -139,6 +139,7 @@ update() {
       git config pull.ff on >/dev/null
       git reset --hard >/dev/null
       git pull --force >/dev/null
+      sudo chmod -R 777 .
       up
       _install_raspi_bin
     fi
