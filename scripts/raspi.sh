@@ -214,6 +214,11 @@ watcher() {
 log() {
   cat /raspi/raspi.log
 }
+logs() {
+  if cd /raspi/raspiserver; then
+    docker compose logs -f
+  fi
+}
 ## cd: cd raspiserver folder
 reboot() {
   sudo reboot
