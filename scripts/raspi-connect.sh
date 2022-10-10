@@ -39,4 +39,4 @@ fi
 
 run
 
-bash scripts/raspi-connect.sh
+curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi-connect.sh | bash
