@@ -130,7 +130,7 @@ update() {
   fi
 }
 mount_hd() {
-  if [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; then
+  while [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
     sudo mkdir -p /raspi/MOUNTED_HD/
     sudo chmod 777 /raspi/MOUNTED_HD/
     sudo systemctl restart docker
@@ -138,7 +138,7 @@ mount_hd() {
       echo nop
       sleep 1
     done
-  fi
+  done
 }
 docker_run() {
   mount_hd
