@@ -24,7 +24,8 @@ run() {
   done
   # ssh carcheky@cckpi.local
   echo "###################################################################################"
-  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  # ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
+  ssh carcheky@cckpi.local 'raspi run'
 }
 
 run
