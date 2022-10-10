@@ -57,7 +57,8 @@ _install() {
   if [ -d /raspiserver ]; then
     echo "raspiserver ya está instalado"
   else
-    git clone https://gitlab.com/carcheky/raspiserver.git "/raspiserver"
+    sudo git clone https://gitlab.com/carcheky/raspiserver.git "/raspiserver"
+    sudo chmod 777 /raspiserver
     _install_raspi_bin
   fi
   if [ $(which docker) ]; then
