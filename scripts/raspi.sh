@@ -45,7 +45,7 @@ _install() {
     if [ \$(which docker) ]; then
       sleep 15
       alias docker='sudo docker'
-      cd /home/carcheky/raspiserver && docker compose restart
+      cd ~//raspiserver && docker compose restart
       docker ps
     fi
 
@@ -121,7 +121,7 @@ docker_run() {
   fi
 }
 remote() {
-  curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash
+  curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
 }
 retry() {
   cd ~/raspiserver
