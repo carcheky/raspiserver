@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -eux
 key=$(cat ~/.ssh/id_rsa.pub)
 command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
 
