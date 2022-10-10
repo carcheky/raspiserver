@@ -134,7 +134,7 @@ update() {
     fi
   fi
 }
-## mount hard disk
+## mount: mount hard disk
 mount() {
   while [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
     sudo mkdir -p /raspi/MOUNTED_HD/
@@ -191,5 +191,5 @@ watcher() {
   done
   exit 0
 }
-
+# this line print help if no arguments
 ${@:-help}
