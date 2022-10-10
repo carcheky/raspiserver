@@ -37,7 +37,7 @@ read option
 if [[ $option == "r" ]]; then
   ssh ${USER}@${HOST} sudo reboot
 fi
-if [[ $option == "r" ]]; then
+if [[ $option == "u" ]]; then
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
 if [[ $option == "t" ]]; then
