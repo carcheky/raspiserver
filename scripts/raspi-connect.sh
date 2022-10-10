@@ -1,7 +1,8 @@
 #!/bin/bash
 
 add_key() {
-  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit; do
+  ssh-keygen -f "/home/user/.ssh/known_hosts" -R "cckpi.local" &>/dev/null
+  while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
     echo -en " \\r waiting key.."
     sleep 1
     echo -en " \\r waiting key..."
