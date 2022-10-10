@@ -210,5 +210,9 @@ watcher() {
   done
   exit 0
 }
+## log: print raspi log
+log() {
+  echo /raspi/raspi.log
+}
 # this line print help if no arguments
 ${@:-help}
