@@ -34,12 +34,11 @@ run
 echo "###################################################################################"
 
 echo "press key to rerun, enter 'r' to retry"
-# read option
-option=r
+read option
+
 if [[ $option == "r" ]]; then
   echo reinstalando
   ssh carcheky@192.168.68.136 raspi retry
-  option=n
 fi
 # ssh carcheky@192.168.68.136 
 # ssh carcheky@192.168.68.136 raspi run
