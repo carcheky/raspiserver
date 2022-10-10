@@ -119,9 +119,9 @@ update() {
     echo "no hay actualizaciones nuevas"
   else
     echo "actualizando"
-    git config pull.ff on
-    git reset --hard
-    git pull --force
+    git config pull.ff on >/dev/null
+    git reset --hard >/dev/null
+    git pull --force >/dev/null
     _install_raspi_bin
   fi
 }
