@@ -20,7 +20,7 @@ _install() {
     echo "git ya está instalado"
   else
     sudo apt update
-    sudo apt install git vim uidmap -y
+    sudo apt install git vim -y
   fi
   if [ -d ~/.oh-my-zsh ]; then
     echo "zsh ya está instalado"
