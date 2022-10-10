@@ -211,7 +211,7 @@ watcher() {
 }
 ## log: print raspi log
 log() {
-  echo /raspi/raspi.log
+  tail -f /raspi/raspi.log
 }
 # this line print help if no arguments
 ${@:-help}
