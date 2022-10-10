@@ -214,5 +214,9 @@ watcher() {
 log() {
   cat /raspi/raspi.log
 }
+## log: print raspi log
+cd() {
+  cd /raspi/raspiserver
+}
 # this line print help if no arguments
 ${@:-help}
