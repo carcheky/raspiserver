@@ -24,7 +24,7 @@ run() {
   done
   # ssh carcheky@cckpi.local
   echo "###################################################################################"
-  raspiserver_install
+  ssh carcheky@cckpi.local 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash'
 }
 
 run
