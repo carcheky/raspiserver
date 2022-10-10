@@ -89,11 +89,10 @@ _install_raspi_bin() {
   exit 0
 }
 run() {
-  if cd ~/raspiserver &>/dev/null; then
+  _install
+  if cd ~/raspiserver; then
     update
     docker_run
-  else
-    _install
   fi
 }
 update() {
