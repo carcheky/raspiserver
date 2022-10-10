@@ -14,11 +14,15 @@ sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -
 set -eux
 _install() {
   sudo dpkg --configure -a
-  if [ ! $(which git) ]; then
+  if [ $(which git) ]; then
+    echo "git ya está instalado"
+  else
     sudo apt update
     sudo apt install git vim uidmap -y
   fi
-  if [ ! -f ~/.zshrc ]; then
+  if [ -d ~/.oh-my-zsh ]; then
+    echo "zsh ya está instalado"
+  else
     sudo apt update
     sudo apt install zsh -y
     if [ ! -d ~/.oh-my-zsh ]; then
@@ -47,11 +51,15 @@ _install() {
 
     " >>~/.zshrc
   fi
-  if [ ! -d ~/raspiserver ]; then
+  if [ -d ~/raspiserver ]; then
+    echo "raspiserver ya está instalado"
+  else
     git clone https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
     _install_raspi_bin
   fi
-  if [ ! $(which docker) ]; then
+  if [ $(which docker) ]; then
+    echo "docker ya está instalado"
+  else
     # curl -fsSL https://get.docker.com -o get-docker.sh
     # sudo sh get-docker.sh
     # dockerd-rootless-setuptool.sh install --force
