@@ -127,8 +127,6 @@ update() {
 }
 mount_hd() {
   if [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/ ]; then
-    # sudo umount /raspi/MOUNTED_HD
-    # sudo rm -fr /raspi/MOUNTED_HD/
     sudo mkdir -p /raspi/MOUNTED_HD/
     sudo chmod 770 /raspi/MOUNTED_HD/
     sudo mount -L HDCCK /raspi/MOUNTED_HD
