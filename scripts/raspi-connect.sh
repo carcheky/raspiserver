@@ -2,8 +2,9 @@
 
 add_key() {
   while ! ssh -oStrictHostKeyChecking=no carcheky@cckpi.local exit &>/dev/null; do
-    echo -en " \\r waiting"
+    echo -en " \\r waiting.."
     sleep 1
+    echo -en " \\r waiting..."
   done
   key=$(cat ~/.ssh/id_rsa.pub)
   command="if [ ! -d .ssh ]; then mkdir .ssh; fi ; echo \"${key}\" > .ssh/authorized_keys"
