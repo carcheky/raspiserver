@@ -34,6 +34,7 @@ echo "  b) login"
 echo "  l) launch"
 echo "  r) reboot"
 read option
+echo "___________________________________________________________________________________"
 
 if [[ $option == "r" ]]; then
   ssh ${USER}@${HOST} sudo reboot
