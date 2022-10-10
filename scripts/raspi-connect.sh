@@ -32,7 +32,6 @@ echo "press key to run, enter 'r' to uninstall first"
 read option
 
 if [[ $option == "r" ]]; then
-  echo reinstalando
   ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
 fi
 
