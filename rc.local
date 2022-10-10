@@ -3,7 +3,6 @@
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 
 while ! sudo mount -L HDCCK /raspi/MOUNTED_HD; do
-  echo nop
   sleep 1
 done
 
