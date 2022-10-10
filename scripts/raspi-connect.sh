@@ -34,7 +34,7 @@ run
 echo "###################################################################################"
 
 echo "press key to rerun, enter 'r' to retry"
-read option
+# read option
 
 if [[ $option == "r" ]]; then
   echo reinstalando
