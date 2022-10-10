@@ -44,12 +44,12 @@ _install() {
     export PATH=/usr/bin:\$PATH
     alias reboot='sudo reboot'
     export DOCKER_HOST=unix:///var/run/docker.sock
-    if [ \$(which docker) ]; then
-      sleep 15
-      alias docker='sudo docker'
-      cd ${raspipath}/raspiserver && docker compose restart
-      docker ps
-    fi
+    # if [ \$(which docker) ]; then
+    #   sleep 15
+    #   alias docker='sudo docker'
+    #   cd ${raspipath}/raspiserver && docker compose restart
+    #   docker ps
+    # fi
 
     " >>~/.zshrc
   fi
