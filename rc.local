@@ -1,18 +1,7 @@
 #!/bin/sh -e
 
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-# curl https://gitlab.com/carcheky/raspi/-/raw/main/scripts/raspi.sh | bash
 
-if [ $(which docker) ]; then
-  cd /home/carcheky/raspiserver && docker compose restart
-fi
-
-if [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/ ]; then
-  sudo umount /raspi/MOUNTED_HD
-  # sudo rm -fr /raspi/MOUNTED_HD/
-  sudo mkdir -p /raspi/MOUNTED_HD/
-  sudo chmod 770 /raspi/MOUNTED_HD/
-  sudo mount -L HDCCK /raspi/MOUNTED_HD
-fi
+raspi &
 
 exit 0
