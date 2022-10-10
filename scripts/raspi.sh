@@ -58,7 +58,6 @@ _install() {
   if [ -d /raspi/raspiserver ]; then
     echo "raspiserver ya está instalado"
   else
-    sudo mkdir /raspi
     sudo chmod 777 /raspi
     git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
     _install_raspi_bin
