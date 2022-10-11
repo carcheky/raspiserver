@@ -143,7 +143,7 @@ update() {
       sudo git pull --force >/dev/null
       sudo git pull --force >/dev/null
       up
-      _install_raspi_bin
+      _install_bin
     fi
   fi
 }
