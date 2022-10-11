@@ -62,7 +62,7 @@ services:
       - /raspi/MOUNTED_HD/raspiserver/data/webtop/config:/config
       - /var/run/docker.sock:/var/run/docker.sock #optional
     ports:
-      - 3000:3000
+      - 80:3000
     # devices:
     #   - /dev/dri:/dev/dri #optional
     shm_size: "1gb" #optional
