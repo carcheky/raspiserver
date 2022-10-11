@@ -40,8 +40,8 @@ services:
       - /path/to/data:/config
     ports:
       - 8123:8123 #optional
-    devices:
-      - /path/to/device:/path/to/device #optional
+    # devices:
+    #   - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
     restart: unless-stopped
 
 
