@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# load vars
+. /raspi/raspiserver/.envd
+
 # for devs
 # set -eux
 
