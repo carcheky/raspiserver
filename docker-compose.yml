@@ -42,7 +42,7 @@ services:
       - 8123:8123 #optional
     # devices:
     #   - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
-    restart: unless-stopped
+    restart: always
 
 
 
