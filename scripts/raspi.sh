@@ -131,6 +131,7 @@ run() {
 ## update: if update, update and reboot
 update() {
   if cd /raspi/raspiserver; then
+    sudo chown -R $USER:$USER .
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     if [ $current = $remote ]; then
