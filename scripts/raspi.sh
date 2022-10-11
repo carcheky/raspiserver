@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SLEEP_TIME=30
+. /raspi/raspiserver/.env
+
 # for devs
 # set -eux
 
@@ -108,7 +111,7 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    sudo git clone -b beta https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    sudo git clone -b $CHANNEL https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
     update
   fi
 }
@@ -206,7 +209,7 @@ watcher() {
   while true; do
     update
     # sleep 3600
-    sleep 5
+    sleep $SLEEP_TIME
   done
   exit 0
 }

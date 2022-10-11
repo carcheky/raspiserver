@@ -4,7 +4,7 @@ services:
 
   # jellyfin
   jellyfin:
-    image: linuxserver/jellyfin
+    image: linuxserver/jellyfin:latest
     container_name: jellyfin
     environment:
       - PUID=1000
@@ -25,6 +25,31 @@ services:
       # - /opt/vc/lib:/opt/vc/lib
       # devices:
       #   - /dev/vchiq:/dev/vchi
+
+
+  # homeassistant
+  homeassistant:
+    image: linuxserver/homeassistant:latest
+    container_name: homeassistant
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /raspi/MOUNTED_HD/raspiserver/data/homeassistant/config:/config
+    ports:
+      - 8123:8123 #optional
+    # devices:
+    #   - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+    restart: always
+
+
+
+
+
+
+
 
       # # transmission
       # transmission:
