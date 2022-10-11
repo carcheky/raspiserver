@@ -146,6 +146,7 @@ update() {
       sudo git pull --force >/dev/null
       sudo git pull --force >/dev/null
       up
+      update
       _install_bin
     fi
   fi
