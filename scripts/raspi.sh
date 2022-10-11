@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # for devs
-set -eux
+# set -eux
 
 # helper scripts
 _install() {
