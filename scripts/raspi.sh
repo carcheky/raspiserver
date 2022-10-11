@@ -122,6 +122,10 @@ _install_raspi_bin() {
   reboot
   exit 0
 }
+_check_update_channel(){
+    git checkout ${CHANNEL:-stable}
+    update
+}
 ## run: install, update & run
 run() {
   _install
@@ -142,7 +146,7 @@ update() {
       sudo git config pull.ff on >/dev/null
       sudo git reset --hard >/dev/null
       sudo git pull --force >/dev/null
-      sudo git checkout ${CHANNEL:-stable}
+      _check_update_channel
       sudo git pull --force >/dev/null
       up
       _install_raspi_bin
@@ -229,19 +233,6 @@ logs() {
 reboot() {
   sudo reboot
 }
-## beta: change to beta releases
-change_(){
-  if cd /raspi/raspiserver; then
-    git checkout beta
-    update
-  fi
-}
-## stable: change to stable releases
-stable(){
-  if cd /raspi/raspiserver; then
-    git checkout stable
-    update
-  fi
-}
+
 # this line print help if no arguments
 ${@:-help}
