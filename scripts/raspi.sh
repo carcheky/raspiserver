@@ -109,7 +109,7 @@ _install() {
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
     sudo git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
-gp -    _install_bin
+    _install_bin
   fi
 }
 _install_bin() {
@@ -143,7 +143,7 @@ update() {
       sudo git pull --force >/dev/null
       sudo git pull --force >/dev/null
       up
-      _install_bin
+      _install_raspi_bin
     fi
   fi
 }
