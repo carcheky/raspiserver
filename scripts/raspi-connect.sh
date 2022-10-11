@@ -37,7 +37,7 @@ read option
 echo "___________________________________________________________________________________"
 
 if [[ $option == "e" ]]; then
-  ssh ${USER}@${HOST} cd /raspi/raspiserver
+  ssh ${USER}@${HOST}
 fi
 if [[ $option == "r" ]]; then
   ssh ${USER}@${HOST} "curl https://gitlab.com/carcheky/raspiserver/-/raw/${CHANNEL:-stable}/scripts/raspi.sh | bash -s -- run"
