@@ -123,8 +123,10 @@ _install_raspi_bin() {
   exit 0
 }
 _check_update_channel(){
+  if cd /raspi/raspiserver; then
     git checkout ${CHANNEL:-stable}
     update
+  fi
 }
 ## run: install, update & run
 run() {
