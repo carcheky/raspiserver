@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SLEEP_TIME=30
+
 # for devs
 # set -eux
 
@@ -206,7 +208,7 @@ watcher() {
   while true; do
     update
     # sleep 3600
-    sleep 30
+    sleep $SLEEP_TIME
   done
   exit 0
 }
