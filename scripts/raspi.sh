@@ -141,6 +141,7 @@ update() {
       echo -e "\u25E6 actualizando"
       sudo git config pull.ff on >/dev/null
       sudo git reset --hard >/dev/null
+      sudo git checkout ${CHANNEL:-stable}
       sudo git pull --force >/dev/null
       up
       _install_raspi_bin
