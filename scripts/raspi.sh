@@ -58,6 +58,7 @@ _install() {
     echo "
     
     export PATH=/usr/bin:\$PATH
+    alias git='sudo git'
     echo \"
     ██████╗  █████╗ ███████╗██████╗ ██╗              
     ██╔══██╗██╔══██╗██╔════╝██╔══██╗██║              
