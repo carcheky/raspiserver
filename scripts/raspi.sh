@@ -166,7 +166,6 @@ up() {
   mount
   if cd /raspi/raspiserver; then
     docker compose up -d --remove-orphans
-    docker compose logs
   fi
 }
 ## up: docker compose restart
@@ -206,7 +205,8 @@ help() {
 watcher() {
   while true; do
     update
-    sleep 3600
+    # sleep 3600
+    sleep 5
   done
   exit 0
 }
