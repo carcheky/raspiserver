@@ -137,9 +137,9 @@ run() {
 ## update: if update, update and reboot
 update() {
   if cd /raspi/raspiserver; then
+    _check_update_channel
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
-    _check_update_channel
     if [ $current = $remote ]; then
       echo -e "\u2022 no hay actualizaciones disponibles"
     else
