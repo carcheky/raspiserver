@@ -124,7 +124,7 @@ _install_raspi_bin() {
   exit 0
 }
 _check_update_channel(){
-  if cd /raspi/raspiserver; then
+  if cd /raspi/raspiserver ; then
     sudo git checkout ${CHANNEL:-stable} -f
     update
   fi
