@@ -166,7 +166,6 @@ up() {
   mount
   if cd /raspi/raspiserver; then
     docker compose up -d --remove-orphans
-    docker compose logs
   fi
 }
 ## up: docker compose restart
