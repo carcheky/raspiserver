@@ -4,7 +4,7 @@
 set -eux
 
 # load vars
-. /raspi/raspiserver/.env
+CHANNEL=beta
 
 # helper scripts
 _install() {
