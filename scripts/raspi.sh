@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # for devs
-set -eux
+# set -eux
 
 # helper scripts
 _install() {
@@ -166,6 +166,7 @@ up() {
   mount
   if cd /raspi/raspiserver; then
     docker compose up -d --remove-orphans
+    docker compose logs
   fi
 }
 ## up: docker compose restart
