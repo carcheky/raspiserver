@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # for devs
-# set -eux
+set -eux
+
+# load vars
+. /raspi/raspiserver/.env
 
 # helper scripts
 _install() {
@@ -107,7 +110,7 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    git clone https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    git clone -b ${CHANNEL:-stable} https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
     _install_raspi_bin
   fi
 }
@@ -118,6 +121,10 @@ _install_raspi_bin() {
   echo -e "\u2023 necesita reinicio"
   reboot
   exit 0
+}
+_check_update_channel(){
+    git checkout ${CHANNEL:-stable}
+    update
 }
 ## run: install, update & run
 run() {
@@ -130,6 +137,7 @@ run() {
 ## update: if update, update and reboot
 update() {
   if cd /raspi/raspiserver; then
+    _check_update_channel
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     if [ $current = $remote ]; then
@@ -138,6 +146,7 @@ update() {
       echo -e "\u25E6 actualizando"
       sudo git config pull.ff on >/dev/null
       sudo git reset --hard >/dev/null
+      sudo git pull --force >/dev/null
       sudo git pull --force >/dev/null
       up
       _install_raspi_bin
@@ -224,5 +233,6 @@ logs() {
 reboot() {
   sudo reboot
 }
+
 # this line print help if no arguments
 ${@:-help}

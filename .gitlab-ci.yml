@@ -13,10 +13,21 @@ release:
   image: node:16
   stage: release
   only:
-    - main
+    - stable
   when: delayed
   start_in: 15 minutes
   script:
     - cp .releaserc.changelog .releaserc
+    - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
+    - npx semantic-release
+
+release_beta:
+  image: node:16
+  stage: release
+  only:
+    - beta
+  when: delayed
+  start_in: 5 minutes
+  script:
     - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
     - npx semantic-release

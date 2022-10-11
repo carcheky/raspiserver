@@ -9,16 +9,11 @@ add_key() {
     echo "waiting key..."
     sleep 1
   done
-  if [ ! ssh ${USER}@${HOST} ls /tmp/updated ]; then
-    ssh ${USER}@${HOST} sudo apt update
-    ssh ${USER}@${HOST} sudo apt upgrade -y
-    ssh ${USER}@${HOST} touch /tmp/updated
-  fi
   echo ""
 }
 
 run() {
-  while ! ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'; do
+  while ! ssh ${USER}@${HOST} "curl https://gitlab.com/carcheky/raspiserver/-/raw/${CHANNEL:-stable}/scripts/raspi.sh | bash -s -- run"; do
     echo "waiting script,.."
     sleep 1
   done
@@ -28,7 +23,7 @@ run() {
 add_key
 
 echo "___________________________________________________________________________________"
-echo "press key to run"
+echo "press key to run:"
 echo "  e) eogin"
 echo "  r) run"
 echo "  d) deboot"
@@ -40,13 +35,13 @@ if [[ $option == "e" ]]; then
   ssh ${USER}@${HOST}
 fi
 if [[ $option == "r" ]]; then
-  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run'
+  ssh ${USER}@${HOST} "curl https://gitlab.com/carcheky/raspiserver/-/raw/${CHANNEL:-stable}/scripts/raspi.sh | bash -s -- run"
 fi
 if [[ $option == "d" ]]; then
   ssh ${USER}@${HOST} sudo reboot
 fi
 if [[ $option == "f" ]]; then
-  ssh ${USER}@${HOST} 'curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- retry'
+  ssh ${USER}@${HOST} "curl https://gitlab.com/carcheky/raspiserver/-/raw/${CHANNEL:-stable}/scripts/raspi.sh | bash -s -- retry"
 fi
 
 bash scripts/raspi-connect.sh  
