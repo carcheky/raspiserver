@@ -3,9 +3,6 @@
 # for devs
 set -eux
 
-# load vars
-. /raspi/raspiserver/.env
-
 # helper scripts
 _install() {
   # update date
@@ -58,6 +55,7 @@ _install() {
     echo "
     
     export PATH=/usr/bin:\$PATH
+    alias git='sudo git'
     echo \"
     ██████╗  █████╗ ███████╗██████╗ ██╗              
     ██╔══██╗██╔══██╗██╔════╝██╔══██╗██║              
@@ -110,21 +108,17 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    git clone -b ${CHANNEL:-stable} https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
-    _install_raspi_bin
+    git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    _install_bin
   fi
 }
-_install_raspi_bin() {
+_install_bin() {
   sudo cp rc.local /etc/rc.local
   sudo cp -fr /raspi/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   echo -e "\u2023 necesita reinicio"
   reboot
   exit 0
-}
-_check_update_channel(){
-    git checkout ${CHANNEL:-stable}
-    update
 }
 ## run: install, update & run
 run() {
@@ -137,9 +131,9 @@ run() {
 ## update: if update, update and reboot
 update() {
   if cd /raspi/raspiserver; then
-    _check_update_channel
-    current=$(git rev-parse HEAD)
-    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+    sudo chown -R $USER:$USER .
+    current=$(sudo git rev-parse HEAD)
+    remote=$(sudo git ls-remote $(sudo git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     if [ $current = $remote ]; then
       echo -e "\u2022 no hay actualizaciones disponibles"
     else
@@ -215,7 +209,7 @@ help() {
 watcher() {
   while true; do
     update
-    sleep 300
+    sleep 3600
   done
   exit 0
 }
