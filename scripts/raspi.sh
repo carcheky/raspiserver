@@ -229,5 +229,19 @@ logs() {
 reboot() {
   sudo reboot
 }
+## beta: change to beta releases
+beta(){
+  if cd /raspi/raspiserver; then
+    git checkout beta
+    update
+  fi
+}
+## stable: change to stable releases
+stable(){
+  if cd /raspi/raspiserver; then
+    git checkout stable
+    update
+  fi
+}
 # this line print help if no arguments
 ${@:-help}
