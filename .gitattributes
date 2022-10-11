@@ -3,3 +3,4 @@
 .releaserc export-ignore
 .releaserc.changelog export-ignore
 raspiserver.code-workspace export-ignore
+to-stable.sh export-ignore
