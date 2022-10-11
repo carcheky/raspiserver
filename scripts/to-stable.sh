@@ -1,5 +1,4 @@
 #!/bin/bash
-
 git checkout beta
 git merge stable --no-ff --no-edit
 git push
