@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# load vars
-. /raspi/raspiserver/.envd
-
 # for devs
 # set -eux
+
+# load vars
+. /raspi/raspiserver/.envd
 
 # helper scripts
 _install() {
