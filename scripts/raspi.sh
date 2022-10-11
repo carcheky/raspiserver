@@ -206,7 +206,8 @@ help() {
 watcher() {
   while true; do
     update
-    sleep 3600
+    # sleep 3600
+    sleep 5
   done
   exit 0
 }
