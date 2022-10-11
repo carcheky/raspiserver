@@ -230,7 +230,7 @@ reboot() {
   sudo reboot
 }
 ## beta: change to beta releases
-beta(){
+change_(){
   if cd /raspi/raspiserver; then
     git checkout beta
     update
