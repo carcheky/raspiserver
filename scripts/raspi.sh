@@ -3,9 +3,6 @@
 # for devs
 set -eux
 
-# load vars
-CHANNEL='beta'
-
 # helper scripts
 _install() {
   # update date
@@ -123,12 +120,6 @@ _install_raspi_bin() {
   reboot
   exit 0
 }
-_check_update_channel(){
-  if cd /raspi/raspiserver ; then
-    sudo git checkout ${CHANNEL} -f
-    update
-  fi
-}
 ## run: install, update & run
 run() {
   _install
@@ -140,7 +131,6 @@ run() {
 ## update: if update, update and reboot
 update() {
   if cd /raspi/raspiserver; then
-    _check_update_channel
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     if [ $current = $remote ]; then
