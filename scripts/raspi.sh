@@ -4,7 +4,7 @@
 set -eux
 
 # load vars
-CHANNEL=beta
+CHANNEL='beta'
 
 # helper scripts
 _install() {
@@ -111,7 +111,7 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    git clone -b ${CHANNEL:-stable} https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
     _install_raspi_bin
   fi
 }
@@ -125,7 +125,7 @@ _install_raspi_bin() {
 }
 _check_update_channel(){
   if cd /raspi/raspiserver ; then
-    sudo git checkout ${CHANNEL:-stable} -f
+    sudo git checkout ${CHANNEL} -f
     update
   fi
 }
