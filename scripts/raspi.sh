@@ -4,7 +4,7 @@
 # set -eux
 
 # load vars
-. /raspi/raspiserver/.envd
+. /raspi/raspiserver/.env
 
 # helper scripts
 _install() {
