@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SLEEP_TIME=30
+. /raspi/raspiserver/.env
 
 # for devs
 # set -eux
