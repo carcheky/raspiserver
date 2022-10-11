@@ -37,7 +37,7 @@ services:
       - PGID=1000
       - TZ=Europe/London
     volumes:
-      - /path/to/data:/config
+      - /raspi/MOUNTED_HD/raspiserver/data/homeassistant/config:/config
     ports:
       - 8123:8123 #optional
     # devices:
