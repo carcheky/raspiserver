@@ -48,7 +48,7 @@ services:
 
   # webtop
   webtop:
-    image: linuxserver/webtop:latest
+    image: linuxserver/webtop:alpine-kde
     container_name: webtop
     security_opt:
       - seccomp:unconfined #optional
