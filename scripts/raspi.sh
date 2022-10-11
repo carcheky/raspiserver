@@ -132,8 +132,8 @@ run() {
 update() {
   if cd /raspi/raspiserver; then
     sudo chown -R $USER:$USER .
-    current=$(git rev-parse HEAD)
-    remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+    current=$(sudo git rev-parse HEAD)
+    remote=$(sudo git ls-remote $(sudo git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
     if [ $current = $remote ]; then
       echo -e "\u2022 no hay actualizaciones disponibles"
     else
