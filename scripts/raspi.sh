@@ -139,6 +139,7 @@ update() {
   if cd /raspi/raspiserver; then
     current=$(git rev-parse HEAD)
     remote=$(git ls-remote $(git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
+    _check_update_channel
     if [ $current = $remote ]; then
       echo -e "\u2022 no hay actualizaciones disponibles"
     else
@@ -146,7 +147,6 @@ update() {
       sudo git config pull.ff on >/dev/null
       sudo git reset --hard >/dev/null
       sudo git pull --force >/dev/null
-      _check_update_channel
       sudo git pull --force >/dev/null
       up
       _install_raspi_bin
