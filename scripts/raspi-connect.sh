@@ -28,7 +28,7 @@ run() {
 add_key
 
 echo "___________________________________________________________________________________"
-echo "press key to run"
+echo "press key to run:"
 echo "  e) eogin"
 echo "  r) run"
 echo "  d) deboot"
