@@ -176,10 +176,6 @@ restart() {
     docker compose up
   fi
 }
-## remote: run this script from remote repo
-remote() {
-  curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
-}
 ## retry: uninstall and exit
 retry() {
   sudo dpkg --configure -a
