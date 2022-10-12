@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SLEEP_TIME=30
+WATCHER_TIME=30
 . /raspi/raspiserver/.env
 
 # for devs
@@ -210,7 +210,7 @@ watcher() {
   while true; do
     update
     # sleep 3600
-    sleep $SLEEP_TIME
+    sleep $WATCHER_TIME
   done
   exit 0
 }
