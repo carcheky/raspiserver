@@ -42,7 +42,7 @@ services:
     volumes:
       - /raspi/MOUNTED_HD/raspiserver/data/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
-      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/media
     ports:
       - 8123:8123 #optional
     # devices:
