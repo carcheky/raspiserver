@@ -23,6 +23,7 @@ services:
       - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config:/config
       - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/movies:/data/movies
       - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/tvshows:/data/tvshows
+      - /etc/localtime:/etc/localtime:ro
       - /opt/vc/lib:/opt/vc/lib
     devices:
       - /dev/vchiq:/dev/vchi
