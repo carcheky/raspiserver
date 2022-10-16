@@ -29,7 +29,8 @@ services:
 
   # homeassistant
   homeassistant:
-    image: linuxserver/homeassistant:latest
+    # image: linuxserver/homeassistant:latest
+    image: "home-assistant/home-assistant:stable"
     container_name: homeassistant
     network_mode: host
     environment:
@@ -38,13 +39,16 @@ services:
       - TZ=Europe/Madrid
     volumes:
       - /raspi/MOUNTED_HD/raspiserver/data/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 8123:8123 #optional
     # devices:
-    #   - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
     restart: unless-stopped
+    privileged: true
 
-
+  # homeassistant:
+    # container_name: homeassistant
 
   # # webtop
   # webtop:
