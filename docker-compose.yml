@@ -29,8 +29,8 @@ services:
 
   # homeassistant
   homeassistant:
-    # image: linuxserver/homeassistant:latest
-    image: "home-assistant/home-assistant:stable"
+    image: linuxserver/homeassistant:latest
+    # image: "home-assistant/home-assistant:stable"
     container_name: homeassistant
     network_mode: host
     environment:
