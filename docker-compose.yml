@@ -70,7 +70,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=192.168.1.200 #optional
+      - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
     restart: unless-stopped
     ports:
       - 8096:8096
@@ -96,9 +96,9 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-      - USER=username #optional
-      - PASS=password #optional
+      # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+      # - USER=username #optional
+      # - PASS=password #optional
       # - WHITELIST=iplist #optional
       # - PEERPORT=0 #optional
       # - HOST_WHITELIST=dnsname list #optional
