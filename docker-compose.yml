@@ -2,32 +2,6 @@ version: '3.7'
 
 services:
 
-  # jellyfin
-  jellyfin:
-    image: linuxserver/jellyfin:latest
-    container_name: jellyfin
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=192.168.1.200 #optional
-    restart: unless-stopped
-    ports:
-      - 8096:8096
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
-      - 8920:8920 #optional
-    volumes:
-      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
-      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config:/config
-      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/movies:/data/movies
-      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/tvshows:/data/tvshows
-      - /etc/localtime:/etc/localtime:ro
-      - /opt/vc/lib:/opt/vc/lib
-    devices:
-      - /dev/vchiq:/dev/vchi
-
 
   # homeassistant
   homeassistant:
@@ -49,12 +23,23 @@ services:
     # devices:
     restart: unless-stopped
     privileged: true
+    healthcheck:
+      test: ["CMD", "bash"]
+      interval: 45s
+      timeout: 3s
+      retries: 5
+
+      
 
 
   # Proxy the Docker sock so that we can pick up stats for HomeAssistant
   dockerproxy:
     image: tecnativa/docker-socket-proxy
     container_name: dockerproxy
+    network_mode: host
+    depends_on: 
+      homeassistant:
+          condition: service_completed_successfully
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -77,6 +62,37 @@ services:
       - SWARM=1
       - POST=1
 
+
+
+
+  # jellyfin
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    network_mode: host
+    depends_on: 
+      homeassistant:
+          condition: service_completed_successfully
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - JELLYFIN_PublishedServerUrl=192.168.1.200 #optional
+    restart: unless-stopped
+    ports:
+      - 8096:8096
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+      - 8920:8920 #optional
+    volumes:
+      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config:/config
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/movies:/data/movies
+      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/tvshows:/data/tvshows
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/vc/lib:/opt/vc/lib
+    devices:
+      - /dev/vchiq:/dev/vchi
 
 
   # homeassistant:
