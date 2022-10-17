@@ -23,11 +23,7 @@ services:
     # devices:
     restart: unless-stopped
     privileged: true
-    healthcheck:
-      test: ["CMD", "bash"]
-      interval: 45s
-      timeout: 3s
-      retries: 5
+
 
       
 
@@ -39,7 +35,7 @@ services:
     network_mode: host
     depends_on: 
       homeassistant:
-          condition: service_completed_successfully
+          condition: service_started
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -72,7 +68,7 @@ services:
     network_mode: host
     depends_on: 
       homeassistant:
-          condition: service_completed_successfully
+          condition: service_started
     environment:
       - PUID=1000
       - PGID=1000
