@@ -97,8 +97,8 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
       # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-      # - USER=username #optional
-      # - PASS=password #optional
+      - USER=carcheky #optional
+      - PASS=locococo #optional
       # - WHITELIST=iplist #optional
       # - PEERPORT=0 #optional
       # - HOST_WHITELIST=dnsname list #optional
