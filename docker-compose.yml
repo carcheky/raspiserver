@@ -18,6 +18,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /raspi/MOUNTED_HD/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
+      - /run/dbus:/run/dbus:ro
     ports:
       - 8123:8123 #optional
     # devices:
