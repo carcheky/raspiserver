@@ -87,30 +87,30 @@ services:
     devices:
       - /dev/vchiq:/dev/vchi
 
-    # transmission
-    transmission:
-      image: linuxserver/transmission:latest
-      container_name: transmission
-      environment:
-        - PUID=1000
-        - PGID=1000
-        - TZ=Europe/London
-        - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-        - USER=username #optional
-        - PASS=password #optional
-        - WHITELIST=iplist #optional
-        - PEERPORT=peerport #optional
-        - HOST_WHITELIST=dnsname list #optional
-      volumes:
-        - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
-        - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
-        - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
-        # - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
-      ports:
-        - 9091:9091
-        - 51413:51413
-        - 51413:51413/udp
-      restart: unless-stopped
+  # transmission
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+      - USER=username #optional
+      - PASS=password #optional
+      - WHITELIST=iplist #optional
+      - PEERPORT=peerport #optional
+      - HOST_WHITELIST=dnsname list #optional
+    volumes:
+      - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
+      - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
+      - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
+      # - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: unless-stopped
       
       
       # # portainer
