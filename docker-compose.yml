@@ -94,13 +94,13 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Madrid
       - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
       - USER=username #optional
       - PASS=password #optional
-      - WHITELIST=iplist #optional
-      - PEERPORT=peerport #optional
-      - HOST_WHITELIST=dnsname list #optional
+      # - WHITELIST=iplist #optional
+      # - PEERPORT=0 #optional
+      # - HOST_WHITELIST=dnsname list #optional
     volumes:
       - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
       - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
