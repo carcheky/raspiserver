@@ -32,6 +32,7 @@ services:
   dockerproxy:
     image: tecnativa/docker-socket-proxy
     container_name: dockerproxy
+    restart: unless-stopped
     network_mode: host
     depends_on: 
       homeassistant:
