@@ -91,6 +91,7 @@ services:
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
+    network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
