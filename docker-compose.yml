@@ -2,7 +2,6 @@ version: '3.7'
 
 services:
 
-
   # homeassistant
   homeassistant:
     image: linuxserver/homeassistant:latest
@@ -24,10 +23,6 @@ services:
     # devices:
     restart: unless-stopped
     privileged: true
-
-
-      
-
 
   # Proxy the Docker sock so that we can pick up stats for HomeAssistant
   dockerproxy:
@@ -92,58 +87,30 @@ services:
     devices:
       - /dev/vchiq:/dev/vchi
 
-
-  # homeassistant:
-    # container_name: homeassistant
-
-  # # webtop
-  # webtop:
-  #   image: linuxserver/webtop:alpine-kde
-  #   container_name: webtop
-  #   security_opt:
-  #     - seccomp:unconfined #optional
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Madrid
-  #     - SUBFOLDER=/web #optional
-  #     - KEYBOARD=es-es-qwerty #optional
-  #   volumes:
-  #     - /raspi/MOUNTED_HD/raspiserver/data/webtop/config:/config
-  #     - /var/run/docker.sock:/var/run/docker.sock #optional
-  #   ports:
-  #     - 80:3000
-  #   # devices:
-  #   #   - /dev/dri:/dev/dri #optional
-  #   shm_size: "1gb" #optional
-  #   restart: unless-stopped
-
-
-
-
-      # # transmission
-      # transmission:
-      #   image: linuxserver/transmission:latest
-      #   container_name: transmission
-      #   environment:
-      #     - PUID=1000
-      #     - PGID=1000
-      #     - TZ=Europe/London
-      #     - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-      #     - USER=username #optional
-      #     - PASS=password #optional
-      #     - WHITELIST=iplist #optional
-      #     - PEERPORT=peerport #optional
-      #     - HOST_WHITELIST=dnsname list #optional
-      #   volumes:
-      #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
-      #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
-      #     - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
-      #   ports:
-      #     - 9091:9091
-      #     - 51413:51413
-      #     - 51413:51413/udp
-      #   restart: unless-stopped
+  # transmission
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+      - USER=username #optional
+      - PASS=password #optional
+      # - WHITELIST=iplist #optional
+      # - PEERPORT=0 #optional
+      # - HOST_WHITELIST=dnsname list #optional
+    volumes:
+      - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
+      - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
+      - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
+      # - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: unless-stopped
       
       
       # # portainer
