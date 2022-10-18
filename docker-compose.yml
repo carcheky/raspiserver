@@ -12,8 +12,7 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
-      # - /raspi/data/homeassistant/config:/config
-      - /raspi/ccostan/config:/config
+      - /raspi/data/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
       - /raspi/MOUNTED_HD/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
