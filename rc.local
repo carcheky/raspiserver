@@ -1,6 +1,6 @@
 #!/bin/sh -e
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-bash /usr/local/bin/raspi mount >> /raspi/raspi.log &
+bash /usr/local/bin/raspi mount >> /raspi/raspi.log
 echo "restarted at $(date)">>/raspi/rc.local.dates.log
 bash /usr/local/bin/raspi watcher >> /raspi/raspi.log &
 exit 0
