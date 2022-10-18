@@ -183,6 +183,13 @@ up() {
     docker compose up -d --remove-orphans
   fi
 }
+## stop: docker compose stop -d --remove-orphans
+stop() {
+  mount
+  if cd /raspi/raspiserver; then
+    docker compose stop -d --remove-orphans
+  fi
+}
 ## up: docker compose restart
 restart() {
   mount
