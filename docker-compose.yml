@@ -12,7 +12,7 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
-      - /raspi/data/homeassistant/config:/config
+      - /raspi/MOUNTED_raspiconfig/data/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
       - /raspi/MOUNTED_HD/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
@@ -75,9 +75,9 @@ services:
       - 8920:8920 #optional
     volumes:
       - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
-      - /raspi/data/jellyfin/config:/config
-      - /raspi/data/jellyfin/movies:/data/movies
-      - /raspi/data/jellyfin/tvshows:/data/tvshows
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
       - /etc/localtime:/etc/localtime:ro
       - /opt/vc/lib:/opt/vc/lib
     devices:
@@ -99,9 +99,9 @@ services:
       # - PEERPORT=0 #optional
       # - HOST_WHITELIST=dnsname list #optional
     volumes:
-      - /raspi/data/transmission/data:/config
-      - /raspi/data/transmission/downloads:/downloads
-      - /raspi/data/transmission/watch/folder:/watch
+      - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
+      - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
+      - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
       # - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 9091:9091
@@ -121,5 +121,5 @@ services:
       #   restart: unless-stopped
       #   volumes:
       #     - /var/run/docker.sock:/var/run/docker.sock
-      #     - /raspi/data/portainer/data:/data
+      #     - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
       #   command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC

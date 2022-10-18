@@ -1,6 +1,7 @@
 #!/bin/sh -e
 sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
-sudo mount -L HDCCK /raspi/MOUNTED_HD
+sudo mount -L raspimedia /raspi/MOUNTED_raspimedia
+sudo mount -L raspiconfig /raspi/MOUNTED_raspiconfig
 echo "restarted at $(date)">>/raspi/rc.local.dates.log
 bash /usr/local/bin/raspi watcher >> /raspi/raspi.log &
 exit 0
