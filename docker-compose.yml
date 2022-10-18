@@ -1,5 +1,4 @@
 version: '3.7'
-
 services:
 
   # homeassistant
@@ -13,7 +12,8 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
-      - /raspi/data/homeassistant/config:/config
+      # - /raspi/data/homeassistant/config:/config
+      - /raspi/ccostan/config:/config
       - /etc/localtime:/etc/localtime:ro
       - /raspi/MOUNTED_HD/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
@@ -54,9 +54,6 @@ services:
       - SESSSION=1
       - SWARM=1
       - POST=1
-
-
-
 
   # jellyfin
   jellyfin:
