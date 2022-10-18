@@ -102,6 +102,7 @@ services:
       - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
       - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
       - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
+      - /var/run/docker.sock:/var/run/docker.sock
       # - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 9091:9091
