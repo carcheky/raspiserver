@@ -1,5 +1,4 @@
 version: '3.7'
-
 services:
 
   # homeassistant
@@ -13,9 +12,9 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
-      - /raspi/MOUNTED_HD/raspiserver/data/homeassistant/config:/config
+      - /raspi/MOUNTED_raspiconfig/data/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
-      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/media
+      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
     ports:
@@ -55,9 +54,6 @@ services:
       - SWARM=1
       - POST=1
 
-
-
-
   # jellyfin
   jellyfin:
     image: linuxserver/jellyfin:latest
@@ -70,7 +66,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=192.168.1.200 #optional
+      - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
     restart: unless-stopped
     ports:
       - 8096:8096
@@ -78,10 +74,10 @@ services:
       - 1900:1900/udp #optional
       - 8920:8920 #optional
     volumes:
-      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
-      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/config:/config
-      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/movies:/data/movies
-      - /raspi/MOUNTED_HD/raspiserver/data/jellyfin/tvshows:/data/tvshows
+      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
       - /etc/localtime:/etc/localtime:ro
       - /opt/vc/lib:/opt/vc/lib
     devices:
@@ -91,21 +87,22 @@ services:
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
+    network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-      - USER=username #optional
-      - PASS=password #optional
+      # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+      - USER=carcheky #optional
+      - PASS=locococo #optional
       # - WHITELIST=iplist #optional
       # - PEERPORT=0 #optional
       # - HOST_WHITELIST=dnsname list #optional
     volumes:
-      - /raspi/MOUNTED_HD/raspiserver/data/transmission/data:/config
-      - /raspi/MOUNTED_HD/raspiserver/data/transmission/downloads:/downloads
-      - /raspi/MOUNTED_HD/raspiserver/data/transmission/watch/folder:/watch
-      # - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
+      - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
+      - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
+      # - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 9091:9091
       - 51413:51413
@@ -124,5 +121,5 @@ services:
       #   restart: unless-stopped
       #   volumes:
       #     - /var/run/docker.sock:/var/run/docker.sock
-      #     - /raspi/MOUNTED_HD/raspiserver/data/portainer/data:/data
+      #     - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
       #   command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC

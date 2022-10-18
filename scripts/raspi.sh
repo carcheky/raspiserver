@@ -153,23 +153,42 @@ update() {
 }
 ## mount: mount hard disk
 mount() {
-  while [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
-    sudo mkdir -p /raspi/MOUNTED_HD/
-    sudo chmod 777 /raspi/MOUNTED_HD/
+  while [ ! -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
+    sudo mkdir -p /raspi/MOUNTED_raspimedia/
+    sudo chmod 777 /raspi/MOUNTED_raspimedia/
     if [ $(which docker) ]; then
-      sudo systemctl restart docker
+      sudo systemctl stop docker
     fi
-    while ! sudo mount -L HDCCK /raspi/MOUNTED_HD; do
+    while ! sudo mount -L raspimedia /raspi/MOUNTED_raspimedia; do
       echo nop
       sleep 1
     done
   done
+  while [ ! -d /raspi/MOUNTED_raspiconfig/data/homeassistant/config/ ]; do
+    sudo mkdir -p /raspi/MOUNTED_raspiconfig/
+    sudo chmod 777 /raspi/MOUNTED_raspiconfig/
+    if [ $(which docker) ]; then
+      sudo systemctl stop docker
+    fi
+    while ! sudo mount -L raspiconfig /raspi/MOUNTED_raspiconfig; do
+      echo nop
+      sleep 1
+    done
+  done
+  sudo systemctl start docker
 }
 ## up: docker compose up -d --remove-orphans
 up() {
   mount
   if cd /raspi/raspiserver; then
     docker compose up -d --remove-orphans
+  fi
+}
+## stop: docker compose stop -d --remove-orphans
+stop() {
+  mount
+  if cd /raspi/raspiserver; then
+    docker compose stop -d --remove-orphans
   fi
 }
 ## up: docker compose restart
@@ -186,8 +205,8 @@ retry() {
   if [ $(which docker) ]; then
     sudo systemctl stop docker
   fi
-  while [ -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
-    sudo umount /raspi/MOUNTED_HD
+  while [ -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
+    sudo umount /raspi/MOUNTED_raspimedia
   done
   sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
