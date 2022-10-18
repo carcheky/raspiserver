@@ -157,24 +157,25 @@ mount() {
     sudo mkdir -p /raspi/MOUNTED_raspimedia/
     sudo chmod 777 /raspi/MOUNTED_raspimedia/
     if [ $(which docker) ]; then
-      sudo systemctl restart docker
+      sudo systemctl stop docker
     fi
     while ! sudo mount -L raspimedia /raspi/MOUNTED_raspimedia; do
       echo nop
       sleep 1
     done
   done
-  while [ ! -d /raspi/MOUNTED_raspiconfig/data ]; do
+  while [ ! -d /raspi/MOUNTED_raspiconfig/data/homeassistant/config/ ]; do
     sudo mkdir -p /raspi/MOUNTED_raspiconfig/
     sudo chmod 777 /raspi/MOUNTED_raspiconfig/
     if [ $(which docker) ]; then
-      sudo systemctl restart docker
+      sudo systemctl stop docker
     fi
     while ! sudo mount -L raspiconfig /raspi/MOUNTED_raspiconfig; do
       echo nop
       sleep 1
     done
   done
+  sudo systemctl start docker
 }
 ## up: docker compose up -d --remove-orphans
 up() {
