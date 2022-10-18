@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [5.1.0](https://gitlab.com/carcheky/raspiserver/compare/v5.0.23...v5.1.0) (2022-10-18)
+
+
+### Bug Fixes
+
+* docker-compose transmission config ([b75da98](https://gitlab.com/carcheky/raspiserver/commit/b75da98e88cfb035e4c6c369e72d2cffac0d05a5))
+* docker-compose.yml indent ([f97c4de](https://gitlab.com/carcheky/raspiserver/commit/f97c4dee9a6eac084507256bfc54c695666701de))
+* ignore files ([8ae3d47](https://gitlab.com/carcheky/raspiserver/commit/8ae3d47dd62e69257547895dc43961a27089ccb8))
+
+
+### Features
+
+* transmission ([de2ec0f](https://gitlab.com/carcheky/raspiserver/commit/de2ec0fdd87bac93c81ea6829fa218e063550552))
+
 ## [5.0.23](https://gitlab.com/carcheky/raspiserver/compare/v5.0.22...v5.0.23) (2022-10-13)
 
 
