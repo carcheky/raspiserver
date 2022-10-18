@@ -14,7 +14,7 @@ services:
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
-      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/media
+      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
     ports:
@@ -74,7 +74,7 @@ services:
       - 1900:1900/udp #optional
       - 8920:8920 #optional
     volumes:
-      - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
@@ -102,7 +102,7 @@ services:
       - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
       - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
       - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
-      # - /raspi/MOUNTED_HD/BibliotecaMultimedia:/BibliotecaMultimedia
+      # - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 9091:9091
       - 51413:51413
