@@ -39,8 +39,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
       - /raspi/MOUNTED_raspiconfig/data/:/certificados/
-    # ports:
-      # - 8123:8123 #optional
+    ports:
+      - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
 
@@ -75,35 +75,35 @@ services:
   #     - SWARM=1
   #     - POST=1
 
-  # # jellyfin
-  # jellyfin:
-  #   image: linuxserver/jellyfin:latest
-  #   container_name: jellyfin
-  #   network_mode: host
-  #   # depends_on: 
-  #   #   homeassistant:
-  #   #       condition: service_started
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Madrid
-  #     - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
-  #   restart: unless-stopped
-  #   ports:
-  #     - 8096:8096
-  #     - 7359:7359/udp #optional
-  #     - 1900:1900/udp #optional
-  #     - 8920:8920 #optional
-  #   volumes:
-  #     - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
-  #     - /raspi/MOUNTED_raspiconfig/data/:/certificados/
-  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
-  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
-  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
-  #     - /etc/localtime:/etc/localtime:ro
-  #     - /opt/vc/lib:/opt/vc/lib
-  #   devices:
-  #     - /dev/vchiq:/dev/vchi
+  # jellyfin
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    network_mode: host
+    # depends_on: 
+    #   homeassistant:
+    #       condition: service_started
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
+    restart: unless-stopped
+    ports:
+      - 8096:8096
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+      - 8920:8920 #optional
+    volumes:
+      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_raspiconfig/data/:/certificados/
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/vc/lib:/opt/vc/lib
+    devices:
+      - /dev/vchiq:/dev/vchi
 
   # # transmission
   # transmission:
