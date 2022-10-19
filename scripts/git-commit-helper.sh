@@ -3,5 +3,5 @@ git config --global user.name "carcheky"
 git add .
 git commit -m "${@}"
 git push
-dkud --force-recreate --remove-orphans 
+ docker compose up -d --force-recreate --remove-orphans 
 raspi logs
