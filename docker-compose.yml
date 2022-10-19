@@ -121,4 +121,5 @@ services:
     restart: unless-stopped
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
