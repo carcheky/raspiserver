@@ -123,3 +123,22 @@ services:
       - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
+
+  # diun
+  diun:
+    image: crazymax/diun:latest
+    container_name: diun
+    command: serve
+    volumes:
+      - "./data:/data"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      - "TZ=Europe/Paris"
+      - "LOG_LEVEL=info"
+      - "LOG_JSON=false"
+      - "DIUN_WATCH_WORKERS=20"
+      - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
+      - "DIUN_PROVIDERS_DOCKER=true"
+    labels:
+      - "diun.enable=true"
+    restart: always
