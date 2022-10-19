@@ -137,7 +137,7 @@ services:
       - "LOG_LEVEL=info"
       - "LOG_JSON=false"
       - "DIUN_WATCH_WORKERS=20"
-      - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
+      - "DIUN_WATCH_SCHEDULE=0 */12 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     labels:
       - "diun.enable=true"
