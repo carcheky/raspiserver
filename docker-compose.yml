@@ -17,6 +17,7 @@ services:
       - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
+      - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
     ports:
       - 8123:8123 #optional
     # devices:
