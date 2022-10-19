@@ -18,8 +18,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
       - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
-    ports:
-      - 443:8123 #optional
+    # ports:
+      # - 443:8123 #optional
     restart: unless-stopped
     privileged: true
 
