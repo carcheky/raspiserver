@@ -78,6 +78,7 @@ services:
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
+      - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
       - /etc/localtime:/etc/localtime:ro
       - /opt/vc/lib:/opt/vc/lib
     devices:
