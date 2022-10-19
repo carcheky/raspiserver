@@ -20,7 +20,6 @@ services:
       - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
     ports:
       - 443:8123 #optional
-    # devices:
     restart: unless-stopped
     privileged: true
 
