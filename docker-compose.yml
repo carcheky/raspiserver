@@ -1,5 +1,27 @@
 version: '3.7'
 services:
+  nginx-proxy:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8123:8123"
+      - "8096:8096"
+      - "8920:8920"
+    volumes:
+      - /raspi/MOUNTED_raspiconfig/data/nginx/nginx-config/proxy.conf:/etc/nginx/conf.d/default.conf
+      - /raspi/MOUNTED_raspiconfig/data/certbot/conf:/etc/letsencrypt
+      - /raspi/MOUNTED_raspiconfig/data/certbot/www:/var/www/certbot
+    restart: always
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+  certbot:
+    image: certbot/certbot:arm32v6-latest
+    container_name: certbot
+    volumes:
+      - /raspi/MOUNTED_raspiconfig/data/certbot/conf:/etc/letsencrypt
+      - /raspi/MOUNTED_raspiconfig/data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   # homeassistant
   homeassistant:
@@ -13,39 +35,39 @@ services:
       - TZ=Europe/Madrid
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/homeassistant/config:/config
-      - /etc/localtime:/etc/localtime:ro
+      - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
       - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/media
+      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
-      - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
-    ports:
-      - 8123:8123 #optional
+    # ports:
+    #   - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
 
   # jellyfin
-  jellyfin:
-    image: linuxserver/jellyfin:latest
-    container_name: jellyfin
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
-    restart: unless-stopped
-    ports:
-      - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
-    volumes:
-      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
-      - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
-      - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
-      - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
-      - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
-      - /etc/localtime:/etc/localtime:ro
-      - /opt/vc/lib:/opt/vc/lib
-    devices:
-      - /dev/vchiq:/dev/vchi
+  # jellyfin:
+  #   image: linuxserver/jellyfin:latest
+  #   container_name: jellyfin
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Madrid
+  #     - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
+  #   restart: unless-stopped
+  #   # ports:
+  #   #   - 8096:8096
+  #   #   - 8920:8920 #optional
+  #   #   - 7359:7359/udp #optional
+  #   #   - 1900:1900/udp #optional
+  #   volumes:
+  #     - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
+  #     - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
+  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
+  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
+  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - /opt/vc/lib:/opt/vc/lib
+  #   devices:
+  #     - /dev/vchiq:/dev/vchi
