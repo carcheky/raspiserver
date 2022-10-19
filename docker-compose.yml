@@ -19,7 +19,7 @@ services:
       - /run/dbus:/run/dbus:ro
       - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
     ports:
-      - 8123:8123 #optional
+      - 443:8123 #optional
     # devices:
     restart: unless-stopped
     privileged: true
