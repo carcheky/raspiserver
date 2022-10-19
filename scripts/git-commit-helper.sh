@@ -3,3 +3,5 @@ git config --global user.name "carcheky"
 git add .
 git commit -m "${@}"
 git push
+raspi up
+raspi logs
