@@ -1,26 +1,5 @@
 version: '3.7'
 services:
-  # nginx:
-  #   image: nginx:latest
-  #   container_name: nginx
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #     - "8096:8096"
-  #     - "8920:8920" #optional
-  #   volumes:
-  #     - /raspi/MOUNTED_raspiconfig/data/nginx/nginx-config/proxy.conf:/etc/nginx/conf.d/default.conf
-  #     - /raspi/MOUNTED_raspiconfig/data/certbot/conf:/etc/letsencrypt
-  #     - /raspi/MOUNTED_raspiconfig/data/certbot/www:/var/www/certbot
-  #   restart: always
-  #   command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-  # certbot:
-  #   image: certbot/certbot:arm32v6-latest
-  #   container_name: certbot
-  #   volumes:
-  #     - /raspi/MOUNTED_raspiconfig/data/certbot/conf:/etc/letsencrypt
-  #     - /raspi/MOUNTED_raspiconfig/data/certbot/www:/var/www/certbot
-  #   entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   # homeassistant
   homeassistant:
@@ -43,7 +22,6 @@ services:
       - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
-
 
   # jellyfin
   jellyfin:
@@ -71,96 +49,3 @@ services:
       - /opt/vc/lib:/opt/vc/lib
     devices:
       - /dev/vchiq:/dev/vchi
-
-
-  # # Proxy the Docker sock so that we can pick up stats for HomeAssistant
-  # dockerproxy:
-  #   image: tecnativa/docker-socket-proxy
-  #   container_name: dockerproxy
-  #   restart: unless-stopped
-  #   network_mode: host
-  #   depends_on: 
-  #     homeassistant:
-  #         condition: service_started
-  #   privileged: true
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   ports:
-  #     - 2375:2375
-  #   environment:
-  #     - BUILD=1
-  #     - COMMIT=1
-  #     - CONFIGS=1
-  #     - CONTAINERS=1
-  #     - DISTRIBUTION=1
-  #     - EXEC=1
-  #     - IMAGES=1
-  #     - INFO=1
-  #     - NETWORKS=1
-  #     - NODES=1
-  #     - PLUGINS=1
-  #     - SERVICES=1
-  #     - SESSSION=1
-  #     - SWARM=1
-  #     - POST=1
-
-
-  # # transmission
-  # transmission:
-  #   image: linuxserver/transmission:latest
-  #   container_name: transmission
-  #   network_mode: host
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Madrid
-  #     # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-  #     - USER=carcheky #optional
-  #     - PASS=locococo #optional
-  #     # - WHITELIST=iplist #optional
-  #     # - PEERPORT=0 #optional
-  #     # - HOST_WHITELIST=dnsname list #optional
-  #   volumes:
-  #     - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
-  #     - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
-  #     - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     # - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
-  #   ports:
-  #     - 9091:9091
-  #     - 51413:51413
-  #     - 51413:51413/udp
-  #   restart: unless-stopped
-      
-  # # portainer
-  # portainer:
-  #   image: portainer/portainer-ce
-  #   container_name: portainer
-  #   ports:
-  #     - 9000:9000
-  #     - 8000:8000
-  #     - 9443:9443
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
-
-  # # diun
-  # diun:
-  #   image: crazymax/diun:latest
-  #   container_name: diun
-  #   command: serve
-  #   volumes:
-  #     - "/raspi/MOUNTED_raspiconfig/data/diun/data:/data"
-  #     - "/var/run/docker.sock:/var/run/docker.sock"
-  #   environment:
-  #     - "TZ=Europe/Paris"
-  #     - "LOG_LEVEL=info"
-  #     - "LOG_JSON=false"
-  #     - "DIUN_WATCH_WORKERS=20"
-  #     - "DIUN_WATCH_SCHEDULE=0 */12 * * *"
-  #     - "DIUN_PROVIDERS_DOCKER=true"
-  #   labels:
-  #     - "diun.enable=true"
-  #   restart: always
