@@ -69,10 +69,10 @@ services:
       - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
     restart: unless-stopped
     ports:
-      - 80:8096
+      - 8096:8096
       - 7359:7359/udp #optional
       - 1900:1900/udp #optional
-      - 443:8920 #optional
+      - 8920:8920 #optional
     volumes:
       - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
       - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
@@ -84,62 +84,62 @@ services:
     devices:
       - /dev/vchiq:/dev/vchi
 
-  # transmission
-  transmission:
-    image: linuxserver/transmission:latest
-    container_name: transmission
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-      - USER=carcheky #optional
-      - PASS=locococo #optional
-      # - WHITELIST=iplist #optional
-      # - PEERPORT=0 #optional
-      # - HOST_WHITELIST=dnsname list #optional
-    volumes:
-      - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
-      - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
-      - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
-      - /var/run/docker.sock:/var/run/docker.sock
-      # - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
-    ports:
-      - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
-    restart: unless-stopped
+  # # transmission
+  # transmission:
+  #   image: linuxserver/transmission:latest
+  #   container_name: transmission
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Madrid
+  #     # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+  #     - USER=carcheky #optional
+  #     - PASS=locococo #optional
+  #     # - WHITELIST=iplist #optional
+  #     # - PEERPORT=0 #optional
+  #     # - HOST_WHITELIST=dnsname list #optional
+  #   volumes:
+  #     - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
+  #     - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
+  #     - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     # - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
+  #   ports:
+  #     - 9091:9091
+  #     - 51413:51413
+  #     - 51413:51413/udp
+  #   restart: unless-stopped
       
-  # portainer
-  portainer:
-    image: portainer/portainer-ce
-    container_name: portainer
-    ports:
-      - 9000:9000
-      - 8000:8000
-      - 9443:9443
-    restart: unless-stopped
-    volumes:
-      - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
+  # # portainer
+  # portainer:
+  #   image: portainer/portainer-ce
+  #   container_name: portainer
+  #   ports:
+  #     - 9000:9000
+  #     - 8000:8000
+  #     - 9443:9443
+  #   restart: unless-stopped
+  #   volumes:
+  #     - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
 
-  # diun
-  diun:
-    image: crazymax/diun:latest
-    container_name: diun
-    command: serve
-    volumes:
-      - "/raspi/MOUNTED_raspiconfig/data/diun/data:/data"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    environment:
-      - "TZ=Europe/Paris"
-      - "LOG_LEVEL=info"
-      - "LOG_JSON=false"
-      - "DIUN_WATCH_WORKERS=20"
-      - "DIUN_WATCH_SCHEDULE=0 */12 * * *"
-      - "DIUN_PROVIDERS_DOCKER=true"
-    labels:
-      - "diun.enable=true"
-    restart: always
+  # # diun
+  # diun:
+  #   image: crazymax/diun:latest
+  #   container_name: diun
+  #   command: serve
+  #   volumes:
+  #     - "/raspi/MOUNTED_raspiconfig/data/diun/data:/data"
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #   environment:
+  #     - "TZ=Europe/Paris"
+  #     - "LOG_LEVEL=info"
+  #     - "LOG_JSON=false"
+  #     - "DIUN_WATCH_WORKERS=20"
+  #     - "DIUN_WATCH_SCHEDULE=0 */12 * * *"
+  #     - "DIUN_PROVIDERS_DOCKER=true"
+  #   labels:
+  #     - "diun.enable=true"
+  #   restart: always
