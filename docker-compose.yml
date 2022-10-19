@@ -18,8 +18,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
       - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
-    # ports:
-      # - 443:8123 #optional
+    ports:
+      - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
 
@@ -69,7 +69,7 @@ services:
       - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
     restart: unless-stopped
     ports:
-      - 8096:8096
+      - 80:8096
       - 7359:7359/udp #optional
       - 1900:1900/udp #optional
       - 8920:8920 #optional
