@@ -78,9 +78,9 @@ services:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
     network_mode: host
-    depends_on: 
-      homeassistant:
-          condition: service_started
+    # depends_on: 
+    #   homeassistant:
+    #       condition: service_started
     environment:
       - PUID=1000
       - PGID=1000
