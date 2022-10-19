@@ -110,15 +110,15 @@ services:
       - 51413:51413/udp
     restart: unless-stopped
       
-  # # portainer
-  # portainer:
-  #   image: portainer/portainer-ce
-  #   container_name: portainer
-  #   ports:
-  #     - 9000:9000
-  #     - 8000:8000
-  #     - 9443:9443
-  #   restart: unless-stopped
-  #   volumes:
-  #     - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
-  #   command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
+  # portainer
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    ports:
+      - 9000:9000
+      - 8000:8000
+      - 9443:9443
+    restart: unless-stopped
+    volumes:
+      - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
+    command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
