@@ -75,10 +75,10 @@ services:
       - 8920:8920 #optional
     volumes:
       - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
-      - /raspi/MOUNTED_raspiconfig/certificados/:/certificados/
       - /etc/localtime:/etc/localtime:ro
       - /opt/vc/lib:/opt/vc/lib
     devices:
@@ -131,7 +131,7 @@ services:
     container_name: diun
     command: serve
     volumes:
-      - "./data:/data"
+      - "/raspi/MOUNTED_raspiconfig/data/diun/data:/data"
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
       - "TZ=Europe/Paris"
