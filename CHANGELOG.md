@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [5.1.1](https://gitlab.com/carcheky/raspiserver/compare/v5.1.0...v5.1.1) (2022-10-19)
+
+
+### Bug Fixes
+
+*  19 oct 2022, 0:01 ([f8a6656](https://gitlab.com/carcheky/raspiserver/commit/f8a665603bfe513fde49bf18ccc8b56b4431d92b))
+* minimal transmission ([3baf8e5](https://gitlab.com/carcheky/raspiserver/commit/3baf8e590645110f5321323ea996c80663413980))
+* network_mode host ([34579f9](https://gitlab.com/carcheky/raspiserver/commit/34579f9c4a02dd9c2c1686818abddd0c9b7152fb))
+* user pass ([41ee46d](https://gitlab.com/carcheky/raspiserver/commit/41ee46d3920d56ee8bf57d02bbd5b6eab4cf025d))
+
 # [5.1.0](https://gitlab.com/carcheky/raspiserver/compare/v5.0.23...v5.1.0) (2022-10-18)
 
 
