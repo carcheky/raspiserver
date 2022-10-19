@@ -38,7 +38,7 @@ services:
       - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro
-      - /raspi/MOUNTED_raspiconfig/data/certificados:/certificados/
+      - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
     ports:
       - 8123:8123 #optional
     restart: unless-stopped
@@ -63,7 +63,7 @@ services:
       - 1900:1900/udp #optional
     volumes:
       - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
-      - /raspi/MOUNTED_raspiconfig/data/certificados:/certificados/
+      - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
       - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
