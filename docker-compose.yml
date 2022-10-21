@@ -3,35 +3,35 @@ services:
 
 
 
-  swag:
-    image: lscr.io/linuxserver/swag:latest
-    container_name: swag
-    cap_add:
-      - NET_ADMIN
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - URL=carcheky.duckdns.org
-      - VALIDATION=http
-      - SUBDOMAINS=www, #optional
-      # - CERTPROVIDER= #optional
-      - DNSPLUGIN=duckdns #optional
-      # - PROPAGATION= #optional
-      - EMAIL=${EMAIL}
-      # - VALIDATION=duckdns
-      # - DUCKDNSTOKEN=${DUCKDNSTOKEN}
-      # - ONLY_SUBDOMAINS=false #optional
-      # - EXTRA_DOMAINS= #optional
-      # - STAGING=false #optional
-      # - FILE__PASSWORD=/run/secrets/mysecretpassword
-    volumes:
-      - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
-      # - /path/to/appdata/config:/config
-    ports:
-      - 443:443
-      - 80:80 #optional
-    restart: unless-stopped
+  # swag:
+  #   image: lscr.io/linuxserver/swag:latest
+  #   container_name: swag
+  #   cap_add:
+  #     - NET_ADMIN
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Madrid
+  #     - URL=carcheky.duckdns.org
+  #     - VALIDATION=http
+  #     - SUBDOMAINS=www, #optional
+  #     # - CERTPROVIDER= #optional
+  #     - DNSPLUGIN=duckdns #optional
+  #     # - PROPAGATION= #optional
+  #     - EMAIL=${EMAIL}
+  #     # - VALIDATION=duckdns
+  #     # - DUCKDNSTOKEN=${DUCKDNSTOKEN}
+  #     # - ONLY_SUBDOMAINS=false #optional
+  #     # - EXTRA_DOMAINS= #optional
+  #     # - STAGING=false #optional
+  #     # - FILE__PASSWORD=/run/secrets/mysecretpassword
+  #   volumes:
+  #     - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
+  #     # - /path/to/appdata/config:/config
+  #   ports:
+  #     - 443:443
+  #     - 80:80 #optional
+  #   restart: unless-stopped
 
   # duckdns
   duckdns:
