@@ -1,0 +1,27 @@
+services:
+  swag:
+    image: linuxserver/swag:latest
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - URL=carcheky.duckdns.org
+      - VALIDATION=dns
+      # - SUBDOMAINS=www, #optional
+      # - CERTPROVIDER= #optional
+      - DNSPLUGIN=duckdns #optional
+      # - PROPAGATION=30 #optional
+      - EMAIL= carcheky@gmail.com #optional
+      # - ONLY_SUBDOMAINS=false #optional
+      # - EXTRA_DOMAINS= #optional
+      # - STAGING=false #optional
+    volumes:
+      - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
+    ports:
+      - 443:443
+      - 80:80 #optional
+    restart: unless-stopped
