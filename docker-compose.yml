@@ -1,38 +1,6 @@
 version: '3.7'
 services:
 
-
-
-  # swag:
-  #   image: lscr.io/linuxserver/swag:latest
-  #   container_name: swag
-  #   cap_add:
-  #     - NET_ADMIN
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Madrid
-  #     - URL=carcheky.duckdns.org
-  #     - VALIDATION=http
-  #     - SUBDOMAINS=www, #optional
-  #     # - CERTPROVIDER= #optional
-  #     - DNSPLUGIN=duckdns #optional
-  #     # - PROPAGATION= #optional
-  #     - EMAIL=${EMAIL}
-  #     # - VALIDATION=duckdns
-  #     # - DUCKDNSTOKEN=${DUCKDNSTOKEN}
-  #     # - ONLY_SUBDOMAINS=false #optional
-  #     # - EXTRA_DOMAINS= #optional
-  #     # - STAGING=false #optional
-  #     # - FILE__PASSWORD=/run/secrets/mysecretpassword
-  #   volumes:
-  #     - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
-  #     # - /path/to/appdata/config:/config
-  #   ports:
-  #     - 443:443
-  #     - 80:80 #optional
-  #   restart: unless-stopped
-
   # duckdns
   duckdns:
     image: linuxserver/duckdns:latest
@@ -47,16 +15,6 @@ services:
     volumes:
       - /path/to/appdata/config:/config #optional
     restart: unless-stopped
-
-
-
-
-
-
-
-
-
-
 
   # homeassistant
   homeassistant:
@@ -81,28 +39,28 @@ services:
     privileged: true
 
   # jellyfin
-  # jellyfin:
-  #   image: linuxserver/jellyfin:latest
-  #   container_name: jellyfin
-  #   network_mode: host
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/Madrid
-  #     - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
-  #   restart: unless-stopped
-  #   # ports:
-  #   #   - 8096:8096
-  #   #   - 8920:8920 #optional
-  #   #   - 7359:7359/udp #optional
-  #   #   - 1900:1900/udp #optional
-  #   volumes:
-  #     - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
-  #     - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
-  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
-  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
-  #     - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
-  #     - /etc/localtime:/etc/localtime:ro
-  #     - /opt/vc/lib:/opt/vc/lib
-  #   devices:
-  #     - /dev/vchiq:/dev/vchi
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
+    restart: unless-stopped
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    volumes:
+      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
+      - /raspi/MOUNTED_raspiconfig/certificados:/certificados/
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
+      - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/vc/lib:/opt/vc/lib
+    devices:
+      - /dev/vchiq:/dev/vchi
