@@ -21,6 +21,7 @@ services:
       # - STAGING=false #optional
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
+      - /var/run/docker.sock:/tmp/docker.sock:ro
     ports:
       - 443:443
       - 80:80 #optional
