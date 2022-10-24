@@ -1,83 +1,110 @@
-version: '3.7'
 services:
+
+  # diun
+  diun:
+    image: crazymax/diun:latest
+    container_name: diun
+    command: serve
+    volumes:
+      - "${DATA_FOLDER}/diun/data:/data"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    environment:
+      - "TZ=Europe/Paris"
+      - "LOG_LEVEL=info"
+      - "LOG_JSON=false"
+      - "DIUN_WATCH_WORKERS=20"
+      - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
+      - "DIUN_PROVIDERS_DOCKER=true"
+    restart: always
+
+  # swag
+  swag:
+    image: linuxserver/swag:latest
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    # network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      # - URL=raspi.carcheky.com
+      - URL=carcheky.duckdns.org
+      # - VALIDATION=http
+      # - VALIDATION=dns
+      - VALIDATION=duckdns
+      - DNSPLUGIN=duckdns #optional
+      - EMAIL=carcheky@gmail.com #optional
+      - SUBDOMAINS=wildcard  #optional
+      # - CERTPROVIDER=zerossl #optional
+      # - PROPAGATION=30 #optional
+      # - ONLY_SUBDOMAINS=false #optional
+      # - EXTRA_DOMAINS=raspi.carcheky.com #optional
+      # - STAGING=true #optional
+    volumes:
+      - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /raspi/MOUNTED_raspiconfig/data/swag/log:/var/log/letsencrypt
+    ports:
+      # - 53:53/udp
+      - 444:443
+      - 81:80 #optional
+    restart: unless-stopped
+
+  # duckdns
+  duckdns:
+    image: linuxserver/duckdns:latest
+    container_name: duckdns
+    environment:
+      - TZ=Europe/Madrid
+      - SUBDOMAINS=carcheky
+      - TOKEN=${DUCKDNSTOKEN}
+    restart: unless-stopped
 
   # homeassistant
   homeassistant:
-    image: linuxserver/homeassistant:latest
-    # image: "home-assistant/home-assistant:stable"
+    # image: linuxserver/homeassistant:latest
+    image: "homeassistant/home-assistant:stable"
     container_name: homeassistant
-    network_mode: host
+    # network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
     volumes:
-      - /raspi/MOUNTED_raspiconfig/data/homeassistant/config:/config
+      - ${DATA_FOLDER}/homeassistant/config:/config
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
+      - ${MEDIA_FOLDER}:/media
       - /etc/localtime:/etc/localtime:ro
-      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/media
       - /var/run/docker.sock:/var/run/docker.sock
-      - /run/dbus:/run/dbus:ro
+      - /run/dbus:/run/dbus:ro # bluethooth
     ports:
       - 8123:8123 #optional
-    # devices:
     restart: unless-stopped
     privileged: true
-
-  # Proxy the Docker sock so that we can pick up stats for HomeAssistant
-  dockerproxy:
-    image: tecnativa/docker-socket-proxy
-    container_name: dockerproxy
-    restart: unless-stopped
-    network_mode: host
-    depends_on: 
-      homeassistant:
-          condition: service_started
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - 2375:2375
-    environment:
-      - BUILD=1
-      - COMMIT=1
-      - CONFIGS=1
-      - CONTAINERS=1
-      - DISTRIBUTION=1
-      - EXEC=1
-      - IMAGES=1
-      - INFO=1
-      - NETWORKS=1
-      - NODES=1
-      - PLUGINS=1
-      - SERVICES=1
-      - SESSSION=1
-      - SWARM=1
-      - POST=1
 
   # jellyfin
   jellyfin:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
-    network_mode: host
-    depends_on: 
-      homeassistant:
-          condition: service_started
+    # network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
+      # - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
     restart: unless-stopped
     ports:
       - 8096:8096
+      - 8920:8920 #optional
       - 7359:7359/udp #optional
       - 1900:1900/udp #optional
-      - 8920:8920 #optional
     volumes:
-      - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
-      - /raspi/MOUNTED_raspiconfig/data/jellyfin/config:/config
-      - /raspi/MOUNTED_raspiconfig/data/jellyfin/movies:/data/movies
-      - /raspi/MOUNTED_raspiconfig/data/jellyfin/tvshows:/data/tvshows
+      - ${MEDIA_FOLDER}:/BibliotecaMultimedia
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
+      - ${DATA_FOLDER}/jellyfin/config:/config
+      - ${DATA_FOLDER}/jellyfin/movies:/data/movies
+      - ${DATA_FOLDER}/jellyfin/tvshows:/data/tvshows
       - /etc/localtime:/etc/localtime:ro
       - /opt/vc/lib:/opt/vc/lib
     devices:
@@ -87,38 +114,23 @@ services:
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
-    network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/Madrid
+      - TZ=Europe/madrid
+      - USER=${TRANSMISSION_USER} #optional
       # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-      - USER=carcheky #optional
-      - PASS=locococo #optional
+      - PASS=${TRANSMISSION_PASSWORD} #optional
       # - WHITELIST=iplist #optional
-      # - PEERPORT=0 #optional
+      # - PEERPORT="peerport" #optional
       # - HOST_WHITELIST=dnsname list #optional
     volumes:
-      - /raspi/MOUNTED_raspiconfig/data/transmission/data:/config
-      - /raspi/MOUNTED_raspiconfig/data/transmission/downloads:/downloads
-      - /raspi/MOUNTED_raspiconfig/data/transmission/watch/folder:/watch
-      # - /raspi/MOUNTED_raspimedia/BibliotecaMultimedia:/BibliotecaMultimedia
+      - ${DATA_FOLDER}/data:/config
+      - ${DATA_FOLDER}/watch/folder:/watch
+      - ${MEDIA_FOLDER}/downloads:/downloads
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
     ports:
       - 9091:9091
       - 51413:51413
       - 51413:51413/udp
     restart: unless-stopped
-      
-  # portainer
-  portainer:
-    image: portainer/portainer-ce
-    container_name: portainer
-    ports:
-      - 9000:9000
-      - 8000:8000
-      - 9443:9443
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /raspi/MOUNTED_raspiconfig/data/portainer/data:/data
-    command: --admin-password $$2y$$05$$na4eZ7.5khaaFZbPn3MYieq4x7YGOBBBttedAyPvq2xt8/jfi8goC
