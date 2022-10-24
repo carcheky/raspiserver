@@ -30,20 +30,23 @@ services:
       - TZ=Europe/Madrid
       # - URL=raspi.carcheky.com
       - URL=carcheky.duckdns.org
-      - VALIDATION=duckdns
+      # - VALIDATION=http
+      # - VALIDATION=dns
+      - VALIDATION=dns
       - DNSPLUGIN=duckdns #optional
       - EMAIL=carcheky@gmail.com #optional
-      - SUBDOMAINS=wildcard  #optional
-      - CERTPROVIDER= #optional
-      # - PROPAGATdION=30 #optional
+      # - SUBDOMAINS=wildcard  #optional
+      - CERTPROVIDER=zerossl #optional
+      # - PROPAGATION=30 #optional
       # - ONLY_SUBDOMAINS=false #optional
-      # - EXTRA_DOMAINS= #optional
+      # - EXTRA_DOMAINS=raspi.carcheky.com #optional
       # - STAGING=true #optional
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - /raspi/MOUNTED_raspiconfig/data/swag/log:/var/log/
+      - /raspi/MOUNTED_raspiconfig/data/swag/log:/var/log/letsencrypt
     ports:
+      # - 53:53/udp
       - 444:443
       - 81:80 #optional
     restart: unless-stopped
@@ -70,7 +73,7 @@ services:
       - TZ=Europe/Madrid
     volumes:
       - ${DATA_FOLDER}/homeassistant/config:/config
-      - ${DATA_FOLDER}/swag/config/keys/letsencrypt:/certificados/
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
       - ${MEDIA_FOLDER}:/media
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
@@ -98,7 +101,7 @@ services:
       - 1900:1900/udp #optional
     volumes:
       - ${MEDIA_FOLDER}:/BibliotecaMultimedia
-      - ${DATA_FOLDER}/swag/config/keys/letsencrypt:/certificados/
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
       - ${DATA_FOLDER}/jellyfin/config:/config
       - ${DATA_FOLDER}/jellyfin/movies:/data/movies
       - ${DATA_FOLDER}/jellyfin/tvshows:/data/tvshows
@@ -125,6 +128,7 @@ services:
       - ${DATA_FOLDER}/data:/config
       - ${DATA_FOLDER}/watch/folder:/watch
       - ${MEDIA_FOLDER}/downloads:/downloads
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
     ports:
       - 9091:9091
       - 51413:51413
