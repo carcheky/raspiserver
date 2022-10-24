@@ -40,7 +40,7 @@ services:
       # - PROPAGATION=30 #optional
       # - ONLY_SUBDOMAINS=false #optional
       # - EXTRA_DOMAINS=raspi.carcheky.com #optional
-      - STAGING=true #optional
+      # - STAGING=true #optional
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
       - /var/run/docker.sock:/tmp/docker.sock:ro
