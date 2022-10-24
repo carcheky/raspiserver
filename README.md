@@ -15,7 +15,7 @@
 ````
 
 
-Download and run
+## Download and run
 ````
 curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | bash -s -- run
 ````

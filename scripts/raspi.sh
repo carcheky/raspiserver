@@ -1,7 +1,10 @@
 #!/bin/bash
 
+WATCHER_TIME=30
+. /raspi/raspiserver/.env
+
 # for devs
-set -eux
+# set -eux
 
 # helper scripts
 _install() {
@@ -70,7 +73,7 @@ _install() {
     ███████║███████╗██║  ██║ ╚████╔╝ ███████╗██║  ██║
     ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝
     \"                                                                              
-    
+    raspi logs
     " >>~/.zshrc
   fi
   if [ $(which docker) ]; then
@@ -108,8 +111,8 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
-    _install_bin
+    sudo git clone -b $CHANNEL https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    update
   fi
 }
 _install_bin() {
@@ -143,29 +146,49 @@ update() {
       sudo git pull --force >/dev/null
       sudo git pull --force >/dev/null
       up
-      _install_raspi_bin
+      update
+      _install_bin
     fi
   fi
 }
 ## mount: mount hard disk
 mount() {
-  while [ ! -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
-    sudo mkdir -p /raspi/MOUNTED_HD/
-    sudo chmod 777 /raspi/MOUNTED_HD/
+  while [ ! -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
+    sudo mkdir -p /raspi/MOUNTED_raspimedia/
+    sudo chmod 777 /raspi/MOUNTED_raspimedia/
     if [ $(which docker) ]; then
-      sudo systemctl restart docker
+      sudo systemctl stop docker
     fi
-    while ! sudo mount -L HDCCK /raspi/MOUNTED_HD; do
+    while ! sudo mount -L raspimedia /raspi/MOUNTED_raspimedia; do
       echo nop
       sleep 1
     done
   done
+  while [ ! -d /raspi/MOUNTED_raspiconfig/data/homeassistant/config/ ]; do
+    sudo mkdir -p /raspi/MOUNTED_raspiconfig/
+    sudo chmod 777 /raspi/MOUNTED_raspiconfig/
+    if [ $(which docker) ]; then
+      sudo systemctl stop docker
+    fi
+    while ! sudo mount -L raspiconfig /raspi/MOUNTED_raspiconfig; do
+      echo nop
+      sleep 1
+    done
+  done
+  sudo systemctl start docker
 }
 ## up: docker compose up -d --remove-orphans
 up() {
   mount
   if cd /raspi/raspiserver; then
     docker compose up -d --remove-orphans
+  fi
+}
+## stop: docker compose stop -d --remove-orphans
+stop() {
+  mount
+  if cd /raspi/raspiserver; then
+    docker compose stop -d --remove-orphans
   fi
 }
 ## up: docker compose restart
@@ -176,18 +199,14 @@ restart() {
     docker compose up
   fi
 }
-## remote: run this script from remote repo
-remote() {
-  curl https://gitlab.com/carcheky/raspiserver/-/raw/main/scripts/raspi.sh | sudo bash
-}
 ## retry: uninstall and exit
 retry() {
   sudo dpkg --configure -a
   if [ $(which docker) ]; then
     sudo systemctl stop docker
   fi
-  while [ -d /raspi/MOUNTED_HD/BibliotecaMultimedia/Peliculas ]; do
-    sudo umount /raspi/MOUNTED_HD
+  while [ -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
+    sudo umount /raspi/MOUNTED_raspimedia
   done
   sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
@@ -209,7 +228,8 @@ help() {
 watcher() {
   while true; do
     update
-    sleep 3600
+    # sleep 3600
+    sleep $WATCHER_TIME
   done
   exit 0
 }
