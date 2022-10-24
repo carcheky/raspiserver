@@ -32,10 +32,10 @@ services:
       - URL=carcheky.duckdns.org
       # - VALIDATION=http
       # - VALIDATION=dns
-      - VALIDATION=dns
+      - VALIDATION=duckdns
       - DNSPLUGIN=duckdns #optional
       - EMAIL=carcheky@gmail.com #optional
-      # - SUBDOMAINS=wildcard  #optional
+      - SUBDOMAINS=wildcard  #optional
       - CERTPROVIDER=zerossl #optional
       # - PROPAGATION=30 #optional
       # - ONLY_SUBDOMAINS=false #optional
