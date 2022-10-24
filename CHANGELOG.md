@@ -1,5 +1,70 @@
 # CHANGELOG
 
+# [5.2.0](https://gitlab.com/carcheky/raspiserver/compare/v5.1.1...v5.2.0) (2022-10-24)
+
+
+### Bug Fixes
+
+* docker-compose portainer ([754d8e4](https://gitlab.com/carcheky/raspiserver/commit/754d8e4f122e44e33cc951239a9eaa22ddc9a2fc))
+* homeassistant cert ([9695146](https://gitlab.com/carcheky/raspiserver/commit/96951467a984096c5262b52a7040150872f777b8))
+* homeassistant cert ([d605646](https://gitlab.com/carcheky/raspiserver/commit/d605646dc396e29eb9e18305c5cf1d3ba8e0918b))
+* homeassistant cert ([2c65b71](https://gitlab.com/carcheky/raspiserver/commit/2c65b71bfa73ad4ce37e8fcf698b604cdd3d4f0f))
+* homeassistant cert ([10426da](https://gitlab.com/carcheky/raspiserver/commit/10426dac5d06a0bec427e490b1763429fafc198d))
+* homeassistant cert ([525b8db](https://gitlab.com/carcheky/raspiserver/commit/525b8dbbf42eaae95dc8ddf4b212a4dbcc251ba6))
+* homeassistant cert ([69077ef](https://gitlab.com/carcheky/raspiserver/commit/69077eff2879916e0fe9d209a96c93c5fe8fa732))
+* homeassistant cert ([308bcd9](https://gitlab.com/carcheky/raspiserver/commit/308bcd96e444aaccf1bf2fb32142702c6adecc93))
+* homeassistant cert ([779b0f1](https://gitlab.com/carcheky/raspiserver/commit/779b0f15c6d1386a47318d95a99de848046ca70d))
+* homeassistant cert ([d3722f9](https://gitlab.com/carcheky/raspiserver/commit/d3722f932a2ed1cd4400e8674ec20581451b62d3))
+* homeassistant cert ([a9fb8c3](https://gitlab.com/carcheky/raspiserver/commit/a9fb8c30412d4bb5fc4ec926e5756099d5e3e244))
+* homeassistant cert ([323c806](https://gitlab.com/carcheky/raspiserver/commit/323c8064d25049b081e4e4a5253fd9bd74139529))
+* homeassistant cert ([6053a25](https://gitlab.com/carcheky/raspiserver/commit/6053a25979bbf9f784fb9112c558f233d8ad1837))
+* homeassistant cert ([53324b3](https://gitlab.com/carcheky/raspiserver/commit/53324b3411b840d3b6a9930c7b41dc50ff0d9ed8))
+* homeassistant cert ([76c32e1](https://gitlab.com/carcheky/raspiserver/commit/76c32e1a9e65307ad892dc3edea8ef481e5561cb))
+* homeassistant cert ([247556b](https://gitlab.com/carcheky/raspiserver/commit/247556b3b4e3eb0bbaecf5cef7ec37cd5494d3ef))
+* homeassistant cert ([8bef5a3](https://gitlab.com/carcheky/raspiserver/commit/8bef5a3f49f37964e375b07dc108d322c842ff9c))
+* homeassistant cert ([345c98c](https://gitlab.com/carcheky/raspiserver/commit/345c98c0f744d00aa138066d9aa1905c00c35131))
+* homeassistant cert ([e7c96d4](https://gitlab.com/carcheky/raspiserver/commit/e7c96d489a3005d6c076c74ed0b92bafa57d2997))
+* jellyfin cert ([5619247](https://gitlab.com/carcheky/raspiserver/commit/5619247e29c564c97a9456aacbb0e36e78ea458c))
+* jellyfin cert ([d36bf1e](https://gitlab.com/carcheky/raspiserver/commit/d36bf1e6a6052863e2af812fa4af8be9a6da0702))
+* jellyfin cert ([6422024](https://gitlab.com/carcheky/raspiserver/commit/6422024ec4baf867ab3e98a194dfd0ec1c289965))
+* jellyfin cert ([674227b](https://gitlab.com/carcheky/raspiserver/commit/674227b9e1fe2d687c3421dcca137ab91bfbdce7))
+* jellyfin cert ([385d9ab](https://gitlab.com/carcheky/raspiserver/commit/385d9ab7864b39ffe00fdcb7d2f91941ccbd97db))
+* jellyfin cert ([91f2c14](https://gitlab.com/carcheky/raspiserver/commit/91f2c14c8837c32d27eaf5d7b0f92ae938bc7495))
+* jellyfin cert ([9675748](https://gitlab.com/carcheky/raspiserver/commit/96757482fadd4c88e74e66a0a5b0e597c656fba7))
+* jellyfin cert ([d4f7de4](https://gitlab.com/carcheky/raspiserver/commit/d4f7de46ec35b612d9c4bab5e776c04557566696))
+* jellyfin cert ([9453965](https://gitlab.com/carcheky/raspiserver/commit/945396580863f3c82abb28e0177906b0a5ba4100))
+* jellyfin cert ([c4637e6](https://gitlab.com/carcheky/raspiserver/commit/c4637e6887ca3a89347f3d43217556f902102e53))
+* jellyfin cert ([057cd2c](https://gitlab.com/carcheky/raspiserver/commit/057cd2cd74e631721dc29c270d6a9d08fd8c32ef))
+* jellyfin cert ([0702225](https://gitlab.com/carcheky/raspiserver/commit/070222596aad4363c59a7e1d47d6c9eecc0152c9))
+* jellyfin cert ([3ad5425](https://gitlab.com/carcheky/raspiserver/commit/3ad5425689ad88c8d38e0cd223c4c7b71f6baf61))
+* jellyfin cert ([b5fbbd1](https://gitlab.com/carcheky/raspiserver/commit/b5fbbd1e50855487a67c0ff02e36ec79351a9eab))
+* jellyfin cert ([4cb4807](https://gitlab.com/carcheky/raspiserver/commit/4cb4807dc145e7e8c2a76a9094a870a2c4d3de09))
+* jellyfin cert ([1369774](https://gitlab.com/carcheky/raspiserver/commit/1369774a1230029f45b46cd134a2bd0b23ef07e4))
+
+
+### Features
+
+* added diun ([01183b0](https://gitlab.com/carcheky/raspiserver/commit/01183b0e37434059f279e7bef5f67a5100d697ed))
+* added git-commit-helper.sh ([a1ce196](https://gitlab.com/carcheky/raspiserver/commit/a1ce1963b38507bf635fdf33e0688447df28ac1f))
+* added git-commit-helper.sh ([e611f33](https://gitlab.com/carcheky/raspiserver/commit/e611f33f3e557619da3e5a0f5d7f7d81f19a1ade))
+* added git-commit-helper.sh ([3797478](https://gitlab.com/carcheky/raspiserver/commit/3797478852549025b8d3ff8bcb7cec586431877b))
+* added git-commit-helper.sh ([855814d](https://gitlab.com/carcheky/raspiserver/commit/855814d75d5508f2a5b891beea0cacf0dae2f30b))
+* added git-commit-helper.sh ([fca441a](https://gitlab.com/carcheky/raspiserver/commit/fca441a9a2354c27c1869869b662b1e12549f2d2))
+* added git-commit-helper.sh ([0817588](https://gitlab.com/carcheky/raspiserver/commit/08175887fb9c1773a52d246b49b0ac73ba875842))
+* added git-commit-helper.sh ([ea884a1](https://gitlab.com/carcheky/raspiserver/commit/ea884a16e5a48ee612937dc8e347397639ce02da))
+* added git-commit-helper.sh ([6c4432d](https://gitlab.com/carcheky/raspiserver/commit/6c4432d324fb212dffebf16d75a8c6def092be36))
+* added git-commit-helper.sh ([1d6f71a](https://gitlab.com/carcheky/raspiserver/commit/1d6f71a720213efc377cd36c9fe3901685604aa0))
+* diun ([135031e](https://gitlab.com/carcheky/raspiserver/commit/135031e3c274a84b3a5f582ed472b8c75bc89821))
+* homeassistant to port 80 ([a6027d9](https://gitlab.com/carcheky/raspiserver/commit/a6027d908a6e950971f6cc0108489e0da667a153))
+* homeassistant to port 80 ([c9fd10c](https://gitlab.com/carcheky/raspiserver/commit/c9fd10ce72e941ee147511eebbe5c15817881d83))
+* homeassistant to port 80 ([69afe9e](https://gitlab.com/carcheky/raspiserver/commit/69afe9e2ed03f1b848a803b38e4b8211b2edcbc1))
+* homeassistant to port 80 ([8d14b8f](https://gitlab.com/carcheky/raspiserver/commit/8d14b8fa917d91b353f8fc364dd44799e2426c92))
+* homeassistant to port 80 ([4fa1835](https://gitlab.com/carcheky/raspiserver/commit/4fa1835f198f0af314f1750dfd2059a9099ab62d))
+* jellyfin cert ([2a1180c](https://gitlab.com/carcheky/raspiserver/commit/2a1180c3b3e9f635ef379d89678250b577fd8b11))
+* official homeassistant image ([7887719](https://gitlab.com/carcheky/raspiserver/commit/7887719cd551e4eb4a36fa23afc6a440b3098ab9))
+* ssl ([33672f2](https://gitlab.com/carcheky/raspiserver/commit/33672f2c0edd7c9f328b70fce2658792333ddbeb))
+* transmission ([ea76d6a](https://gitlab.com/carcheky/raspiserver/commit/ea76d6a9d460eaa9903d80d4d661ca8409958237))
+
 ## [5.1.1](https://gitlab.com/carcheky/raspiserver/compare/v5.1.0...v5.1.1) (2022-10-19)
 
 
