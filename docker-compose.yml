@@ -36,11 +36,11 @@ services:
       - DNSPLUGIN=duckdns #optional
       - EMAIL=carcheky@gmail.com #optional
       - SUBDOMAINS=wildcard  #optional
-      - CERTPROVIDER=zerossl #optional
+      # - CERTPROVIDER=zerossl #optional
       # - PROPAGATION=30 #optional
       # - ONLY_SUBDOMAINS=false #optional
       # - EXTRA_DOMAINS=raspi.carcheky.com #optional
-      # - STAGING=true #optional
+      - STAGING=true #optional
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
       - /var/run/docker.sock:/tmp/docker.sock:ro

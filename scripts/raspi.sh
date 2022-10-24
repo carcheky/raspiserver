@@ -249,11 +249,7 @@ reboot() {
 }
 
 jellyfin_ssl(){
-  mount
-  if cd /raspi/raspiserver; then
-    docker compose up --force-recreate swag -d
-    sleep 60
-
+  if [ -d /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.duckdns.org/ ]; then
     openssl pkcs12 -export \
         -out /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.duckdns.org/jellyfin.p12 \
         -in /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.duckdns.org/fullchain.pem \
