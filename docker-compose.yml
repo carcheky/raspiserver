@@ -25,7 +25,7 @@ services:
       - TZ=Europe/Madrid
       - SUBDOMAINS=carcheky
       - TOKEN=${DUCKDNSTOKEN}
-    restart: unless-stopped
+    restart: always
     depends_on:
       - diun
      
@@ -61,7 +61,7 @@ services:
       # - 53:53/udp
       - 444:443
       - 81:80 #optional
-    restart: unless-stopped
+    restart: always
     depends_on:
       - duckdns
  
