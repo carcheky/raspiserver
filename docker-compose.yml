@@ -2,7 +2,17 @@ services:
 
   # dnsmasq
   dnsmasq:
-  
+    image: dnsmasq
+    build: dnsmasq.Dockerfile
+    container_name: dnsmasq
+    hostname: dnsmasq
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    restart: always
+    volumes:
+      - ./hosts:/etc/hosts:ro
+
   # diun
   diun:
     image: crazymax/diun:latest
@@ -45,15 +55,3 @@ services:
       - 80:80
     restart: always
     entrypoint: /config/init
-
-
-    image: dnsmasq
-    build: dnsmasq.Dockerfile
-    container_name: dnsmasq
-    hostname: dnsmasq
-    cap_add:
-      - NET_ADMIN
-    network_mode: host
-    restart: always
-    volumes:
-      - ./hosts:/etc/hosts:ro
