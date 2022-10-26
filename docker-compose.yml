@@ -57,6 +57,8 @@ services:
       - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - /raspi/MOUNTED_raspiconfig/data/swag/log:/var/log/letsencrypt
+      - ${DATA_FOLDER}/homeassistant:/homeassistant/
+      - ${DATA_FOLDER}/jellyfin:/jellyfin/
     ports:
       # - 53:53/udp
       - 444:443
@@ -64,4 +66,5 @@ services:
     restart: always
     depends_on:
       - duckdns
+    entrypoint: /config/init
  

@@ -21,7 +21,6 @@ services:
       - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
-    entrypoint: /config/init-homeassistant
     depends_on:
       - swag
 
