@@ -1,18 +1,5 @@
 services:
 
-  # dnsmasq
-  dnsmasq:
-    image: dnsmasq
-    build: dnsmasq.Dockerfile
-    container_name: dnsmasq
-    hostname: dnsmasq
-    cap_add:
-      - NET_ADMIN
-    network_mode: host
-    restart: always
-    volumes:
-      - ./hosts:/etc/hosts:ro
-
   # diun
   diun:
     image: crazymax/diun:latest
@@ -29,6 +16,19 @@ services:
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
+
+  # dnsmasq
+  dnsmasq:
+    image: dnsmasq
+    build: dnsmasq
+    container_name: dnsmasq
+    hostname: dnsmasq
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    restart: always
+    volumes:
+      - ./dnsmasq/hosts:/etc/hosts:ro
      
   # swag
   swag:
@@ -55,3 +55,5 @@ services:
       - 80:80
     restart: always
     entrypoint: /config/init
+    depends_on:
+      - dnsmasq
