@@ -33,7 +33,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      # - JELLYFIN_PublishedServerUrl=192.168.1.201 #optional
+      - JELLYFIN_PublishedServerUrl=carcheky.tplinkdns.com
     restart: unless-stopped
     ports:
       - 8096:8096

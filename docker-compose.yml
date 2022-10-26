@@ -1,5 +1,8 @@
 services:
 
+  # dnsmasq
+  dnsmasq:
+  
   # diun
   diun:
     image: crazymax/diun:latest
@@ -16,18 +19,6 @@ services:
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
-
-  # # duckdns
-  # duckdns:
-  #   image: linuxserver/duckdns:latest
-  #   container_name: duckdns
-  #   environment:
-  #     - TZ=Europe/Madrid
-  #     - SUBDOMAINS=carcheky
-  #     - TOKEN=${DUCKDNSTOKEN}
-  #   restart: always
-  #   depends_on:
-  #     - diun
      
   # swag
   swag:
@@ -54,4 +45,15 @@ services:
       - 80:80
     restart: always
     entrypoint: /config/init
- 
+
+
+    image: dnsmasq
+    build: dnsmasq.Dockerfile
+    container_name: dnsmasq
+    hostname: dnsmasq
+    cap_add:
+      - NET_ADMIN
+    network_mode: host
+    restart: always
+    volumes:
+      - ./hosts:/etc/hosts:ro
