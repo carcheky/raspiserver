@@ -17,17 +17,17 @@ services:
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
 
-  # duckdns
-  duckdns:
-    image: linuxserver/duckdns:latest
-    container_name: duckdns
-    environment:
-      - TZ=Europe/Madrid
-      - SUBDOMAINS=carcheky
-      - TOKEN=${DUCKDNSTOKEN}
-    restart: always
-    depends_on:
-      - diun
+  # # duckdns
+  # duckdns:
+  #   image: linuxserver/duckdns:latest
+  #   container_name: duckdns
+  #   environment:
+  #     - TZ=Europe/Madrid
+  #     - SUBDOMAINS=carcheky
+  #     - TOKEN=${DUCKDNSTOKEN}
+  #   restart: always
+  #   depends_on:
+  #     - diun
      
   # swag
   swag:
@@ -40,19 +40,9 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      # - URL=raspi.carcheky.com
-      - URL=carcheky.duckdns.org
-      # - VALIDATION=http
-      # - VALIDATION=dns
-      - VALIDATION=duckdns
-      - DNSPLUGIN=duckdns #optional
+      - URL=carcheky.tplinkdns.com
+      - VALIDATION=http
       - EMAIL=carcheky@gmail.com #optional
-      - SUBDOMAINS=wildcard  #optional
-      # - CERTPROVIDER=zerossl #optional
-      # - PROPAGATION=30 #optional
-      # - ONLY_SUBDOMAINS=false #optional
-      # - EXTRA_DOMAINS=raspi.carcheky.com #optional
-      # - STAGING=true #optional
     volumes:
       - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
       - /var/run/docker.sock:/tmp/docker.sock:ro
@@ -60,11 +50,8 @@ services:
       - ${DATA_FOLDER}/homeassistant:/homeassistant/
       - ${DATA_FOLDER}/jellyfin:/jellyfin/
     ports:
-      # - 53:53/udp
-      - 444:443
-      - 81:80 #optional
+      - 443:443
+      - 80:80
     restart: always
-    depends_on:
-      - duckdns
     entrypoint: /config/init
  

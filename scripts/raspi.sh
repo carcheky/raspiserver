@@ -249,11 +249,11 @@ reboot() {
 }
 
 jellyfin_ssl(){
-  if [ -d /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.duckdns.org/ ]; then
+  if [ -d /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/ ]; then
     openssl pkcs12 -export \
-        -out /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.duckdns.org/jellyfin.p12 \
-        -in /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.duckdns.org/fullchain.pem \
-        -inkey /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.duckdns.org/privkey.pem \
+        -out /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/jellyfin.p12 \
+        -in /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/fullchain.pem \
+        -inkey /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/privkey.pem \
         -passin pass: \
         -passout pass:
   fi
