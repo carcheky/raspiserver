@@ -5,7 +5,6 @@ services:
     # image: linuxserver/homeassistant:latest
     image: "homeassistant/home-assistant:stable"
     container_name: homeassistant
-    # network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
@@ -21,14 +20,11 @@ services:
       - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
-    depends_on:
-      - swag
 
   # jellyfin
   jellyfin:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
-    # network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
@@ -50,8 +46,6 @@ services:
       - /opt/vc/lib:/opt/vc/lib
     devices:
       - /dev/vchiq:/dev/vchi
-    depends_on:
-      - swag
 
   # transmission
   transmission:
@@ -77,5 +71,4 @@ services:
       - 51413:51413
       - 51413:51413/udp
     restart: unless-stopped
-    depends_on:
-      - swag
+
