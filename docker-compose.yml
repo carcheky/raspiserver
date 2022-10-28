@@ -4,6 +4,7 @@ services:
   diun:
     image: crazymax/diun:latest
     container_name: diun
+    network_mode: host
     command: serve
     volumes:
       - "${DATA_FOLDER}/diun/data:/data"
@@ -21,9 +22,9 @@ services:
   swag:
     image: linuxserver/swag:latest
     container_name: swag
+    network_mode: host
     cap_add:
       - NET_ADMIN
-    # network_mode: host
     environment:
       - PUID=1000
       - PGID=1000

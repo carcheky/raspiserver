@@ -5,7 +5,7 @@ services:
     # image: linuxserver/homeassistant:latest
     image: "homeassistant/home-assistant:stable"
     container_name: homeassistant
-    # network_mode: host
+    network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
@@ -28,7 +28,7 @@ services:
   jellyfin:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
-    # network_mode: host
+    network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
@@ -57,6 +57,7 @@ services:
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
+    network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
