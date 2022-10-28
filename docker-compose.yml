@@ -4,7 +4,6 @@ services:
   diun:
     image: crazymax/diun:latest
     container_name: diun
-    network_mode: host
     command: serve
     volumes:
       - "${DATA_FOLDER}/diun/data:/data"
@@ -17,29 +16,75 @@ services:
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
-   
-  # swag
-  swag:
-    image: linuxserver/swag:latest
-    container_name: swag
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
+
+  # homeassistant
+  homeassistant:
+    # image: linuxserver/homeassistant:latest
+    image: "homeassistant/home-assistant:stable"
+    container_name: homeassistant
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - URL=carcheky.tplinkdns.com
-      - VALIDATION=http
-      - EMAIL=carcheky@gmail.com #optional
     volumes:
-      - /raspi/MOUNTED_raspiconfig/data/swag/config:/config
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - /raspi/MOUNTED_raspiconfig/data/swag/log:/var/log/letsencrypt
-      - ${DATA_FOLDER}/homeassistant:/homeassistant/
-      - ${DATA_FOLDER}/jellyfin:/jellyfin/
+      - ${DATA_FOLDER}/homeassistant/config:/config
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
+      - ${MEDIA_FOLDER}:/media
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /run/dbus:/run/dbus:ro # bluethooth
     ports:
-      - 443:443
-      - 80:80
-    restart: always
-    entrypoint: /config/init
+      - 8123:8123 #optional
+    restart: unless-stopped
+    privileged: true
+
+  # jellyfin
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - JELLYFIN_PublishedServerUrl=carcheky.tplinkdns.com
+    restart: unless-stopped
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
+    volumes:
+      - ${MEDIA_FOLDER}:/BibliotecaMultimedia
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
+      - ${DATA_FOLDER}/jellyfin/config:/config
+      - ${DATA_FOLDER}/jellyfin/movies:/data/movies
+      - ${DATA_FOLDER}/jellyfin/tvshows:/data/tvshows
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/vc/lib:/opt/vc/lib
+    devices:
+      - /dev/vchiq:/dev/vchi
+
+  # transmission
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/madrid
+      - USER=$USER} #optional
+      # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
+      - PASS=$PASSWORD} #optional
+      # - WHITELIST=iplist #optional
+      # - PEERPORT="peerport" #optional
+      # - HOST_WHITELIST=dnsname list #optional
+    volumes:
+      - ${DATA_FOLDER}/transmission/data:/config
+      - ${DATA_FOLDER}/transmission/watch/folder:/watch
+      - ${MEDIA_FOLDER}/downloads:/downloads
+      - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: unless-stopped
