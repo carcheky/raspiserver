@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [5.2.1](https://gitlab.com/carcheky/raspiserver/compare/v5.2.0...v5.2.1) (2022-10-26)
+
+
+### Bug Fixes
+
+* remove autoupdate ([108a356](https://gitlab.com/carcheky/raspiserver/commit/108a35629417cb4727f4058a298f3c835a0fc513))
+
 # [5.2.0](https://gitlab.com/carcheky/raspiserver/compare/v5.1.1...v5.2.0) (2022-10-24)
 
 
