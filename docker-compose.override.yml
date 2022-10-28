@@ -61,15 +61,15 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/madrid
-      - USER=${TRANSMISSION_USER} #optional
+      - USER=$USER} #optional
       # - TRANSMISSION_WEB_HOME=/combustion-release/ #optional
-      - PASS=${TRANSMISSION_PASSWORD} #optional
+      - PASS=$PASSWORD} #optional
       # - WHITELIST=iplist #optional
       # - PEERPORT="peerport" #optional
       # - HOST_WHITELIST=dnsname list #optional
     volumes:
-      - ${DATA_FOLDER}/data:/config
-      - ${DATA_FOLDER}/watch/folder:/watch
+      - ${DATA_FOLDER}/transmission/data:/config
+      - ${DATA_FOLDER}/transmission/watch/folder:/watch
       - ${MEDIA_FOLDER}/downloads:/downloads
       - ${DATA_FOLDER}/swag/config/etc/letsencrypt:/etc/letsencrypt
     ports:

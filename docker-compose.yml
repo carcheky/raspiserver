@@ -16,21 +16,7 @@ services:
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
-
-  # dnsmasq
-  dnsmasq:
-    image: dnsmasq
-    build: dnsmasq
-    container_name: dnsmasq
-    hostname: dnsmasq
-    cap_add:
-      - NET_ADMIN
-    network_mode: host
-    restart: always
-    volumes:
-      - ./dnsmasq/hosts:/etc/hosts:ro
-      - ./dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf:ro
-     
+   
   # swag
   swag:
     image: linuxserver/swag:latest
@@ -56,5 +42,3 @@ services:
       - 80:80
     restart: always
     entrypoint: /config/init
-    depends_on:
-      - dnsmasq
