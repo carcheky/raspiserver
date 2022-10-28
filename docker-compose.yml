@@ -16,3 +16,26 @@ services:
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "81:80"
+      - "443:443"
+    volumes:
+      - ${DATA_FOLDER}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # - ${DATA_FOLDER}/nginx/www:/var/www/html
+      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
+      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
+    
+  # certbot:
+  #   image: certbot/certbot:arm32v6-latest
+  #   container_name: certbot
+  #   command: certonly -v --keep --email carcheky@gmail.com --staging --agree-tos --no-eff-email --duplicate --expand --webroot -w=/etc/letsencrypt --cert-name *.carcheky.com -d jf.carcheky.com,ha.carcheky.com,tr.carcheky.com
+  #   volumes:
+  #     -  ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
+  #     -  ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
+  #   depends_on:
+  #     - nginx
