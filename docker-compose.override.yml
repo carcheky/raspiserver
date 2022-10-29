@@ -21,11 +21,15 @@ services:
       - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
+    entrypoint: /config/init-update-proxy.sh
+    depends_on:
+      - nginx
 
   # jellyfin
   jellyfin:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
+    privileged: true
     environment:
       - PUID=1000
       - PGID=1000
@@ -53,6 +57,7 @@ services:
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
+    privileged: true
     environment:
       - PUID=1000
       - PGID=1000
