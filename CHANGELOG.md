@@ -1,5 +1,25 @@
 # CHANGELOG
 
+# [5.3.0](https://gitlab.com/carcheky/raspiserver/compare/v5.2.1...v5.3.0) (2022-10-29)
+
+
+### Bug Fixes
+
+* containers ([f76667a](https://gitlab.com/carcheky/raspiserver/commit/f76667a8de6fa5c7cb7a6bd730f093064b10396b))
+* network mode ([aa0d319](https://gitlab.com/carcheky/raspiserver/commit/aa0d3196ae8756f5208a4f8581d333e7a3bce1ea))
+* pkcs12 gen ([f882f91](https://gitlab.com/carcheky/raspiserver/commit/f882f9183a1a291ca1262e2af4c273d7424bae21))
+
+
+### Features
+
+* clean docker services ([e3dcc62](https://gitlab.com/carcheky/raspiserver/commit/e3dcc6283f0136ec2de0bfeb101dc9e69e32ffc9))
+* clean docker services ([c7b6cab](https://gitlab.com/carcheky/raspiserver/commit/c7b6cab7c47f86760d19a59145e09977242b437c))
+* dnsmasq ([f0e9c33](https://gitlab.com/carcheky/raspiserver/commit/f0e9c33c2b38bbfd6b966bce79fd436bd15c58d5))
+* dnsmasq ([b735528](https://gitlab.com/carcheky/raspiserver/commit/b7355283ca7952ffb085d35511085c84e8c88fb4))
+* dnsmasq ([dd98558](https://gitlab.com/carcheky/raspiserver/commit/dd985587a8a56335f0b0f6d4398a8b10b4b3691b))
+* dnsmasq ([285af28](https://gitlab.com/carcheky/raspiserver/commit/285af2864dfa3ec35f60c8b8ec534e5ce8b53373))
+* working ([3d37708](https://gitlab.com/carcheky/raspiserver/commit/3d37708d59dede9cddfd1cccada40332094f9f7d))
+
 ## [5.2.1](https://gitlab.com/carcheky/raspiserver/compare/v5.2.0...v5.2.1) (2022-10-26)
 
 
