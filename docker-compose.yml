@@ -4,6 +4,7 @@ services:
   diun:
     image: crazymax/diun:latest
     container_name: diun
+    privileged: true
     command: serve
     volumes:
       - "${DATA_FOLDER}/diun/data:/data"
@@ -16,3 +17,47 @@ services:
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.2
+
+  # nginx
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    privileged: true
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
+      - ${DATA_FOLDER}/acme/vhost:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.3
+  
+  nginx-proxy-acme:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.4
+    volumes:
+      - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
+      - ${DATA_FOLDER}/acme/vhost:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
+      - ${DATA_FOLDER}/acme/acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DEFAULT_EMAIL=carcheky@gmail.com
+    volumes_from:
+      - nginx-proxy:rw
+
+networks:
+  raspinet:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
