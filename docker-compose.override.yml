@@ -5,10 +5,15 @@ services:
     # image: linuxserver/homeassistant:latest
     image: "homeassistant/home-assistant:stable"
     container_name: homeassistant
+    # network_mode: host
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
+      - VIRTUAL_HOST=ha.carcheky.com
+      - VIRTUAL_PORT=8123
+      - LETSENCRYPT_HOST=ha.carcheky.com
+      - LETSENCRYPT_EMAIL=mail@ha.carcheky.com
     volumes:
       - ${DATA_FOLDER}/homeassistant/config:/config
       - ${MEDIA_FOLDER}:/media
@@ -24,6 +29,10 @@ services:
     entrypoint: /config/init-update-proxy.sh
     depends_on:
       - nginx
+    # network_mode: "service:nginx"
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.10
 
   # jellyfin
   jellyfin:
@@ -35,6 +44,10 @@ services:
       - PGID=1000
       - TZ=Europe/Madrid
       - JELLYFIN_PublishedServerUrl=carcheky.tplinkdns.com
+      - VIRTUAL_HOST=jf.carcheky.com
+      - VIRTUAL_PORT=8096
+      - LETSENCRYPT_HOST=jf.carcheky.com
+      - LETSENCRYPT_EMAIL=mail@jf.carcheky.com
     restart: unless-stopped
     ports:
       - 8096:8096
@@ -52,6 +65,9 @@ services:
       - /opt/vc/lib:/opt/vc/lib
     devices:
       - /dev/vchiq:/dev/vchi
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.11
 
   # transmission
   transmission:
@@ -68,6 +84,10 @@ services:
       # - WHITELIST=iplist #optional
       # - PEERPORT="peerport" #optional
       # - HOST_WHITELIST=dnsname list #optional
+      - VIRTUAL_HOST=tr.carcheky.com
+      - VIRTUAL_PORT=9091
+      - LETSENCRYPT_HOST=tr.carcheky.com
+      - LETSENCRYPT_EMAIL=mail@tr.carcheky.com
     volumes:
       - ${DATA_FOLDER}/transmission/data:/config
       - ${DATA_FOLDER}/transmission/watch/folder:/watch
@@ -79,4 +99,13 @@ services:
       - 51413:51413
       - 51413:51413/udp
     restart: unless-stopped
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.12
+        
 
+networks:
+  raspinet:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

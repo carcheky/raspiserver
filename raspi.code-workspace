@@ -1,0 +1,29 @@
+{
+	"folders": [
+		{
+			"path": "/raspi/raspiserver"
+		},
+		{
+			"path": "/raspi/MOUNTED_raspiconfig/data"
+		},
+		{
+			"path": "/raspi/MOUNTED_raspimedia"
+		},
+		{
+			"path": "/raspi/"
+		},
+		{
+			"path": "/home/carcheky"
+		}
+	],
+	"settings": {
+		"gitConfigUser.profiles": [
+			{
+				"label": "carcheky",
+				"email": "carcheky@gmail.com",
+				"userName": "carcheky",
+				"selected": true
+			}
+		]
+	}
+}

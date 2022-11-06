@@ -17,9 +17,14 @@ services:
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.2
 
+  # nginx
   nginx:
-    image: nginx:latest
+    # image: nginx:latest
+    image: jwilder/nginx-proxy
     container_name: nginx
     privileged: true
     restart: unless-stopped
@@ -27,17 +32,66 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ${DATA_FOLDER}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # - ${DATA_FOLDER}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       # - ${DATA_FOLDER}/nginx/www:/var/www/html
-      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
-    
-  certbot:
-    image: certbot/certbot:arm32v6-latest
-    container_name: certbot
-    command: certonly -v --keep --email carcheky@gmail.com --staging --agree-tos --no-eff-email --duplicate --expand --webroot -w=/etc/letsencrypt --cert-name r.carcheky.com -d jf.carcheky.com,ha.carcheky.com,tr.carcheky.com
+      # - /var/run/docker.sock:/tmp/docker.sock
+      # - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
+      # - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
+      - ${DATA_FOLDER}/acme/vhost:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.3
+    # command: [nginx-debug, '-g', 'daemon off;']
+  
+  acme:
+    image: nginxproxy/acme-companion
+    container_name: acme
+    networks:
+      raspinet:
+        ipv4_address: 172.20.0.4
     volumes:
-      -  ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      -  ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
-    depends_on:
-      - nginx
+      - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
+      - ${DATA_FOLDER}/acme/vhost:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
+      - ${DATA_FOLDER}/acme/acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DEFAULT_EMAIL=carcheky@gmail.com
+      
+      #   --volumes-from nginx-proxy \
+  #   --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+  #   --volume acme:/etc/acme.sh \
+  #   --env "DEFAULT_EMAIL=mail@yourdomain.tld" \
+  #   nginxproxy/acme-companion
+
+
+
+
+
+
+
+  # # certbot
+  # certbot:
+  #   image: certbot/certbot:arm32v6-latest
+  #   container_name: certbot 
+  #   command: certonly --keep --email carcheky@gmail.com --staging --agree-tos --duplicate --expand --cert-name ha.carcheky.com -d ha.carcheky.com --webroot -w=/etc/letsencrypt
+  #   # command: certonly -v --keep --email carcheky@gmail.com --staging --agree-tos --no-eff-email --duplicate --expand --webroot -w=/etc/letsencrypt --cert-name *.carcheky.com -d ha.carcheky.com 
+  #   # command: certonly  --keep --email carcheky@gmail.com --staging --agree-tos --no-eff-email --duplicate --expand --webroot -w=/etc/letsencrypt --cert-name *.carcheky.com -d jf.carcheky.com,ha.carcheky.com,tr.carcheky.com
+  #   volumes:
+  #     -  ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
+  #     -  ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
+  #   depends_on:
+  #     - nginx
+  #   networks:
+  #     raspinet:
+  #       ipv4_address: 172.20.0.4
+  
+
+networks:
+  raspinet:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
