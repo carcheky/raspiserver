@@ -22,21 +22,15 @@ services:
         ipv4_address: 172.20.0.2
 
   # nginx
-  nginx:
-    # image: nginx:latest
+  nginx-proxy:
     image: jwilder/nginx-proxy
-    container_name: nginx
+    container_name: nginx-proxy
     privileged: true
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      # - ${DATA_FOLDER}/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      # - ${DATA_FOLDER}/nginx/www:/var/www/html
-      # - /var/run/docker.sock:/tmp/docker.sock
-      # - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      # - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
       - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
       - ${DATA_FOLDER}/acme/vhost:/etc/nginx/vhost.d
       - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
@@ -44,11 +38,10 @@ services:
     networks:
       raspinet:
         ipv4_address: 172.20.0.3
-    # command: [nginx-debug, '-g', 'daemon off;']
   
-  acme:
+  nginx-proxy-acme:
     image: nginxproxy/acme-companion
-    container_name: acme
+    container_name: nginx-proxy-acme
     networks:
       raspinet:
         ipv4_address: 172.20.0.4
@@ -60,35 +53,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
       - DEFAULT_EMAIL=carcheky@gmail.com
-      
-      #   --volumes-from nginx-proxy \
-  #   --volume /var/run/docker.sock:/var/run/docker.sock:ro \
-  #   --volume acme:/etc/acme.sh \
-  #   --env "DEFAULT_EMAIL=mail@yourdomain.tld" \
-  #   nginxproxy/acme-companion
-
-
-
-
-
-
-
-  # # certbot
-  # certbot:
-  #   image: certbot/certbot:arm32v6-latest
-  #   container_name: certbot 
-  #   command: certonly --keep --email carcheky@gmail.com --staging --agree-tos --duplicate --expand --cert-name ha.carcheky.com -d ha.carcheky.com --webroot -w=/etc/letsencrypt
-  #   # command: certonly -v --keep --email carcheky@gmail.com --staging --agree-tos --no-eff-email --duplicate --expand --webroot -w=/etc/letsencrypt --cert-name *.carcheky.com -d ha.carcheky.com 
-  #   # command: certonly  --keep --email carcheky@gmail.com --staging --agree-tos --no-eff-email --duplicate --expand --webroot -w=/etc/letsencrypt --cert-name *.carcheky.com -d jf.carcheky.com,ha.carcheky.com,tr.carcheky.com
-  #   volumes:
-  #     -  ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-  #     -  ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
-  #   depends_on:
-  #     - nginx
-  #   networks:
-  #     raspinet:
-  #       ipv4_address: 172.20.0.4
-  
+    volumes_from:
+      - nginx-proxy:rw
 
 networks:
   raspinet:

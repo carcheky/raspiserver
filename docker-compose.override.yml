@@ -13,7 +13,7 @@ services:
       - VIRTUAL_HOST=ha.carcheky.com
       - VIRTUAL_PORT=8123
       - LETSENCRYPT_HOST=ha.carcheky.com
-      - LETSENCRYPT_EMAIL=mail@ha.carcheky.com
+      - LETSENCRYPT_EMAIL=carcheky@gmail.com
     volumes:
       - ${DATA_FOLDER}/homeassistant/config:/config
       - ${MEDIA_FOLDER}:/media
@@ -27,8 +27,8 @@ services:
     restart: unless-stopped
     privileged: true
     entrypoint: /config/init-update-proxy.sh
-    depends_on:
-      - nginx
+    # depends_on:
+    #   - nginx
     # network_mode: "service:nginx"
     networks:
       raspinet:
@@ -43,11 +43,11 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=carcheky.tplinkdns.com
+      - JELLYFIN_PublishedServerUrl=jf.carcheky.com
       - VIRTUAL_HOST=jf.carcheky.com
       - VIRTUAL_PORT=8096
       - LETSENCRYPT_HOST=jf.carcheky.com
-      - LETSENCRYPT_EMAIL=mail@jf.carcheky.com
+      - LETSENCRYPT_EMAIL=carcheky@gmail.com
     restart: unless-stopped
     ports:
       - 8096:8096
@@ -87,7 +87,7 @@ services:
       - VIRTUAL_HOST=tr.carcheky.com
       - VIRTUAL_PORT=9091
       - LETSENCRYPT_HOST=tr.carcheky.com
-      - LETSENCRYPT_EMAIL=mail@tr.carcheky.com
+      - LETSENCRYPT_EMAIL=carcheky@gmail.com
     volumes:
       - ${DATA_FOLDER}/transmission/data:/config
       - ${DATA_FOLDER}/transmission/watch/folder:/watch
