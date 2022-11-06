@@ -26,7 +26,7 @@ services:
       - 8123:8123 #optional
     restart: unless-stopped
     privileged: true
-    entrypoint: /config/init-update-proxy.sh
+    # entrypoint: /config/init-update-proxy.sh
     # depends_on:
     #   - nginx
     # network_mode: "service:nginx"
