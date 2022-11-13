@@ -16,7 +16,7 @@
 			"path": "/home/carcheky"
 		},
 		{
-			"path": "../../etc/dnsmasq.d"
+			"path": "/etc/dnsmasq.d"
 		}
 	],
 	"settings": {
