@@ -22,8 +22,8 @@ services:
   nginx-proxy:
     image: jwilder/nginx-proxy
     container_name: nginx-proxy
+    restart: always
     privileged: true
-    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
@@ -41,6 +41,8 @@ services:
   nginx-proxy-acme:
     image: nginxproxy/acme-companion
     container_name: nginx-proxy-acme
+    restart: always
+    privileged: true
     networks:
       raspinet:
         ipv4_address: 172.20.0.4

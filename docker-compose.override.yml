@@ -2,10 +2,10 @@ services:
 
   # homeassistant
   homeassistant:
-    # image: linuxserver/homeassistant:latest
     image: "homeassistant/home-assistant:stable"
     container_name: homeassistant
-    # network_mode: host
+    restart: always
+    privileged: true
     environment:
       - PUID=1000
       - PGID=1000
@@ -22,12 +22,6 @@ services:
       - /run/dbus:/run/dbus:ro # bluethooth
     ports:
       - 8123:8123 #optional
-    restart: unless-stopped
-    privileged: true
-    # entrypoint: /config/init-update-proxy.sh
-    # depends_on:
-    #   - nginx
-    # network_mode: "service:nginx"
     networks:
       raspinet:
         ipv4_address: 172.20.0.10
@@ -36,6 +30,7 @@ services:
   jellyfin:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
+    restart: always
     privileged: true
     environment:
       - PUID=1000
@@ -46,7 +41,6 @@ services:
       - VIRTUAL_PORT=8096
       - LETSENCRYPT_HOST=jf.carcheky.com
       - LETSENCRYPT_EMAIL=carcheky@gmail.com
-    restart: unless-stopped
     ports:
       - 8096:8096
       - 8920:8920 #optional
@@ -69,6 +63,7 @@ services:
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
+    restart: always
     privileged: true
     environment:
       - PUID=1000
@@ -92,7 +87,6 @@ services:
       - 9091:9091
       - 51413:51413
       - 51413:51413/udp
-    restart: unless-stopped
     networks:
       raspinet:
         ipv4_address: 172.20.0.12
