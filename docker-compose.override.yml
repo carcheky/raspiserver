@@ -20,8 +20,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
-      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
     ports:
       - 8123:8123 #optional
     restart: unless-stopped
@@ -56,8 +54,6 @@ services:
       - 1900:1900/udp #optional
     volumes:
       - ${MEDIA_FOLDER}:/BibliotecaMultimedia
-      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
       - ${DATA_FOLDER}/jellyfin/config:/config
       - ${DATA_FOLDER}/jellyfin/movies:/data/movies
       - ${DATA_FOLDER}/jellyfin/tvshows:/data/tvshows
@@ -92,8 +88,6 @@ services:
       - ${DATA_FOLDER}/transmission/data:/config
       - ${DATA_FOLDER}/transmission/watch/folder:/watch
       - ${MEDIA_FOLDER}/downloads:/downloads
-      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
     ports:
       - 9091:9091
       - 51413:51413
