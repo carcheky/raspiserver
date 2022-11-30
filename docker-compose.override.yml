@@ -20,11 +20,10 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
+      # - /dev/ttyAMA0:/dev/ttyAMA0
     ports:
       - 8123:8123 #optional
-    networks:
-      raspinet:
-        ipv4_address: 172.20.0.10
+    network_mode: host
 
   # jellyfin
   jellyfin:
@@ -55,9 +54,7 @@ services:
       - /opt/vc/lib:/opt/vc/lib
     devices:
       - /dev/vchiq:/dev/vchi
-    networks:
-      raspinet:
-        ipv4_address: 172.20.0.11
+    network_mode: host
 
   # transmission
   transmission:
@@ -87,12 +84,4 @@ services:
       - 9091:9091
       - 51413:51413
       - 51413:51413/udp
-    networks:
-      raspinet:
-        ipv4_address: 172.20.0.12
-
-networks:
-  raspinet:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+    network_mode: host

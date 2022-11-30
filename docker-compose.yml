@@ -19,47 +19,29 @@ services:
     restart: always
 
   # nginx
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    container_name: nginx-proxy
-    restart: always
-    privileged: true
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
-      - ${DATA_FOLDER}/acme/vhost.d:/etc/nginx/vhost.d
-      - ${DATA_FOLDER}/acme/conf.d:/etc/nginx/conf.d
-      - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-    networks:
-      raspinet:
-        ipv4_address: 172.20.0.3
-  
-  # nginx-proxy-acme
-  nginx-proxy-acme:
-    image: nginxproxy/acme-companion
-    container_name: nginx-proxy-acme
-    restart: always
-    privileged: true
-    networks:
-      raspinet:
-        ipv4_address: 172.20.0.4
-    volumes:
-      - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
-      - ${DATA_FOLDER}/acme/vhost.d:/etc/nginx/vhost.d
-      - ${DATA_FOLDER}/acme/conf.d:/etc/nginx/conf.d
-      - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
-      - ${DATA_FOLDER}/acme/acme:/etc/acme.sh
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+  swag:
+    image: linuxserver/swag:latest
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
     environment:
-      - DEFAULT_EMAIL=${EMAIL}
-    volumes_from:
-      - nginx-proxy:rw
-
-networks:
-  raspinet:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - URL=carcheky.com
+      - VALIDATION=http
+      - SUBDOMAINS=r,ha,tr,jf,jd #optional
+      # - CERTPROVIDER= #optional
+      # - DNSPLUGIN=cloudflare #optional
+      # - PROPAGATION= #optional
+      - EMAIL= carcheky@gmail.com
+      - ONLY_SUBDOMAINS=true #optional
+      # - EXTRA_DOMAINS= #optional
+      - STAGING=false #optional
+    volumes:
+      - "${DATA_FOLDER}/swag/data:/config"
+    ports:
+      - 443:443
+      - 80:80 #optional
+    restart: unless-stopped
+    network_mode: host
