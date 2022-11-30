@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [5.4.0](https://gitlab.com/carcheky/raspiserver/compare/v5.3.0...v5.4.0) (2022-11-07)
+
+
+### Bug Fixes
+
+* remove homeassistant entrypoint ([dbd2c5f](https://gitlab.com/carcheky/raspiserver/commit/dbd2c5f0093b44fd46e0e337f8b3d0a7f6da5811))
+
+
+### Features
+
+* auto vhosts with letsencrypt ([4f6566a](https://gitlab.com/carcheky/raspiserver/commit/4f6566a5bdce6f5b71ffd538b2c85674c0e41a82))
+* letsencrypt staging ([600a463](https://gitlab.com/carcheky/raspiserver/commit/600a4632b8cf52bdff148d843f7b0bbf0e95df34))
+* nginx server ([d27c5f2](https://gitlab.com/carcheky/raspiserver/commit/d27c5f22c81ef8b9a0205d6ef6eb682aeb19ac78))
+* working auto vhosts ([e47f727](https://gitlab.com/carcheky/raspiserver/commit/e47f72724d02c4541ead5f01cd2658d63eb13da7))
+
 # [5.3.0](https://gitlab.com/carcheky/raspiserver/compare/v5.2.1...v5.3.0) (2022-10-29)
 
 
