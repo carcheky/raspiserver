@@ -10,7 +10,7 @@ services:
       - "${DATA_FOLDER}/diun/data:/data"
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      - "TZ=Europe/Paris"
+      - "TZ=Europe/Madrid"
       - "LOG_LEVEL=info"
       - "LOG_JSON=false"
       - "DIUN_WATCH_WORKERS=20"
@@ -54,7 +54,7 @@ services:
       - ${DATA_FOLDER}/acme/acme:/etc/acme.sh
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - DEFAULT_EMAIL=carcheky@gmail.com
+      - DEFAULT_EMAIL=${EMAIL}
     volumes_from:
       - nginx-proxy:rw
 

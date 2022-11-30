@@ -10,10 +10,10 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - VIRTUAL_HOST=ha.carcheky.com
+      - VIRTUAL_HOST=ha.${DOMAIN}
       - VIRTUAL_PORT=8123
-      - LETSENCRYPT_HOST=ha.carcheky.com
-      - LETSENCRYPT_EMAIL=carcheky@gmail.com
+      - LETSENCRYPT_HOST=ha.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${DATA_FOLDER}/homeassistant/config:/config
       - ${MEDIA_FOLDER}:/media
@@ -36,11 +36,11 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=jf.carcheky.com
-      - VIRTUAL_HOST=jf.carcheky.com
+      - JELLYFIN_PublishedServerUrl=jf.${DOMAIN}
+      - VIRTUAL_HOST=jf.${DOMAIN}
       - VIRTUAL_PORT=8096
-      - LETSENCRYPT_HOST=jf.carcheky.com
-      - LETSENCRYPT_EMAIL=carcheky@gmail.com
+      - LETSENCRYPT_HOST=jf.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     ports:
       - 8096:8096
       - 8920:8920 #optional
@@ -75,14 +75,14 @@ services:
       # - WHITELIST=iplist #optional
       # - PEERPORT="peerport" #optional
       # - HOST_WHITELIST=dnsname list #optional
-      - VIRTUAL_HOST=tr.carcheky.com
+      - VIRTUAL_HOST=tr.${DOMAIN}
       - VIRTUAL_PORT=9091
-      - LETSENCRYPT_HOST=tr.carcheky.com
-      - LETSENCRYPT_EMAIL=carcheky@gmail.com
+      - LETSENCRYPT_HOST=tr.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${DATA_FOLDER}/transmission/data:/config
       - ${DATA_FOLDER}/transmission/watch/folder:/watch
-      - ${MEDIA_FOLDER}/downloads:/downloads
+      - ${MEDIA_FOLDER}/downloads/transmission:/downloads
     ports:
       - 9091:9091
       - 51413:51413
@@ -90,7 +90,6 @@ services:
     networks:
       raspinet:
         ipv4_address: 172.20.0.12
-        
 
 networks:
   raspinet:
