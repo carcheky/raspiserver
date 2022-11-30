@@ -2,34 +2,26 @@ services:
 
   # homeassistant
   homeassistant:
-    # image: linuxserver/homeassistant:latest
     image: "homeassistant/home-assistant:stable"
     container_name: homeassistant
-    # network_mode: host
+    restart: always
+    privileged: true
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - VIRTUAL_HOST=ha.carcheky.com
+      - VIRTUAL_HOST=ha.${DOMAIN}
       - VIRTUAL_PORT=8123
-      - LETSENCRYPT_HOST=ha.carcheky.com
-      - LETSENCRYPT_EMAIL=carcheky@gmail.com
+      - LETSENCRYPT_HOST=ha.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${DATA_FOLDER}/homeassistant/config:/config
       - ${MEDIA_FOLDER}:/media
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
-      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
     ports:
       - 8123:8123 #optional
-    restart: unless-stopped
-    privileged: true
-    # entrypoint: /config/init-update-proxy.sh
-    # depends_on:
-    #   - nginx
-    # network_mode: "service:nginx"
     networks:
       raspinet:
         ipv4_address: 172.20.0.10
@@ -38,17 +30,17 @@ services:
   jellyfin:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
+    restart: always
     privileged: true
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=jf.carcheky.com
-      - VIRTUAL_HOST=jf.carcheky.com
+      - JELLYFIN_PublishedServerUrl=jf.${DOMAIN}
+      - VIRTUAL_HOST=jf.${DOMAIN}
       - VIRTUAL_PORT=8096
-      - LETSENCRYPT_HOST=jf.carcheky.com
-      - LETSENCRYPT_EMAIL=carcheky@gmail.com
-    restart: unless-stopped
+      - LETSENCRYPT_HOST=jf.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     ports:
       - 8096:8096
       - 8920:8920 #optional
@@ -56,8 +48,6 @@ services:
       - 1900:1900/udp #optional
     volumes:
       - ${MEDIA_FOLDER}:/BibliotecaMultimedia
-      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
       - ${DATA_FOLDER}/jellyfin/config:/config
       - ${DATA_FOLDER}/jellyfin/movies:/data/movies
       - ${DATA_FOLDER}/jellyfin/tvshows:/data/tvshows
@@ -73,6 +63,7 @@ services:
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
+    restart: always
     privileged: true
     environment:
       - PUID=1000
@@ -84,25 +75,21 @@ services:
       # - WHITELIST=iplist #optional
       # - PEERPORT="peerport" #optional
       # - HOST_WHITELIST=dnsname list #optional
-      - VIRTUAL_HOST=tr.carcheky.com
+      - VIRTUAL_HOST=tr.${DOMAIN}
       - VIRTUAL_PORT=9091
-      - LETSENCRYPT_HOST=tr.carcheky.com
-      - LETSENCRYPT_EMAIL=carcheky@gmail.com
+      - LETSENCRYPT_HOST=tr.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${DATA_FOLDER}/transmission/data:/config
       - ${DATA_FOLDER}/transmission/watch/folder:/watch
-      - ${MEDIA_FOLDER}/downloads:/downloads
-      - ${DATA_FOLDER}/nginx/etc/letsencrypt:/etc/letsencrypt
-      - ${DATA_FOLDER}/nginx/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ${MEDIA_FOLDER}/downloads/transmission:/downloads
     ports:
       - 9091:9091
       - 51413:51413
       - 51413:51413/udp
-    restart: unless-stopped
     networks:
       raspinet:
         ipv4_address: 172.20.0.12
-        
 
 networks:
   raspinet:

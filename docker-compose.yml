@@ -10,49 +10,51 @@ services:
       - "${DATA_FOLDER}/diun/data:/data"
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
-      - "TZ=Europe/Paris"
+      - "TZ=Europe/Madrid"
       - "LOG_LEVEL=info"
       - "LOG_JSON=false"
       - "DIUN_WATCH_WORKERS=20"
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
-    networks:
-      raspinet:
-        ipv4_address: 172.20.0.2
 
   # nginx
   nginx-proxy:
     image: jwilder/nginx-proxy
     container_name: nginx-proxy
+    restart: always
     privileged: true
-    restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
-      - ${DATA_FOLDER}/acme/vhost:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/vhost.d:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/conf.d:/etc/nginx/conf.d
       - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:
       raspinet:
         ipv4_address: 172.20.0.3
   
+  # nginx-proxy-acme
   nginx-proxy-acme:
     image: nginxproxy/acme-companion
     container_name: nginx-proxy-acme
+    restart: always
+    privileged: true
     networks:
       raspinet:
         ipv4_address: 172.20.0.4
     volumes:
       - ${DATA_FOLDER}/acme/certs:/etc/nginx/certs
-      - ${DATA_FOLDER}/acme/vhost:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/vhost.d:/etc/nginx/vhost.d
+      - ${DATA_FOLDER}/acme/conf.d:/etc/nginx/conf.d
       - ${DATA_FOLDER}/acme/html:/usr/share/nginx/html
       - ${DATA_FOLDER}/acme/acme:/etc/acme.sh
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - DEFAULT_EMAIL=carcheky@gmail.com
+      - DEFAULT_EMAIL=${EMAIL}
     volumes_from:
       - nginx-proxy:rw
 
