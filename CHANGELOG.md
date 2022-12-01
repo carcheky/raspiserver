@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [5.5.0](https://gitlab.com/carcheky/raspiserver/compare/v5.4.0...v5.5.0) (2022-12-01)
+
+
+### Bug Fixes
+
+* restart always ([a4b1129](https://gitlab.com/carcheky/raspiserver/commit/a4b1129992d1a8d1bb7b07719d8324f120b7b9db))
+
+
+### Features
+
+* network host ([6c93739](https://gitlab.com/carcheky/raspiserver/commit/6c9373920ed323befaa008047e5eb54111247a82))
+
 # [5.4.0](https://gitlab.com/carcheky/raspiserver/compare/v5.3.0...v5.4.0) (2022-11-07)
 
 
