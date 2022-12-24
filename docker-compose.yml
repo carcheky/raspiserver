@@ -31,7 +31,7 @@ services:
       - TZ=Europe/Madrid
       - URL=carcheky.com
       - VALIDATION=http
-      - SUBDOMAINS=r,ha,tr,jf,jd #optional
+      - SUBDOMAINS=r,ha,tr,jf,jd,nc #optional
       # - CERTPROVIDER= #optional
       # - DNSPLUGIN=cloudflare #optional
       # - PROPAGATION= #optional
