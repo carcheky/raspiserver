@@ -85,3 +85,23 @@ services:
       - 51413:51413
       - 51413:51413/udp
     network_mode: host
+
+  # nextcloud
+  nextcloud:
+    image: linuxserver/nextcloud:latest
+    container_name: nextcloud
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - VIRTUAL_HOST=nc.${DOMAIN}
+      - VIRTUAL_PORT=8123
+      - LETSENCRYPT_HOST=nc.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+    volumes:
+      - ${DATA_FOLDER}/nextcloud/appdata:/config
+      - ${DATA_FOLDER}/nextcloud/data:/data
+    ports:
+      - 8056:443
+    restart: unless-stopped
+    # network_mode: host
