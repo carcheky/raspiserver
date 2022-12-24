@@ -6,6 +6,7 @@ services:
     container_name: diun
     privileged: true
     command: serve
+    network_mode: host
     volumes:
       - "${DATA_FOLDER}/diun/data:/data"
       - "/var/run/docker.sock:/var/run/docker.sock"
