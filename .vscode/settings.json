@@ -1,3 +1,10 @@
 {
-  "gitdoc.enabled": false
+    "gitConfigUser.profiles": [
+        {
+            "label": "carcheky",
+            "email": "carcheky@gmail.com",
+            "userName": "carcheky",
+            "selected": true
+        }
+    ]
 }
