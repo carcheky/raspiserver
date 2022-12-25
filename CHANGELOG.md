@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [5.6.0](https://gitlab.com/carcheky/raspiserver/compare/v5.5.0...v5.6.0) (2022-12-25)
+
+
+### Bug Fixes
+
+* diun network mode host ([b241f35](https://gitlab.com/carcheky/raspiserver/commit/b241f35816925a6ee920d6712a94a3d87add77ed))
+
+
+### Features
+
+* nextcloud domain ([ee05a73](https://gitlab.com/carcheky/raspiserver/commit/ee05a73f88a06569414fa07fdde48237a7a1208a))
+
 # [5.5.0](https://gitlab.com/carcheky/raspiserver/compare/v5.4.0...v5.5.0) (2022-12-01)
 
 
