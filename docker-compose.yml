@@ -41,8 +41,8 @@ services:
       - STAGING=false #optional
     volumes:
       - "${DATA_FOLDER}/swag/data:/config"
-    ports:
-      - 443:443
-      - 80:80 #optional
+    # ports:
+    #   - 443:443
+    #   - 80:80 #optional
     restart: unless-stopped
     network_mode: host

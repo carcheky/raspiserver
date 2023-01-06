@@ -21,8 +21,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
       # - /dev/ttyAMA0:/dev/ttyAMA0
-    ports:
-      - 8123:8123 #optional
+    # ports:
+    #   - 8123:8123 #optional
     network_mode: host
 
   # jellyfin
@@ -40,11 +40,6 @@ services:
       - VIRTUAL_PORT=8096
       - LETSENCRYPT_HOST=jf.${DOMAIN}
       - LETSENCRYPT_EMAIL=${EMAIL}
-    ports:
-      - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
     volumes:
       - ${MEDIA_FOLDER}:/BibliotecaMultimedia
       - ${DATA_FOLDER}/jellyfin/config:/config
@@ -80,10 +75,6 @@ services:
       - ${DATA_FOLDER}/transmission/data:/config
       - ${DATA_FOLDER}/transmission/watch/folder:/watch
       - ${MEDIA_FOLDER}/downloads/transmission:/downloads
-    ports:
-      - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
     network_mode: host
 
   # nextcloud
@@ -99,9 +90,10 @@ services:
       - LETSENCRYPT_HOST=nc.${DOMAIN}
       - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
-      - ${DATA_FOLDER}/nextcloud/appdata:/config
-      - ${DATA_FOLDER}/nextcloud/data:/data
+      - ${DATA_FOLDER}/nextcloud/config:/config
+      - ${MOUNTED_RASPIMEDIA}/nextcloud/data/:/data/
     ports:
       - 8056:443
     restart: unless-stopped
-    # network_mode: host
+    links:
+      - swag
