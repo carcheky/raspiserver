@@ -4,11 +4,9 @@ services:
   diun:
     image: crazymax/diun:latest
     container_name: diun
-    privileged: true
     command: serve
-    network_mode: host
     volumes:
-      - "${DATA_FOLDER}/diun/data:/data"
+      - "${DATA_FOLDER}/diun/:/data"
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
       - "TZ=Europe/Madrid"
@@ -16,8 +14,11 @@ services:
       - "LOG_JSON=false"
       - "DIUN_WATCH_WORKERS=20"
       - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
+      - "DIUN_WATCH_JITTER=30s"
       - "DIUN_PROVIDERS_DOCKER=true"
     restart: always
+    labels:
+      - "diun.enable=true"
 
   # nginx
   swag:
@@ -32,17 +33,12 @@ services:
       - URL=carcheky.com
       - VALIDATION=http
       - SUBDOMAINS=r,ha,tr,jf,jd,nc #optional
-      # - CERTPROVIDER= #optional
-      # - DNSPLUGIN=cloudflare #optional
-      # - PROPAGATION= #optional
-      - EMAIL= carcheky@gmail.com
+      - EMAIL=carcheky@gmail.com
       - ONLY_SUBDOMAINS=true #optional
-      # - EXTRA_DOMAINS= #optional
       - STAGING=false #optional
     volumes:
-      - "${DATA_FOLDER}/swag/data:/config"
-    # ports:
-    #   - 443:443
-    #   - 80:80 #optional
-    restart: unless-stopped
+      - "${DATA_FOLDER}/swag/:/config"
+    restart: always
     network_mode: host
+    depends_on:
+      - diun
