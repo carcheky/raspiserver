@@ -159,7 +159,7 @@ mount() {
     if [ $(which docker) ]; then
       sudo systemctl stop docker
     fi
-    while ! sudo mount -t exfat -L raspimedia /mnt/MOUNTED_raspimedia  -o umask=000; do
+    while ! sudo mount -L raspimedia /mnt/MOUNTED_raspimedia  -o umask=000; do
       echo nop
       sleep 1
     done
