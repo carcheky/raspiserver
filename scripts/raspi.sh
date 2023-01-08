@@ -131,10 +131,10 @@ _create_env(){
     echo PASSWORD=$var >> ~/raspiserver/.env
     echo "contraseña root mysql?"
     read var
-    echo MYSQL_ROOT_PASSWORD=$(read) >> ~/raspiserver/.env
+    echo MYSQL_ROOT_PASSWORD=$var >> ~/raspiserver/.env
     echo "contraseña mysql?"
-    read var
-    echo NEXTCLOUD_MYSQL_PASSWORD=$(read) >> ~/raspiserver/.env
+  varvar
+    echo NEXTCLOUD_MYSQL_PASSWORD=$var >> ~/raspiserver/.env
   fi
 }
 ## run: install, update & run
