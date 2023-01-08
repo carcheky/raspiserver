@@ -263,7 +263,16 @@ configs_copy(){
 }
 ## configs_backup: backup to repo configs if exists containers data
 configs_backup(){
+  # backup swag subdomains
   [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/*.conf ${RASPISERVER}/configs/nginx/
+  # backup homeassistant configs
+  [ -d ${RASPISERVER}/RASPICONFIG/homeassistant/config/ ] &&\
+    ( 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+    )
 }
 
 # this line print help if no arguments

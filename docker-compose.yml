@@ -94,3 +94,27 @@ services:
     network_mode: host
     depends_on:
       - swag
+
+  # homeassistant
+  homeassistant:
+    image: "homeassistant/home-assistant:stable"
+    container_name: homeassistant
+    restart: always
+    privileged: true
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - VIRTUAL_HOST=ha.${DOMAIN}
+      - VIRTUAL_PORT=8123
+      - LETSENCRYPT_HOST=ha.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+    volumes:
+      - ${RASPICONFIG}/homeassistant/config:/config
+      - ${RASPIMEDIA}:/media
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /run/dbus:/run/dbus:ro # bluethooth
+    network_mode: host
+    depends_on:
+      - swag
