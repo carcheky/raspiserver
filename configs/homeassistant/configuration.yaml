@@ -26,3 +26,9 @@ google_assistant:
   project_id: home-assistant-raspiserver
   service_account: !include SERVICE_ACCOUNT.JSON
   report_state: true
+
+# wake on lan integration
+switch:
+  - platform: wake_on_lan
+    mac: B0-4A-39-09-B6-69
+    name: PCCK
