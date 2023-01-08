@@ -4,10 +4,10 @@
 			"path": "/home/carcheky/raspiserver"
 		},
 		{
-			"path": "/mnt/MOUNTED_raspiconfig"
+			"path": "${RASPICONFIG}"
 		},
 		{
-			"path": "/mnt/MOUNTED_raspimedia"
+			"path": "/mnt/RASPIMEDIA"
 		},
 		{
 			"path": "/home/carcheky"

@@ -15,8 +15,8 @@ services:
       - LETSENCRYPT_HOST=ha.${DOMAIN}
       - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
-      - ${DATA_FOLDER}/homeassistant/config:/config
-      - ${MEDIA_FOLDER}:/media
+      - ${RASPICONFIG}/homeassistant/config:/config
+      - ${RASPIMEDIA}:/media
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
@@ -40,10 +40,10 @@ services:
       - LETSENCRYPT_HOST=jf.${DOMAIN}
       - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
-      - ${MEDIA_FOLDER}:/BibliotecaMultimedia
-      - ${DATA_FOLDER}/jellyfin/config:/config
-      - ${DATA_FOLDER}/jellyfin/movies:/data/movies
-      - ${DATA_FOLDER}/jellyfin/tvshows:/data/tvshows
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+      - ${RASPICONFIG}/jellyfin/config:/config
+      - ${RASPICONFIG}/jellyfin/movies:/data/movies
+      - ${RASPICONFIG}/jellyfin/tvshows:/data/tvshows
       - /etc/localtime:/etc/localtime:ro
       - /opt/vc/lib:/opt/vc/lib
     devices:
@@ -69,9 +69,9 @@ services:
       - LETSENCRYPT_HOST=tr.${DOMAIN}
       - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
-      - ${DATA_FOLDER}/transmission/data:/config
-      - ${DATA_FOLDER}/transmission/watch/folder:/watch
-      - ${MEDIA_FOLDER}/downloads/transmission:/downloads
+      - ${RASPICONFIG}/transmission/config:/config
+      - ${RASPICONFIG}/transmission/watch:/watch
+      - ${RASPIMEDIA}/transmission/:/transmission
     network_mode: host
     depends_on:
       - swag
@@ -83,7 +83,7 @@ services:
     restart: always
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
-      - ${DATA_FOLDER}/mariadb/:/var/lib/mysql
+      - ${RASPICONFIG}/mariadb/:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
@@ -115,11 +115,11 @@ services:
       - OVERWRITEPROTOCOL:https
       - OVERWRITECLIURL:https://nc.carcheky.com
     volumes:
-      - ${DATA_FOLDER}/nextcloud/web:/var/www/html/
-      - ${DATA_FOLDER}/nextcloud/config:/var/www/html/config
-      - ${DATA_FOLDER}/nextcloud/data:/var/www/html/data:rw
-      # - ${DATA_FOLDER}/nextcloud/custom_apps:/var/www/html/custom_apps
-      # - ${DATA_FOLDER}/nextcloud/themes:/var/www/html/themes/
+      - ${RASPICONFIG}/nextcloud/web:/var/www/html/
+      - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
+      - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
+      # - ${RASPICONFIG}/nextcloud/custom_apps:/var/www/html/custom_apps
+      # - ${RASPICONFIG}/nextcloud/themes:/var/www/html/themes/
     ports:
       - 8056:80
     restart: always

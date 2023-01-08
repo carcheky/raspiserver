@@ -1,7 +1,7 @@
 #!/bin/bash
 
 WATCHER_TIME=30
-. ~/raspiserver/.env
+. ${RASPISERVER}/.env
 
 # for devs
 set -eux
@@ -107,49 +107,47 @@ _install() {
     sudo usermod -aG docker $USER
     sudo dpkg --configure -a
   fi
-  if [ -d ~/raspiserver ]; then
+  if [ -d ${RASPISERVER} ]; then
     echo -e "\u2022 raspiserver ya está instalado"
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    sudo git clone -b ${CHANNEL:-beta} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
+    sudo git clone -b ${CHANNEL:-beta} https://gitlab.com/carcheky/raspiserver.git  ${RASPISERVER}
+    _create_env
     update
   fi
 }
 _install_bin() {
-  sudo cp rc.local /etc/rc.local
-  sudo ln -fsP ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
+  sudo ln -fs ${RASPISERVER}/configs/raspbian/rc.local /etc/rc.local
+  sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   echo -e "\u2023 necesita reinicio"
   reboot
   exit 0
 }
 _create_env(){
-  if [ ! -f ~/raspiserver/.env ]; then
-    cp ~/raspiserver/.env.dist ~/raspiserver/.env
-    echo "contraseña genérica?"
-    read var
-    echo PASSWORD=$var >> ~/raspiserver/.env
-    echo "contraseña root mysql?"
-    read var
-    echo MYSQL_ROOT_PASSWORD=$var >> ~/raspiserver/.env
-    echo "contraseña mysql?"
-    read var
-    echo NEXTCLOUD_MYSQL_PASSWORD=$var >> ~/raspiserver/.env
+  if [ ! -f ${RASPISERVER}/.env ]; then
+    cp ${RASPISERVER}/.env.dist ${RASPISERVER}/.env
+    echo "######################################################"
+    echo "contraseña genérica?: " && read var
+    echo PASSWORD=$var >> ${RASPISERVER}/.env
+    echo "contraseña root mysql?: " && read var
+    echo MYSQL_ROOT_PASSWORD=$var >> ${RASPISERVER}/.env
+    echo "contraseña mysql?: " && read var
+    echo NEXTCLOUD_MYSQL_PASSWORD=$var >> ${RASPISERVER}/.env
   fi
 }
 ## run: install, update & run
 run() {
   _install
-  if cd ~/raspiserver; then
-    _create_env
+  if cd ${RASPISERVER}; then
     update
     up
   fi
 }
 ## update: if update, update and reboot
 update() {
-  if cd ~/raspiserver; then
+  if cd ${RASPISERVER}; then
     sudo chown -R $USER:$USER .
     current=$(sudo git rev-parse HEAD)
     remote=$(sudo git ls-remote $(sudo git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
@@ -169,71 +167,57 @@ update() {
 }
 ## mount: mount hard disk
 mount() {
-  while [ ! -f /mnt/MOUNTED_raspimedia/this-is-the-hd ]; do
-    sudo mkdir -p /mnt/MOUNTED_raspimedia/
-    sudo chmod 777 /mnt/MOUNTED_raspimedia/
-    if [ $(which docker) ]; then
-      sudo systemctl stop docker
-    fi
-    while ! sudo mount -L raspimedia /mnt/MOUNTED_raspimedia; do
+  if [ $(which docker) ]; then
+    kill
+    sudo systemctl stop docker
+  fi
+  while [ ! -f ${RASPIMEDIA}/this-is-the-hd ]; do
+    sudo mkdir -p ${RASPIMEDIA}/
+    sudo chmod 777 ${RASPIMEDIA}/
+    while ! sudo mount -L raspimedia ${RASPIMEDIA}; do
       echo nop
       sleep 1
     done
   done
-  while [ ! -f /mnt/MOUNTED_raspiconfig/this-is-the-hd ]; do
-    sudo mkdir -p /mnt/MOUNTED_raspiconfig/
-    sudo chmod 777 /mnt/MOUNTED_raspiconfig/
-    if [ $(which docker) ]; then
-      sudo systemctl stop docker
-    fi
-    while ! sudo mount -L raspiconfig /mnt/MOUNTED_raspiconfig; do
-      echo nop
-      sleep 1
-    done
-  done
-  ls -la /mnt/MOUNTED_raspi*
   sudo systemctl start docker
 }
 ## umount: umount hard disks
 umount() {
   kill
-  sudo umount /mnt/MOUNTED_raspiconfig
-  sudo umount /mnt/MOUNTED_raspimedia
-  ls -la /mnt/MOUNTED_raspi*
-
+  sudo umount ${RASPIMEDIA}
 }
 ## up: docker compose up -d --remove-orphans
 up() {
   mount
-  if cd ~/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose up -d --remove-orphans
   fi
 }
 ## stop: docker compose stop -d --remove-orphans
 stop() {
   mount
-  if cd ~/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose stop -d --remove-orphans
   fi
 }
 ## kill: docker compose kill -d --remove-orphans
 kill() {
   mount
-  if cd ~/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose kill -d --remove-orphans
   fi
 }
 ## down: docker compose down -d --remove-orphans
 down() {
   mount
-  if cd ~/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose down -d --remove-orphans
   fi
 }
 ## up: docker compose restart
 restart() {
   mount
-  if cd ~/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose restart
     docker compose up
   fi
@@ -244,14 +228,14 @@ retry() {
   if [ $(which docker) ]; then
     sudo systemctl stop docker
   fi
-  while [ -d /mnt/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
-    sudo umount /mnt/MOUNTED_raspimedia
+  while [ -d ${RASPIMEDIA}/BibliotecaMultimedia/Peliculas ]; do
+    sudo umount ${RASPIMEDIA}
   done
   sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
     /usr/bin/raspi \
     /usr/local/bin/raspi \
-    ~/raspiserver\
+    ${RASPISERVER}\
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
@@ -278,7 +262,7 @@ log() {
 }
 ## logs: docker compose logs
 logs() {
-  if cd ~/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose logs -f
   fi
 }
@@ -288,11 +272,11 @@ reboot() {
 }
 
 jellyfin_ssl(){
-  if [ -d /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/ ]; then
+  if [ -d ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/ ]; then
     openssl pkcs12 -export \
-        -out /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/jellyfin.p12 \
-        -in /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/fullchain.pem \
-        -inkey /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/privkey.pem \
+        -out ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/jellyfin.p12 \
+        -in ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/fullchain.pem \
+        -inkey ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/privkey.pem \
         -passin pass: \
         -passout pass:
   fi

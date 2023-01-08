@@ -6,7 +6,7 @@ services:
     container_name: diun
     command: serve
     volumes:
-      - "${DATA_FOLDER}/diun/:/data"
+      - "${RASPICONFIG}/diun/:/data"
       - "/var/run/docker.sock:/var/run/docker.sock"
     environment:
       - "TZ=Europe/Madrid"
@@ -37,7 +37,7 @@ services:
       - ONLY_SUBDOMAINS=true #optional
       - STAGING=false #optional
     volumes:
-      - "${DATA_FOLDER}/swag/:/config"
+      - "${RASPICONFIG}/swag/:/config"
     restart: always
     network_mode: host
     depends_on:
