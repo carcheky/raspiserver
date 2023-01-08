@@ -1,22 +1,16 @@
 {
 	"folders": [
 		{
-			"path": "/raspi/raspiserver"
+			"path": "/home/carcheky/raspiserver"
 		},
 		{
-			"path": "/raspi/MOUNTED_raspiconfig/data"
+			"path": "/mnt/MOUNTED_raspiconfig"
 		},
 		{
-			"path": "/raspi/MOUNTED_raspimedia"
-		},
-		{
-			"path": "/raspi/"
+			"path": "/mnt/MOUNTED_raspimedia"
 		},
 		{
 			"path": "/home/carcheky"
-		},
-		{
-			"path": "/etc/dnsmasq.d"
 		}
 	],
 	"settings": {
