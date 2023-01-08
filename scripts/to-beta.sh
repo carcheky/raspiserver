@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -eux
-
 git checkout beta &&\
 git pull --no-ff --no-edit &&\
 echo "commit message:" &&\
