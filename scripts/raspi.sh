@@ -4,11 +4,17 @@ WATCHER_TIME=30
 RASPISERVER="${HOME}/raspiserver"
 RASPIMEDIA='/media/RASPIMEDIA/'
 RASPICONFIG='~/raspiserver/RASPICONFIG'
-echo "Select channel (alpha,beta,stable):"
-read var
-CHANNEL=${var:-alpha}
-echo "$CHANNEL selectd"
-
+if [ -d ${RASPISERVER} ]; then
+  echo -e "\u2022 raspiserver ya está instalado"
+else
+  echo -e "\u25E6 instalando raspiserver..."
+  echo "Select channel (alpha,beta,stable):"
+  read var
+  CHANNEL=${var:-alpha}
+  echo "$CHANNEL selectd"
+  git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
+  update
+fi
 set -eux
 [ $CHANNEL == 'stable' ] && set -eu
 
@@ -97,14 +103,13 @@ _install() {
     sudo usermod -aG docker $USER
     sudo dpkg --configure -a
   fi
-  set -eux
-  if [ -d ${RASPISERVER} ]; then
-    echo -e "\u2022 raspiserver ya está instalado"
-  else
-    echo -e "\u25E6 instalando raspiserver..."
-    git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
-    update
-  fi
+  # if [ -d ${RASPISERVER} ]; then
+  #   echo -e "\u2022 raspiserver ya está instalado"
+  # else
+  #   echo -e "\u25E6 instalando raspiserver..."
+  #   git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
+  #   update
+  # fi
 }
 _install_bin() {
   sudo ln -fs ${RASPISERVER}/configs/raspbian/rc.local /etc/rc.local

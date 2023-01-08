@@ -116,8 +116,8 @@ services:
       - OVERWRITECLIURL:https://nc.carcheky.com
     volumes:
       - ${RASPICONFIG}/nextcloud/web:/var/www/html/
-      - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
-      - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
+      # - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
+      # - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
       # - ${RASPICONFIG}/nextcloud/custom_apps:/var/www/html/custom_apps
       # - ${RASPICONFIG}/nextcloud/themes:/var/www/html/themes/
     ports:
