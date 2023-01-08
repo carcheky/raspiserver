@@ -1,4 +1,2 @@
-/data/
-.env
-RASPICONFIG
-!RASPICONFIG/homeassistant/config/configuration.yaml
+/.env
+/RASPICONFIG
