@@ -4,7 +4,7 @@ WATCHER_TIME=30
 . ~/raspiserver/.env
 
 # for devs
-# set -eux
+set -eux
 
 # helper scripts
 _install() {
@@ -123,10 +123,25 @@ _install_bin() {
   reboot
   exit 0
 }
+_create_env(){
+  if [ ! -f ~/raspiserver/.env ]; then
+    cp ~/raspiserver/.env.dist ~/raspiserver/.env
+    echo "contraseña genérica?"
+    read var
+    echo PASSWORD=$var >> ~/raspiserver/.env
+    echo "contraseña root mysql?"
+    read var
+    echo MYSQL_ROOT_PASSWORD=$(read) >> ~/raspiserver/.env
+    echo "contraseña mysql?"
+    read var
+    echo NEXTCLOUD_MYSQL_PASSWORD=$(read) >> ~/raspiserver/.env
+  fi
+}
 ## run: install, update & run
 run() {
   _install
   if cd ~/raspiserver; then
+    _create_env
     update
     up
   fi
