@@ -40,4 +40,5 @@ curl https://gitlab.com/carcheky/raspiserver/-/raw/alpha/scripts/raspi.sh | bash
 ````
 ````
 curl https://gitlab.com/carcheky/raspiserver/-/raw/alpha/scripts/raspi.sh | bash -s -- retry
+curl https://gitlab.com/carcheky/raspiserver/-/raw/alpha/scripts/raspi.sh | bash -s -- run
 ````
