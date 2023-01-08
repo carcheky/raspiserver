@@ -1,28 +1,5 @@
 services:
 
-  # transmission
-  transmission:
-    image: linuxserver/transmission:latest
-    container_name: transmission
-    restart: always
-    privileged: true
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/madrid
-      - USER=${USER} #optional
-      - PASS=${PASSWORD} #optional
-      - VIRTUAL_HOST=tr.${DOMAIN}
-      - VIRTUAL_PORT=9091
-      - LETSENCRYPT_HOST=tr.${DOMAIN}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-    volumes:
-      - ${RASPICONFIG}/transmission/config:/config
-      - ${RASPICONFIG}/transmission/incomplete:/downloads/incomplete
-      - ${RASPIMEDIA}/transmission/:/downloads
-    network_mode: host
-    depends_on:
-      - swag
 
   # # homeassistant
   # homeassistant:
