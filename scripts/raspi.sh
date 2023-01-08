@@ -72,10 +72,6 @@ _install() {
     echo -e "\u2022 docker ya está instalado"
   else
     echo -e "\u25E6 instalando docker..."
-    # curl -fsSL https://get.docker.com -o get-docker.sh
-    # sudo sh get-docker.sh
-    # dockerd-rootless-setuptool.sh install --force
-    # rm get-docker.sh
     sudo apt update
     sudo apt install \
       ca-certificates \
@@ -103,8 +99,7 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    sudo git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ${RASPISERVER}
-    _create_env
+    sudo git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~
     update
   fi
 }
@@ -139,6 +134,7 @@ run() {
 ## update: if update, update and reboot
 update() {
   if cd ${RASPISERVER}; then
+    _create_env
     sudo chown -R $USER:$USER .
     current=$(sudo git rev-parse HEAD)
     remote=$(sudo git ls-remote $(sudo git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
