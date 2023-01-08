@@ -1,7 +1,7 @@
 #!/bin/bash
 
 WATCHER_TIME=30
-. /raspi/raspiserver/.env
+. ~/raspiserver/.env
 
 # for devs
 # set -eux
@@ -106,18 +106,18 @@ _install() {
     sudo usermod -aG docker $USER
     sudo dpkg --configure -a
   fi
-  if [ -d /raspi/raspiserver ]; then
+  if [ -d ~/raspiserver ]; then
     echo -e "\u2022 raspiserver ya está instalado"
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    sudo git clone -b $CHANNEL https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
+    sudo git clone -b $CHANNEL https://gitlab.com/carcheky/raspiserver.git "~/raspiserver"
     update
   fi
 }
 _install_bin() {
   sudo cp rc.local /etc/rc.local
-  sudo cp -fr /raspi/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
+  sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   echo -e "\u2023 necesita reinicio"
   reboot
@@ -126,14 +126,14 @@ _install_bin() {
 ## run: install, update & run
 run() {
   _install
-  if cd /raspi/raspiserver; then
+  if cd ~/raspiserver; then
     update
     up
   fi
 }
 ## update: if update, update and reboot
 update() {
-  if cd /raspi/raspiserver; then
+  if cd ~/raspiserver; then
     sudo chown -R $USER:$USER .
     current=$(sudo git rev-parse HEAD)
     remote=$(sudo git ls-remote $(sudo git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
@@ -153,24 +153,24 @@ update() {
 }
 ## mount: mount hard disk
 mount() {
-  while [ ! -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
-    sudo mkdir -p /raspi/MOUNTED_raspimedia/
-    sudo chmod 777 /raspi/MOUNTED_raspimedia/
+  while [ ! -d /mnt/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
+    sudo mkdir -p /mnt/MOUNTED_raspimedia/
+    sudo chmod 777 /mnt/MOUNTED_raspimedia/
     if [ $(which docker) ]; then
       sudo systemctl stop docker
     fi
-    while ! sudo mount -t exfat -L raspimedia /raspi/MOUNTED_raspimedia  -o umask=000; do
+    while ! sudo mount -t exfat -L raspimedia /mnt/MOUNTED_raspimedia  -o umask=000; do
       echo nop
       sleep 1
     done
   done
-  while [ ! -d /raspi/MOUNTED_raspiconfig/data/homeassistant/config/ ]; do
-    sudo mkdir -p /raspi/MOUNTED_raspiconfig/
-    sudo chmod 777 /raspi/MOUNTED_raspiconfig/
+  while [ ! -d /mnt/MOUNTED_raspiconfig/data/homeassistant/config/ ]; do
+    sudo mkdir -p /mnt/MOUNTED_raspiconfig/
+    sudo chmod 777 /mnt/MOUNTED_raspiconfig/
     if [ $(which docker) ]; then
       sudo systemctl stop docker
     fi
-    while ! sudo mount -L raspiconfig /raspi/MOUNTED_raspiconfig; do
+    while ! sudo mount -L raspiconfig /mnt/MOUNTED_raspiconfig; do
       echo nop
       sleep 1
     done
@@ -180,21 +180,21 @@ mount() {
 ## up: docker compose up -d --remove-orphans
 up() {
   mount
-  if cd /raspi/raspiserver; then
+  if cd ~/raspiserver; then
     docker compose up -d --remove-orphans
   fi
 }
 ## stop: docker compose stop -d --remove-orphans
 stop() {
   mount
-  if cd /raspi/raspiserver; then
+  if cd ~/raspiserver; then
     docker compose stop -d --remove-orphans
   fi
 }
 ## up: docker compose restart
 restart() {
   mount
-  if cd /raspi/raspiserver; then
+  if cd ~/raspiserver; then
     docker compose restart
     docker compose up
   fi
@@ -205,8 +205,8 @@ retry() {
   if [ $(which docker) ]; then
     sudo systemctl stop docker
   fi
-  while [ -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
-    sudo umount /raspi/MOUNTED_raspimedia
+  while [ -d /mnt/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
+    sudo umount /mnt/MOUNTED_raspimedia
   done
   sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
@@ -239,7 +239,7 @@ log() {
 }
 ## logs: docker compose logs
 logs() {
-  if cd /raspi/raspiserver; then
+  if cd ~/raspiserver; then
     docker compose logs -f
   fi
 }
@@ -249,11 +249,11 @@ reboot() {
 }
 
 jellyfin_ssl(){
-  if [ -d /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/ ]; then
+  if [ -d /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/ ]; then
     openssl pkcs12 -export \
-        -out /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/jellyfin.p12 \
-        -in /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/fullchain.pem \
-        -inkey /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/privkey.pem \
+        -out /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/jellyfin.p12 \
+        -in /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/fullchain.pem \
+        -inkey /mnt/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/privkey.pem \
         -passin pass: \
         -passout pass:
   fi
