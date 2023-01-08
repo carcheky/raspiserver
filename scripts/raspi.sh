@@ -7,6 +7,8 @@ RASPICONFIG='~/raspiserver/RASPICONFIG'
 echo "Select channel (alpha,beta,stable):" && read var
 CHANNEL=${var:-alpha}
 
+[ ! $CHANNEL == 'stable' ] && set -eux
+
 [ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
 
 # helper scripts
