@@ -41,24 +41,25 @@ _install() {
   else
     echo -e "\u25E6 instalando zsh..."
     sudo apt update
-    sudo apt install zsh -y
-    if [ ! -d ~/.oh-my-zsh ]; then
-      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    fi
-    if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k ]; then
-      git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-    fi
-    if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky ]; then
-      git clone --depth=1 https://gitlab.com/carcheky/zsh_carcheky.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky
-    fi
-    sudo usermod -s /bin/zsh $USER
-    sudo chsh -s $(which zsh)
+    curl https://gitlab.com/carcheky/scripts/-/raw/main/install/zsh-ubuntu.sh | bash
+
+    # sudo apt install zsh -y
+    # if [ ! -d ~/.oh-my-zsh ]; then
+    #   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+    # fi
+    # if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k ]; then
+    #   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
+    # fi
+    # if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky ]; then
+    #   git clone --depth=1 https://gitlab.com/carcheky/zsh_carcheky.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky
+    # fi
+    # sudo usermod -s /bin/zsh $USER
+    # sudo chsh -s $(which zsh)
     # sed -i s/'ZSH_THEME="robbyrussell"'/'ZSH_THEME="powerlevel10k\/powerlevel10k"'/g ~/.zshrc
-    sed -i s/'plugins=(git)'/'plugins=(git z composer zsh_carcheky)'/g ~/.zshrc
+    # sed -i s/'plugins=(git)'/'plugins=(git z composer zsh_carcheky)'/g ~/.zshrc
     echo "
     
-    export PATH=/usr/bin:\$PATH
-    alias git='sudo git'
+    export PATH=~/bin:/usr/bin:\$PATH
     echo \"
     ██████╗  █████╗ ███████╗██████╗ ██╗              
     ██╔══██╗██╔══██╗██╔════╝██╔══██╗██║              
