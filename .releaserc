@@ -1,7 +1,7 @@
 {
   "branches": [
     "stable",
-    {name: 'beta', channel: 'beta', prerelease: 'beta'}
+    {name: 'beta', channel: 'beta', prerelease: 'beta'},
     {name: 'alpha', channel: 'alpha', prerelease: 'alpha'}
   ],
   "plugins": [
