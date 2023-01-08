@@ -2,5 +2,7 @@
 .gitlab-ci.yml export-ignore
 .releaserc export-ignore
 .releaserc.changelog export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
 raspiserver.code-workspace export-ignore
 to-stable.sh export-ignore

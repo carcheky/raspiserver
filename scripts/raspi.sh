@@ -1,10 +1,22 @@
 #!/bin/bash
 
 WATCHER_TIME=30
-. /raspi/raspiserver/.env
+RASPISERVER="${HOME}/raspiserver"
+RASPIMEDIA='/media/RASPIMEDIA/'
+RASPICONFIG='~/raspiserver/RASPICONFIG'
+CHANNEL='stable'
 
-# for devs
-# set -eux
+if [ ! -d ${RASPISERVER} ]; then
+  echo -e "\u25E6 instalando raspiserver..."
+  echo "Select channel (alpha,beta,stable):" && read readchannel
+  CHANNEL=${readchannel}
+  echo "$CHANNEL selected"
+  git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
+  update
+fi
+set -eux && [ $CHANNEL == 'stable' ] && set -eu
+
+[ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
 
 # helper scripts
 _install() {
@@ -41,24 +53,11 @@ _install() {
   else
     echo -e "\u25E6 instalando zsh..."
     sudo apt update
-    sudo apt install zsh -y
-    if [ ! -d ~/.oh-my-zsh ]; then
-      sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-    fi
-    if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k ]; then
-      git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-    fi
-    if [ ! -d ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky ]; then
-      git clone --depth=1 https://gitlab.com/carcheky/zsh_carcheky.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh_carcheky
-    fi
-    sudo usermod -s /bin/zsh $USER
-    sudo chsh -s $(which zsh)
-    # sed -i s/'ZSH_THEME="robbyrussell"'/'ZSH_THEME="powerlevel10k\/powerlevel10k"'/g ~/.zshrc
-    sed -i s/'plugins=(git)'/'plugins=(git z composer zsh_carcheky)'/g ~/.zshrc
+    curl https://gitlab.com/carcheky/scripts/-/raw/main/install/zsh-ubuntu.sh | bash
+
     echo "
     
-    export PATH=/usr/bin:\$PATH
-    alias git='sudo git'
+    export PATH=~/bin:/usr/bin:\$PATH
     echo \"
     ██████╗  █████╗ ███████╗██████╗ ██╗              
     ██╔══██╗██╔══██╗██╔════╝██╔══██╗██║              
@@ -73,17 +72,13 @@ _install() {
     ███████║███████╗██║  ██║ ╚████╔╝ ███████╗██║  ██║
     ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝
     \"                                                                              
-    raspi logs
+
     " >>~/.zshrc
   fi
   if [ $(which docker) ]; then
     echo -e "\u2022 docker ya está instalado"
   else
     echo -e "\u25E6 instalando docker..."
-    # curl -fsSL https://get.docker.com -o get-docker.sh
-    # sudo sh get-docker.sh
-    # dockerd-rootless-setuptool.sh install --force
-    # rm get-docker.sh
     sudo apt update
     sudo apt install \
       ca-certificates \
@@ -106,34 +101,42 @@ _install() {
     sudo usermod -aG docker $USER
     sudo dpkg --configure -a
   fi
-  if [ -d /raspi/raspiserver ]; then
-    echo -e "\u2022 raspiserver ya está instalado"
-  else
-    echo -e "\u25E6 instalando raspiserver..."
-    sudo chmod 777 /raspi
-    sudo git clone -b $CHANNEL https://gitlab.com/carcheky/raspiserver.git "/raspi/raspiserver"
-    update
-  fi
 }
 _install_bin() {
-  sudo cp rc.local /etc/rc.local
-  sudo cp -fr /raspi/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
+  sudo ln -fs ${RASPISERVER}/configs/raspbian/rc.local /etc/rc.local
+  sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   echo -e "\u2023 necesita reinicio"
   reboot
   exit 0
 }
+_create_env(){
+  if [ ! -f ${RASPISERVER}/.env ]; then
+    cp ${RASPISERVER}/.env.dist ${RASPISERVER}/.env
+    echo "######################################################"
+    echo "contraseña genérica?: " && read readpass
+    echo PASSWORD=$readpass >> ${RASPISERVER}/.env
+    echo "contraseña root mysql?: " && read readmysqlrootpass
+    echo MYSQL_ROOT_PASSWORD=$readmysqlrootpass >> ${RASPISERVER}/.env
+    echo "contraseña mysql?: " && read readmysqlpass
+    echo NEXTCLOUD_MYSQL_PASSWORD=$readmysqlpass >> ${RASPISERVER}/.env
+    echo RASPISERVER="${HOME}/raspiserver" >> ${RASPISERVER}/.env
+    echo RASPIMEDIA='/media/RASPIMEDIA/' >> ${RASPISERVER}/.env
+    echo RASPICONFIG='~/raspiserver/RASPICONFIG' >> ${RASPISERVER}/.env
+  fi
+}
 ## run: install, update & run
 run() {
   _install
-  if cd /raspi/raspiserver; then
+  if cd ${RASPISERVER}; then
     update
     up
   fi
 }
 ## update: if update, update and reboot
 update() {
-  if cd /raspi/raspiserver; then
+  if cd ${RASPISERVER}; then
+    _create_env
     sudo chown -R $USER:$USER .
     current=$(sudo git rev-parse HEAD)
     remote=$(sudo git ls-remote $(sudo git rev-parse --abbrev-ref @{u} | sed 's/\// /g') | cut -f1)
@@ -153,50 +156,58 @@ update() {
 }
 ## mount: mount hard disk
 mount() {
-  while [ ! -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
-    sudo mkdir -p /raspi/MOUNTED_raspimedia/
-    sudo chmod 777 /raspi/MOUNTED_raspimedia/
+  while [ ! -f ${RASPIMEDIA}/this-is-the-hd ]; do
     if [ $(which docker) ]; then
       sudo systemctl stop docker
     fi
-    while ! sudo mount -L raspimedia /raspi/MOUNTED_raspimedia; do
-      echo nop
-      sleep 1
-    done
-  done
-  while [ ! -d /raspi/MOUNTED_raspiconfig/data/homeassistant/config/ ]; do
-    sudo mkdir -p /raspi/MOUNTED_raspiconfig/
-    sudo chmod 777 /raspi/MOUNTED_raspiconfig/
-    if [ $(which docker) ]; then
-      sudo systemctl stop docker
-    fi
-    while ! sudo mount -L raspiconfig /raspi/MOUNTED_raspiconfig; do
-      echo nop
-      sleep 1
-    done
+    sudo mkdir -p ${RASPIMEDIA}
+    sudo chmod 777 ${RASPIMEDIA}
+    sudo mount -L raspimedia ${RASPIMEDIA}
   done
   sudo systemctl start docker
+}
+## umount: umount hard disks
+umount() {
+  while [ -f ${RASPIMEDIA}/this-is-the-hd ]; do
+    kill
+    sudo umount ${RASPIMEDIA} -q
+  done
 }
 ## up: docker compose up -d --remove-orphans
 up() {
   mount
-  if cd /raspi/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose up -d --remove-orphans
   fi
 }
 ## stop: docker compose stop -d --remove-orphans
 stop() {
   mount
-  if cd /raspi/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose stop -d --remove-orphans
+  fi
+}
+## kill: docker compose kill
+kill() {
+  if cd ${RASPISERVER}; then
+    set -v
+    docker compose kill
+    set -eux && [ $CHANNEL == 'stable' ] && set -eu
+  fi
+}
+## down: docker compose down
+down() {
+  kill
+  if cd ${RASPISERVER}; then
+    docker compose down
   fi
 }
 ## up: docker compose restart
 restart() {
   mount
-  if cd /raspi/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose restart
-    docker compose up
+    docker compose up -d
   fi
 }
 ## retry: uninstall and exit
@@ -205,14 +216,14 @@ retry() {
   if [ $(which docker) ]; then
     sudo systemctl stop docker
   fi
-  while [ -d /raspi/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
-    sudo umount /raspi/MOUNTED_raspimedia
+  while [ -d ${RASPIMEDIA}/BibliotecaMultimedia/Peliculas ]; do
+    sudo umount ${RASPIMEDIA}
   done
   sudo apt -y remove --purge "docker*" containerd runc git
   sudo rm -fr \
     /usr/bin/raspi \
     /usr/local/bin/raspi \
-    /raspi \
+    ${RASPISERVER}\
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
@@ -220,10 +231,7 @@ retry() {
     /var/run/docker.sock
   exit 0
 }
-## help: print this help
-help() {
-  cat /usr/local/bin/raspi | grep '##'
-}
+
 ## watcher: keep checking repo to update if new code available
 watcher() {
   while true; do
@@ -239,7 +247,7 @@ log() {
 }
 ## logs: docker compose logs
 logs() {
-  if cd /raspi/raspiserver; then
+  if cd ${RASPISERVER}; then
     docker compose logs -f
   fi
 }
@@ -248,15 +256,28 @@ reboot() {
   sudo reboot
 }
 
-jellyfin_ssl(){
-  if [ -d /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/ ]; then
-    openssl pkcs12 -export \
-        -out /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/jellyfin.p12 \
-        -in /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/fullchain.pem \
-        -inkey /raspi/MOUNTED_raspiconfig/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/privkey.pem \
-        -passin pass: \
-        -passout pass:
-  fi
+## configs_copy: copy configs if exists containers data
+configs_copy(){
+  [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/configs/nginx/*.conf ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/
 }
+## configs_backup: backup to repo configs if exists containers data
+configs_backup(){
+  # backup swag subdomains
+  [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/*.conf ${RASPISERVER}/configs/nginx/
+  # backup homeassistant configs
+  [ -d ${RASPISERVER}/RASPICONFIG/homeassistant/config/ ] &&\
+    ( 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+    )
+}
+
 # this line print help if no arguments
+## help: print this help using:
+help() {
+  cat /usr/local/bin/raspi | grep '##'
+}
 ${@:-help}
+echo "$SECONDS seconds"
