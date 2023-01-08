@@ -1,5 +1,59 @@
 # CHANGELOG
 
+# [6.0.0](https://gitlab.com/carcheky/raspiserver/compare/v5.6.0...v6.0.0) (2023-01-08)
+
+
+### Bug Fixes
+
+* .env vars ([b086516](https://gitlab.com/carcheky/raspiserver/commit/b086516ff3dd9ac7e459c7c72b28290e34025abe))
+* added some vars to install script ([ed9a536](https://gitlab.com/carcheky/raspiserver/commit/ed9a53603a68aa675f5759b2d333996ced19d872))
+* clone whithout sudo ([8726397](https://gitlab.com/carcheky/raspiserver/commit/8726397de137965f524bba66f596a819acf13685))
+* down & stop commands ([26dacad](https://gitlab.com/carcheky/raspiserver/commit/26dacad9a417652f0a8782c8836ffb8ecbb6c985))
+* export vars to .env ([6c39362](https://gitlab.com/carcheky/raspiserver/commit/6c39362e0ed283c55fcf2c95b75601b3bb5932c4))
+* filetype for media hdd ([b75d4ce](https://gitlab.com/carcheky/raspiserver/commit/b75d4cebb05148b5b31a1b83c884e9d796668282))
+* git clone script path ([cb2ea0f](https://gitlab.com/carcheky/raspiserver/commit/cb2ea0fb8700fd4b630f4468fbb4786b7b275b49))
+* install script ([a87287f](https://gitlab.com/carcheky/raspiserver/commit/a87287f314f11c93f03ec156f14d8e907f8d798d))
+* install script select beta channel ([f88ee92](https://gitlab.com/carcheky/raspiserver/commit/f88ee92de5c00acdb5784e90f49e0b575dba80bd))
+* new zsh install ([23cc38d](https://gitlab.com/carcheky/raspiserver/commit/23cc38d3115a010a2ebe4e735a2934affbf4bf17))
+* nextcloud database host on nextcloud-server ([417cd47](https://gitlab.com/carcheky/raspiserver/commit/417cd47471374ab61def341ee669dc792f5de277))
+* no mount on kill or down ([589a083](https://gitlab.com/carcheky/raspiserver/commit/589a083f5d46c9dedf2917d8727e3b43ca2b88fd))
+* only ask on clone ([b7d5080](https://gitlab.com/carcheky/raspiserver/commit/b7d5080342202e3a12d69c5f9b114243ec7f7cf7))
+* renamed nextcloud containers/paths ([f077043](https://gitlab.com/carcheky/raspiserver/commit/f077043205c747a1bdbd0a3fc003bc1e42574849))
+* script dirs ([ecc754b](https://gitlab.com/carcheky/raspiserver/commit/ecc754b332f451fce13961693a9d69f75e8b887e))
+* script install ([3005b2b](https://gitlab.com/carcheky/raspiserver/commit/3005b2ba9d9eb7dd1604b4658f68456fb9bc1f03))
+* script install ([fdd0195](https://gitlab.com/carcheky/raspiserver/commit/fdd0195fdf06b8d5963860772212f3b8ba7e3610))
+* script run ([3de2a6f](https://gitlab.com/carcheky/raspiserver/commit/3de2a6f910827013559f601ba2273f3f6078b524))
+* set -eux on non stable channels ([a628055](https://gitlab.com/carcheky/raspiserver/commit/a6280551197cd7cae1f7e4ebca5929a63cc3cee9))
+* show channel selected ([8bcc876](https://gitlab.com/carcheky/raspiserver/commit/8bcc876ddf71d444371984df274a8f22ec63d707))
+* transmission ([7566899](https://gitlab.com/carcheky/raspiserver/commit/756689932f153417fcd9b53e79f444a32938646e))
+* transmission ([7c30446](https://gitlab.com/carcheky/raspiserver/commit/7c30446f617d85ece791be49f22bd95f73f44d2f))
+
+
+### Features
+
+* :fire: transmission working ([d4fbcfd](https://gitlab.com/carcheky/raspiserver/commit/d4fbcfd46d49413e0cfb61dc270e5f698f4e1dfc))
+* enable nextcloud & mariadb ([c7529e5](https://gitlab.com/carcheky/raspiserver/commit/c7529e58c4d820cb16a2bc04caf7619943e8994b))
+* homeassistant ([796474b](https://gitlab.com/carcheky/raspiserver/commit/796474bb621561bf4c4adf0c7b40aed56288e714))
+* homeassistant working ([fbeb2fb](https://gitlab.com/carcheky/raspiserver/commit/fbeb2fb68da472a18e63c7d0834793f99df0ff5d))
+* jellyfin ([742e7bb](https://gitlab.com/carcheky/raspiserver/commit/742e7bb5e15ade9c626d2219ac8c0e9be6b8883f))
+* mariadb working ([a8c5871](https://gitlab.com/carcheky/raspiserver/commit/a8c5871f5073749b4f03af97fac7515ca36f5c38))
+* nextcloud working ([700f661](https://gitlab.com/carcheky/raspiserver/commit/700f661a2c0f861a9b666d40b7f2ba133c61dd71))
+* release new version ([852690a](https://gitlab.com/carcheky/raspiserver/commit/852690a75a75d5f072b826203ef78cabcde4f17c))
+* renamed paths ([47d736b](https://gitlab.com/carcheky/raspiserver/commit/47d736bd682458d8d916901cc833b8441cd00572))
+* select channel on install ([ee17899](https://gitlab.com/carcheky/raspiserver/commit/ee17899b798f987a26c3b955e355c8fb205492bc))
+* set -eux on chanels beta&alpha ([650326f](https://gitlab.com/carcheky/raspiserver/commit/650326fcdfb1e4775a498f36b71b1900d532e3d9))
+* transmission ([d08682a](https://gitlab.com/carcheky/raspiserver/commit/d08682a66c6ced8f692f3ae1e27fb4db3cb507ab))
+* working environment ([ee08a94](https://gitlab.com/carcheky/raspiserver/commit/ee08a9443a2551bfd9cc93f261a3ac9dcec6711f))
+* working nextcloud ([200363d](https://gitlab.com/carcheky/raspiserver/commit/200363d27633a8a7dd3632a1fa4a60dcce09faca))
+* working nextcloud ([f0ca680](https://gitlab.com/carcheky/raspiserver/commit/f0ca6809d8cbf8959b165bdc58c148e5958139e8))
+* working nextcloud ([41847e8](https://gitlab.com/carcheky/raspiserver/commit/41847e865b7ee4e980986db99bdb5dcaf450ee29))
+* working! ([f60535a](https://gitlab.com/carcheky/raspiserver/commit/f60535ab73755f270bac9caa72a2dfc585de1756))
+
+
+### BREAKING CHANGES
+
+* Reworked, clean install
+
 # [5.6.0](https://gitlab.com/carcheky/raspiserver/compare/v5.5.0...v5.6.0) (2022-12-25)
 
 
