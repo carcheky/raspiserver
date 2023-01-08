@@ -194,16 +194,16 @@ stop() {
     docker compose stop -d --remove-orphans
   fi
 }
-## kill: docker compose kill -d --remove-orphans
+## kill: docker compose kill
 kill() {
   if cd ${RASPISERVER}; then
-    docker compose kill -d --remove-orphans
+    docker compose kill
   fi
 }
-## down: docker compose down -d --remove-orphans
+## down: docker compose down
 down() {
   if cd ${RASPISERVER}; then
-    docker compose down -d --remove-orphans
+    docker compose down
   fi
 }
 ## up: docker compose restart
