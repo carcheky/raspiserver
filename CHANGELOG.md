@@ -1,5 +1,13 @@
 # CHANGELOG
 
+# [6.1.0](https://gitlab.com/carcheky/raspiserver/compare/v6.0.0...v6.1.0) (2023-01-08)
+
+
+### Features
+
+* google assistant ([b2446d4](https://gitlab.com/carcheky/raspiserver/commit/b2446d4e5b2874d52ebcf037047be5f26b090f05))
+* wake on lan ([1efd1e6](https://gitlab.com/carcheky/raspiserver/commit/1efd1e6ed7b1a571371693d6e0407f6e0e17c2f3))
+
 # [6.0.0](https://gitlab.com/carcheky/raspiserver/compare/v5.6.0...v6.0.0) (2023-01-08)
 
 
