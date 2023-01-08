@@ -111,7 +111,7 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    sudo git clone -b ${CHANNEL:-beta} https://gitlab.com/carcheky/raspiserver.git "~/raspiserver"
+    sudo git clone -b ${CHANNEL:-beta} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
     update
   fi
 }
