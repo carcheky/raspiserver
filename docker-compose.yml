@@ -30,10 +30,10 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Madrid
-      - URL=carcheky.com
+      - URL=${DOMAIN}
       - VALIDATION=http
       - SUBDOMAINS=r,ha,tr,jf,jd,nc #optional
-      - EMAIL=carcheky@gmail.com
+      - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true #optional
       - STAGING=true #optional
     volumes:
