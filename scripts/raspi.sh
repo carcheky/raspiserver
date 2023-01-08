@@ -7,7 +7,8 @@ RASPICONFIG='~/raspiserver/RASPICONFIG'
 echo "Select channel (alpha,beta,stable):" && read var
 CHANNEL=${var:-alpha}
 
-[ ! $CHANNEL == 'stable' ] && set -eux
+set -eux
+[ $CHANNEL == 'stable' ] && set -eu
 
 [ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
 
@@ -94,6 +95,7 @@ _install() {
     sudo usermod -aG docker $USER
     sudo dpkg --configure -a
   fi
+  set -eux
   if [ -d ${RASPISERVER} ]; then
     echo -e "\u2022 raspiserver ya está instalado"
   else
