@@ -10,7 +10,7 @@ if [ ! -d ${RASPISERVER} ]; then
   echo -e "\u25E6 instalando raspiserver..."
   echo "Select channel (alpha,beta,stable):" && read readchannel
   CHANNEL=${readchannel}
-  echo "$CHANNEL selectd"
+  echo "$CHANNEL selected"
   git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
   update
 fi
@@ -123,7 +123,6 @@ _create_env(){
     echo RASPISERVER="${HOME}/raspiserver" >> ${RASPISERVER}/.env
     echo RASPIMEDIA='/media/RASPIMEDIA/' >> ${RASPISERVER}/.env
     echo RASPICONFIG='~/raspiserver/RASPICONFIG' >> ${RASPISERVER}/.env
-    echo CHANNEL=${CHANNEL} >> ${RASPISERVER}/.env
   fi
 }
 ## run: install, update & run
