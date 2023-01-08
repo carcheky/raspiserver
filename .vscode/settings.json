@@ -22,5 +22,6 @@
         "tab.activeBorder": "#e2c75a",
         "iLoveWorkSpaceColors": true,
         "iLoveWorkSpaceRandom": false
-    }
+    },
+    "git.postCommitCommand": "sync"
 }
