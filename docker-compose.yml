@@ -118,3 +118,18 @@ services:
     network_mode: host
     depends_on:
       - swag
+
+  # mariadb
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - ${RASPICONFIG}/mariadb/:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+      - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+      - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
