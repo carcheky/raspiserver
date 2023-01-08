@@ -120,13 +120,13 @@ services:
       - swag
 
   # mariadb
-  mariadb:
+  nextcloud-database:
     image: mariadb:10.5
-    container_name: mariadb
+    container_name: nextcloud-database
     restart: always
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
-      - ${RASPICONFIG}/mariadb/:/var/lib/mysql
+      - ${RASPICONFIG}/nextcloud/database/:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
@@ -135,9 +135,9 @@ services:
       - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
   
   # nextcloud
-  nextcloud:
+  nextcloud-server:
     image: nextcloud:latest
-    container_name: nextcloud
+    container_name: nextcloud-server
     environment:
       - PUID=1000
       - PGID=1000
@@ -152,13 +152,13 @@ services:
       - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${PASSWORD}
-      - NEXTCLOUD_TRUSTED_DOMAINS=nc.carcheky.com cckpi.local:8056 192.168.68.201:8056
+      - NEXTCLOUD_TRUSTED_DOMAINS=nc.carcheky.com raspiserver.local:8056 192.168.68.201:8056
       - TRUSTED_PROXIES=127.0.0.1 localhost 192.168.68.201 0.0.0.0 ::1
       - OVERWRITEHOST:nc.carcheky.com
       - OVERWRITEPROTOCOL:https
       - OVERWRITECLIURL:https://nc.carcheky.com
     volumes:
-      - ${RASPICONFIG}/nextcloud/web:/var/www/html/
+      - ${RASPICONFIG}/nextcloud/server:/var/www/html/
       # - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
       # - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
       # - ${RASPICONFIG}/nextcloud/custom_apps:/var/www/html/custom_apps
@@ -168,4 +168,4 @@ services:
     restart: always
     links:
       - swag
-      - mariadb
+      - nextcloud-database
