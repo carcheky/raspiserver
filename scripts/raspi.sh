@@ -196,14 +196,12 @@ stop() {
 }
 ## kill: docker compose kill -d --remove-orphans
 kill() {
-  mount
   if cd ${RASPISERVER}; then
     docker compose kill -d --remove-orphans
   fi
 }
 ## down: docker compose down -d --remove-orphans
 down() {
-  mount
   if cd ${RASPISERVER}; then
     docker compose down -d --remove-orphans
   fi
