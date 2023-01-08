@@ -1,10 +1,13 @@
 #!/bin/bash
 
 WATCHER_TIME=30
-. ${RASPISERVER}/.env
+RASPISERVER='~/raspiserver'
+RASPIMEDIA='/media/RASPIMEDIA/'
+RASPICONFIG='~/raspiserver/RASPICONFIG'
+echo "Select channel (alpha,beta,stable):" && read var
+CHANNEL=${var:-alpha}
 
-# for devs
-set -eux
+[ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
 
 # helper scripts
 _install() {
@@ -112,7 +115,7 @@ _install() {
   else
     echo -e "\u25E6 instalando raspiserver..."
     sudo chmod 777 /raspi
-    sudo git clone -b ${CHANNEL:-beta} https://gitlab.com/carcheky/raspiserver.git  ${RASPISERVER}
+    sudo git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ${RASPISERVER}
     _create_env
     update
   fi
