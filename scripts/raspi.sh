@@ -1,7 +1,7 @@
 #!/bin/bash
 
 WATCHER_TIME=30
-RASPISERVER='~/raspiserver'
+RASPISERVER="${HOME}/raspiserver"
 RASPIMEDIA='/media/RASPIMEDIA/'
 RASPICONFIG='~/raspiserver/RASPICONFIG'
 echo "Select channel (alpha,beta,stable):"
@@ -124,6 +124,10 @@ _create_env(){
     echo MYSQL_ROOT_PASSWORD=$var >> ${RASPISERVER}/.env
     echo "contraseña mysql?: " && read var
     echo NEXTCLOUD_MYSQL_PASSWORD=$var >> ${RASPISERVER}/.env
+    echo RASPISERVER="${HOME}/raspiserver" >> ${RASPISERVER}/.env
+    echo RASPIMEDIA='/media/RASPIMEDIA/' >> ${RASPISERVER}/.env
+    echo RASPICONFIG='~/raspiserver/RASPICONFIG' >> ${RASPISERVER}/.env
+    echo CHANNEL=${var:-alpha} >> ${RASPISERVER}/.env
   fi
 }
 ## run: install, update & run
