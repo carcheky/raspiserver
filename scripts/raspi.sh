@@ -4,8 +4,10 @@ WATCHER_TIME=30
 RASPISERVER='~/raspiserver'
 RASPIMEDIA='/media/RASPIMEDIA/'
 RASPICONFIG='~/raspiserver/RASPICONFIG'
-echo "Select channel (alpha,beta,stable):" && read var
+echo "Select channel (alpha,beta,stable):"
+read var
 CHANNEL=${var:-alpha}
+echo "$CHANNEL selectd"
 
 set -eux
 [ $CHANNEL == 'stable' ] && set -eu
