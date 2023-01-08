@@ -22,7 +22,7 @@ release:
     - npx semantic-release
 
 release_beta:
-  image: node:16
+  image: node:18
   stage: release
   only:
     - beta
