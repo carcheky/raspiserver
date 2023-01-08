@@ -66,3 +66,31 @@ services:
     network_mode: host
     depends_on:
       - swag
+
+  # jellyfin
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: always
+    privileged: true
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+      - JELLYFIN_PublishedServerUrl=jf.${DOMAIN}
+      - VIRTUAL_HOST=jf.${DOMAIN}
+      - VIRTUAL_PORT=8096
+      - LETSENCRYPT_HOST=jf.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+    volumes:
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+      - ${RASPICONFIG}/jellyfin/config:/config
+      - ${RASPICONFIG}/jellyfin/movies:/data/movies
+      - ${RASPICONFIG}/jellyfin/tvshows:/data/tvshows
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/vc/lib:/opt/vc/lib
+    devices:
+      - /dev/vchiq:/dev/vchi
+    network_mode: host
+    depends_on:
+      - swag
