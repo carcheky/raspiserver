@@ -26,6 +26,7 @@ release_beta:
   stage: release
   only:
     - beta
+    - alpha
   when: delayed
   start_in: 30 seconds
   script:
