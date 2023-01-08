@@ -6,5 +6,21 @@
             "userName": "carcheky",
             "selected": true
         }
-    ]
+    ],
+    "workbench.colorCustomizations": {
+        "titleBar.activeBackground": "#e2c75a",
+        "titleBar.activeForeground": "#000000",
+        "titleBar.inactiveBackground": "#e2c75a",
+        "titleBar.inactiveForeground": "#000000",
+        "titleBar.border": "#e2c75a",
+        "activityBar.background": "#e2c75a",
+        "activityBar.foreground": "#000000",
+        "statusBar.background": "#e2c75a",
+        "statusBar.foreground": "#000000",
+        "statusBar.debuggingBackground": "#e2c75a",
+        "statusBar.debuggingForeground": "#000000",
+        "tab.activeBorder": "#e2c75a",
+        "iLoveWorkSpaceColors": true,
+        "iLoveWorkSpaceRandom": false
+    }
 }
