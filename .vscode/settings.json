@@ -23,5 +23,5 @@
         "iLoveWorkSpaceColors": true,
         "iLoveWorkSpaceRandom": false
     },
-    "git.postCommitCommand": "sync"
+    "git.postCommitCommand": "push"
 }
