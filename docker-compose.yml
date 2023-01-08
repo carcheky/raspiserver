@@ -35,7 +35,7 @@ services:
       - SUBDOMAINS=r,ha,tr,jf,jd,nc #optional
       - EMAIL=carcheky@gmail.com
       - ONLY_SUBDOMAINS=true #optional
-      - STAGING=false #optional
+      - STAGING=true #optional
     volumes:
       - "${RASPICONFIG}/swag/:/config"
     restart: always

@@ -101,13 +101,6 @@ _install() {
     sudo usermod -aG docker $USER
     sudo dpkg --configure -a
   fi
-  # if [ -d ${RASPISERVER} ]; then
-  #   echo -e "\u2022 raspiserver ya está instalado"
-  # else
-  #   echo -e "\u25E6 instalando raspiserver..."
-  #   git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
-  #   update
-  # fi
 }
 _install_bin() {
   sudo ln -fs ${RASPISERVER}/configs/raspbian/rc.local /etc/rc.local
@@ -214,7 +207,7 @@ restart() {
   mount
   if cd ${RASPISERVER}; then
     docker compose restart
-    docker compose up
+    docker compose up -d
   fi
 }
 ## retry: uninstall and exit
@@ -263,16 +256,15 @@ reboot() {
   sudo reboot
 }
 
-jellyfin_ssl(){
-  if [ -d ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/ ]; then
-    openssl pkcs12 -export \
-        -out ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/jellyfin.p12 \
-        -in ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/fullchain.pem \
-        -inkey ${RASPICONFIG}/data/swag/config/etc/letsencrypt/live/carcheky.tplinkdns.com/privkey.pem \
-        -passin pass: \
-        -passout pass:
-  fi
+## configs_copy: copy configs if exists containers data
+configs_copy(){
+  [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/configs/nginx/*.conf ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/
 }
+## configs_backup: backup to repo configs if exists containers data
+configs_backup(){
+  [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/*.conf ${RASPISERVER}/configs/nginx/
+}
+
 # this line print help if no arguments
 ## help: print this help using:
 help() {

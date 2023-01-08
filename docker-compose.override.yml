@@ -1,57 +1,5 @@
 services:
 
-  # homeassistant
-  homeassistant:
-    image: "homeassistant/home-assistant:stable"
-    container_name: homeassistant
-    restart: always
-    privileged: true
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - VIRTUAL_HOST=ha.${DOMAIN}
-      - VIRTUAL_PORT=8123
-      - LETSENCRYPT_HOST=ha.${DOMAIN}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-    volumes:
-      - ${RASPICONFIG}/homeassistant/config:/config
-      - ${RASPIMEDIA}:/media
-      - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /run/dbus:/run/dbus:ro # bluethooth
-    network_mode: host
-    depends_on:
-      - swag
-
-  # jellyfin
-  jellyfin:
-    image: linuxserver/jellyfin:latest
-    container_name: jellyfin
-    restart: always
-    privileged: true
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - JELLYFIN_PublishedServerUrl=jf.${DOMAIN}
-      - VIRTUAL_HOST=jf.${DOMAIN}
-      - VIRTUAL_PORT=8096
-      - LETSENCRYPT_HOST=jf.${DOMAIN}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-    volumes:
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
-      - ${RASPICONFIG}/jellyfin/config:/config
-      - ${RASPICONFIG}/jellyfin/movies:/data/movies
-      - ${RASPICONFIG}/jellyfin/tvshows:/data/tvshows
-      - /etc/localtime:/etc/localtime:ro
-      - /opt/vc/lib:/opt/vc/lib
-    devices:
-      - /dev/vchiq:/dev/vchi
-    network_mode: host
-    depends_on:
-      - swag
-
   # transmission
   transmission:
     image: linuxserver/transmission:latest
@@ -76,55 +24,107 @@ services:
     depends_on:
       - swag
 
-  # mariadb
-  mariadb:
-    image: mariadb:10.5
-    container_name: mariadb
-    restart: always
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
-    volumes:
-      - ${RASPICONFIG}/mariadb/:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
-      - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
-      - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
+  # # homeassistant
+  # homeassistant:
+  #   image: "homeassistant/home-assistant:stable"
+  #   container_name: homeassistant
+  #   restart: always
+  #   privileged: true
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Madrid
+  #     - VIRTUAL_HOST=ha.${DOMAIN}
+  #     - VIRTUAL_PORT=8123
+  #     - LETSENCRYPT_HOST=ha.${DOMAIN}
+  #     - LETSENCRYPT_EMAIL=${EMAIL}
+  #   volumes:
+  #     - ${RASPICONFIG}/homeassistant/config:/config
+  #     - ${RASPIMEDIA}:/media
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /run/dbus:/run/dbus:ro # bluethooth
+  #   network_mode: host
+  #   depends_on:
+  #     - swag
+
+  # # jellyfin
+  # jellyfin:
+  #   image: linuxserver/jellyfin:latest
+  #   container_name: jellyfin
+  #   restart: always
+  #   privileged: true
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Madrid
+  #     - JELLYFIN_PublishedServerUrl=jf.${DOMAIN}
+  #     - VIRTUAL_HOST=jf.${DOMAIN}
+  #     - VIRTUAL_PORT=8096
+  #     - LETSENCRYPT_HOST=jf.${DOMAIN}
+  #     - LETSENCRYPT_EMAIL=${EMAIL}
+  #   volumes:
+  #     - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+  #     - ${RASPICONFIG}/jellyfin/config:/config
+  #     - ${RASPICONFIG}/jellyfin/movies:/data/movies
+  #     - ${RASPICONFIG}/jellyfin/tvshows:/data/tvshows
+  #     - /etc/localtime:/etc/localtime:ro
+  #     - /opt/vc/lib:/opt/vc/lib
+  #   devices:
+  #     - /dev/vchiq:/dev/vchi
+  #   network_mode: host
+  #   depends_on:
+  #     - swag
+
+  # # mariadb
+  # mariadb:
+  #   image: mariadb:10.5
+  #   container_name: mariadb
+  #   restart: always
+  #   command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+  #   volumes:
+  #     - ${RASPICONFIG}/mariadb/:/var/lib/mysql
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+  #     - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+  #     - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+  #     - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+  #     - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
   
-  # nextcloud
-  nextcloud:
-    image: nextcloud:latest
-    container_name: nextcloud
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
-      - VIRTUAL_HOST=nc.${DOMAIN}
-      - VIRTUAL_PORT=8056
-      - LETSENCRYPT_HOST=nc.${DOMAIN}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
-      - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
-      - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
-      - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
-      - NEXTCLOUD_ADMIN_PASSWORD=${PASSWORD}
-      - NEXTCLOUD_TRUSTED_DOMAINS=nc.carcheky.com cckpi.local:8056 192.168.68.201:8056
-      - TRUSTED_PROXIES=127.0.0.1 localhost 192.168.68.201 0.0.0.0 ::1
-      - OVERWRITEHOST:nc.carcheky.com
-      - OVERWRITEPROTOCOL:https
-      - OVERWRITECLIURL:https://nc.carcheky.com
-    volumes:
-      - ${RASPICONFIG}/nextcloud/web:/var/www/html/
-      # - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
-      # - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
-      # - ${RASPICONFIG}/nextcloud/custom_apps:/var/www/html/custom_apps
-      # - ${RASPICONFIG}/nextcloud/themes:/var/www/html/themes/
-    ports:
-      - 8056:80
-    restart: always
-    links:
-      - swag
-      - mariadb
+  # # nextcloud
+  # nextcloud:
+  #   image: nextcloud:latest
+  #   container_name: nextcloud
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/Madrid
+  #     - VIRTUAL_HOST=nc.${DOMAIN}
+  #     - VIRTUAL_PORT=8056
+  #     - LETSENCRYPT_HOST=nc.${DOMAIN}
+  #     - LETSENCRYPT_EMAIL=${EMAIL}
+  #     - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+  #     - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+  #     - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+  #     - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
+  #     - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
+  #     - NEXTCLOUD_ADMIN_PASSWORD=${PASSWORD}
+  #     - NEXTCLOUD_TRUSTED_DOMAINS=nc.carcheky.com cckpi.local:8056 192.168.68.201:8056
+  #     - TRUSTED_PROXIES=127.0.0.1 localhost 192.168.68.201 0.0.0.0 ::1
+  #     - OVERWRITEHOST:nc.carcheky.com
+  #     - OVERWRITEPROTOCOL:https
+  #     - OVERWRITECLIURL:https://nc.carcheky.com
+  #   volumes:
+  #     - ${RASPICONFIG}/nextcloud/web:/var/www/html/
+  #     # - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
+  #     # - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
+  #     # - ${RASPICONFIG}/nextcloud/custom_apps:/var/www/html/custom_apps
+  #     # - ${RASPICONFIG}/nextcloud/themes:/var/www/html/themes/
+  #   ports:
+  #     - 8056:80
+  #   restart: always
+  #   links:
+  #     - swag
+  #     - mariadb
 
 
