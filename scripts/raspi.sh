@@ -134,7 +134,7 @@ _create_env(){
     read var
     echo MYSQL_ROOT_PASSWORD=$var >> ~/raspiserver/.env
     echo "contraseña mysql?"
-  varvar
+    read var
     echo NEXTCLOUD_MYSQL_PASSWORD=$var >> ~/raspiserver/.env
   fi
 }
