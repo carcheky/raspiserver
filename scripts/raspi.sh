@@ -4,19 +4,17 @@ WATCHER_TIME=30
 RASPISERVER="${HOME}/raspiserver"
 RASPIMEDIA='/media/RASPIMEDIA/'
 RASPICONFIG='~/raspiserver/RASPICONFIG'
-if [ -d ${RASPISERVER} ]; then
-  echo -e "\u2022 raspiserver ya está instalado"
-else
+CHANNEL='stable'
+
+if [ ! -d ${RASPISERVER} ]; then
   echo -e "\u25E6 instalando raspiserver..."
-  echo "Select channel (alpha,beta,stable):"
-  read var
-  CHANNEL=${var:-alpha}
+  echo "Select channel (alpha,beta,stable):" && read readchannel
+  CHANNEL=${readchannel}
   echo "$CHANNEL selectd"
   git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
   update
 fi
-set -eux
-[ $CHANNEL == 'stable' ] && set -eu
+set -eux && [ $CHANNEL == 'stable' ] && set -eu
 
 [ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
 
@@ -123,16 +121,16 @@ _create_env(){
   if [ ! -f ${RASPISERVER}/.env ]; then
     cp ${RASPISERVER}/.env.dist ${RASPISERVER}/.env
     echo "######################################################"
-    echo "contraseña genérica?: " && read var
-    echo PASSWORD=$var >> ${RASPISERVER}/.env
-    echo "contraseña root mysql?: " && read var
-    echo MYSQL_ROOT_PASSWORD=$var >> ${RASPISERVER}/.env
-    echo "contraseña mysql?: " && read var
-    echo NEXTCLOUD_MYSQL_PASSWORD=$var >> ${RASPISERVER}/.env
+    echo "contraseña genérica?: " && read readpass
+    echo PASSWORD=$readpass >> ${RASPISERVER}/.env
+    echo "contraseña root mysql?: " && read readmysqlrootpass
+    echo MYSQL_ROOT_PASSWORD=$readmysqlrootpass >> ${RASPISERVER}/.env
+    echo "contraseña mysql?: " && read readmysqlpass
+    echo NEXTCLOUD_MYSQL_PASSWORD=$readmysqlpass >> ${RASPISERVER}/.env
     echo RASPISERVER="${HOME}/raspiserver" >> ${RASPISERVER}/.env
     echo RASPIMEDIA='/media/RASPIMEDIA/' >> ${RASPISERVER}/.env
     echo RASPICONFIG='~/raspiserver/RASPICONFIG' >> ${RASPISERVER}/.env
-    echo CHANNEL=${var:-alpha} >> ${RASPISERVER}/.env
+    echo CHANNEL=${CHANNEL} >> ${RASPISERVER}/.env
   fi
 }
 ## run: install, update & run
@@ -166,24 +164,22 @@ update() {
 }
 ## mount: mount hard disk
 mount() {
-  if [ $(which docker) ]; then
-    kill
-    sudo systemctl stop docker
-  fi
   while [ ! -f ${RASPIMEDIA}/this-is-the-hd ]; do
-    sudo mkdir -p ${RASPIMEDIA}/
-    sudo chmod 777 ${RASPIMEDIA}/
-    while ! sudo mount -L raspimedia ${RASPIMEDIA}; do
-      echo nop
-      sleep 1
-    done
+    if [ $(which docker) ]; then
+      sudo systemctl stop docker
+    fi
+    sudo mkdir -p ${RASPIMEDIA}
+    sudo chmod 777 ${RASPIMEDIA}
+    sudo mount -L raspimedia ${RASPIMEDIA}
   done
   sudo systemctl start docker
 }
 ## umount: umount hard disks
 umount() {
-  kill
-  sudo umount ${RASPIMEDIA}
+  while [ -f ${RASPIMEDIA}/this-is-the-hd ]; do
+    kill
+    sudo umount ${RASPIMEDIA} -q
+  done
 }
 ## up: docker compose up -d --remove-orphans
 up() {
@@ -202,7 +198,9 @@ stop() {
 ## kill: docker compose kill
 kill() {
   if cd ${RASPISERVER}; then
+    set -v
     docker compose kill
+    set -eux && [ $CHANNEL == 'stable' ] && set -eu
   fi
 }
 ## down: docker compose down
@@ -240,10 +238,7 @@ retry() {
     /var/run/docker.sock
   exit 0
 }
-## help: print this help
-help() {
-  cat /usr/local/bin/raspi | grep '##'
-}
+
 ## watcher: keep checking repo to update if new code available
 watcher() {
   while true; do
@@ -279,4 +274,9 @@ jellyfin_ssl(){
   fi
 }
 # this line print help if no arguments
+## help: print this help using:
+help() {
+  cat /usr/local/bin/raspi | grep '##'
+}
 ${@:-help}
+echo "$SECONDS seconds"
