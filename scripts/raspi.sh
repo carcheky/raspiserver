@@ -73,7 +73,7 @@ _install() {
     ███████║███████╗██║  ██║ ╚████╔╝ ███████╗██║  ██║
     ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝
     \"                                                                              
-    raspi logs
+
     " >>~/.zshrc
   fi
   if [ $(which docker) ]; then
@@ -117,7 +117,7 @@ _install() {
 }
 _install_bin() {
   sudo cp rc.local /etc/rc.local
-  sudo cp -fr ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
+  sudo ln -fsP ~/raspiserver/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   echo -e "\u2023 necesita reinicio"
   reboot
@@ -153,18 +153,18 @@ update() {
 }
 ## mount: mount hard disk
 mount() {
-  while [ ! -d /mnt/MOUNTED_raspimedia/BibliotecaMultimedia/Peliculas ]; do
+  while [ ! -f /mnt/MOUNTED_raspimedia/this-is-the-hd ]; do
     sudo mkdir -p /mnt/MOUNTED_raspimedia/
     sudo chmod 777 /mnt/MOUNTED_raspimedia/
     if [ $(which docker) ]; then
       sudo systemctl stop docker
     fi
-    while ! sudo mount -L raspimedia /mnt/MOUNTED_raspimedia  -o umask=000; do
+    while ! sudo mount -L raspimedia /mnt/MOUNTED_raspimedia; do
       echo nop
       sleep 1
     done
   done
-  while [ ! -d /mnt/MOUNTED_raspiconfig/data/homeassistant/config/ ]; do
+  while [ ! -f /mnt/MOUNTED_raspiconfig/this-is-the-hd ]; do
     sudo mkdir -p /mnt/MOUNTED_raspiconfig/
     sudo chmod 777 /mnt/MOUNTED_raspiconfig/
     if [ $(which docker) ]; then
@@ -175,7 +175,16 @@ mount() {
       sleep 1
     done
   done
+  ls -la /mnt/MOUNTED_raspi*
   sudo systemctl start docker
+}
+## umount: umount hard disks
+umount() {
+  kill
+  sudo umount /mnt/MOUNTED_raspiconfig
+  sudo umount /mnt/MOUNTED_raspimedia
+  ls -la /mnt/MOUNTED_raspi*
+
 }
 ## up: docker compose up -d --remove-orphans
 up() {
@@ -189,6 +198,20 @@ stop() {
   mount
   if cd ~/raspiserver; then
     docker compose stop -d --remove-orphans
+  fi
+}
+## kill: docker compose kill -d --remove-orphans
+kill() {
+  mount
+  if cd ~/raspiserver; then
+    docker compose kill -d --remove-orphans
+  fi
+}
+## down: docker compose down -d --remove-orphans
+down() {
+  mount
+  if cd ~/raspiserver; then
+    docker compose down -d --remove-orphans
   fi
 }
 ## up: docker compose restart
@@ -212,7 +235,7 @@ retry() {
   sudo rm -fr \
     /usr/bin/raspi \
     /usr/local/bin/raspi \
-    /raspi \
+    ~/raspiserver\
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
