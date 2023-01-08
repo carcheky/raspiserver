@@ -198,6 +198,7 @@ kill() {
 }
 ## down: docker compose down
 down() {
+  kill
   if cd ${RASPISERVER}; then
     docker compose down
   fi

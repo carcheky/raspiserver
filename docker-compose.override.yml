@@ -18,8 +18,8 @@ services:
       - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${RASPICONFIG}/transmission/config:/config
-      - ${RASPICONFIG}/transmission/watch:/watch
-      - ${RASPIMEDIA}/transmission/:/transmission
+      - ${RASPICONFIG}/transmission/incomplete:/downloads/incomplete
+      - ${RASPIMEDIA}/transmission/:/downloads
     network_mode: host
     depends_on:
       - swag
