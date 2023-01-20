@@ -1,1 +1,62 @@
-[]
+- id: '1673455450832'
+  alias: Roborock
+  description: ''
+  trigger:
+  - platform: time
+    at: '18:00:00'
+  condition: []
+  action:
+  - device_id: f90f267269373f33820eada09da4a0b0
+    domain: vacuum
+    entity_id: vacuum.roborock_s6_pure
+    type: clean
+  mode: single
+- id: '1673686532506'
+  alias: Home Assistant Iniciado
+  description: ''
+  trigger:
+  - platform: homeassistant
+    event: start
+  condition: []
+  action:
+  - device_id: f93a212b9fddee7f99d06453e49c085e
+    domain: mobile_app
+    type: notify
+    message: Home assistant iniciado
+  mode: single
+- id: '1673891885919'
+  alias: swich off pcck
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.pcck_2
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 3
+  condition: []
+  action:
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.pcck_2
+  mode: single
+- id: '1674058994506'
+  alias: 'Batería de TabCheky baja '
+  description: ''
+  trigger:
+  - type: battery_level
+    platform: device
+    device_id: 736773a6b456df98196c168dd7b7eaa3
+    entity_id: sensor.tabcheky_battery_level
+    domain: sensor
+    below: 20
+  condition: []
+  action:
+  - device_id: 0c4c3538cd89ff879934aabb092634d0
+    domain: mobile_app
+    type: notify
+    message: Batería de TabCheky baja
+  mode: single

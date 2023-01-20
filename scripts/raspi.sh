@@ -177,7 +177,7 @@ umount() {
 up() {
   mount
   if cd ${RASPISERVER}; then
-    docker compose up -d --remove-orphans
+    docker compose up -d --remove-orphans --pull always
   fi
 }
 ## stop: docker compose stop -d --remove-orphans

@@ -1,24 +1,34 @@
 services:
 
-  # diun
-  diun:
-    image: crazymax/diun:latest
-    container_name: diun
-    command: serve
+  # watchtower
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
     volumes:
-      - "${RASPICONFIG}/diun/:/data"
-      - "/var/run/docker.sock:/var/run/docker.sock"
-    environment:
-      - "TZ=Europe/Madrid"
-      - "LOG_LEVEL=info"
-      - "LOG_JSON=false"
-      - "DIUN_WATCH_WORKERS=20"
-      - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
-      - "DIUN_WATCH_JITTER=30s"
-      - "DIUN_PROVIDERS_DOCKER=true"
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: always
-    labels:
-      - "diun.enable=true"
+    command: --cleanup --interval 3600
+
+  # diun
+  # diun:
+  #   image: crazymax/diun:latest
+  #   container_name: diun
+  #   network_mode: host
+  #   command: serve
+  #   volumes:
+  #     - "${RASPICONFIG}/diun/:/data"
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #   environment:
+  #     - "TZ=Europe/Madrid"
+  #     - "LOG_LEVEL=info"
+  #     - "LOG_JSON=false"
+  #     - "DIUN_WATCH_WORKERS=20"
+  #     - "DIUN_WATCH_SCHEDULE=0 */6 * * *"
+  #     - "DIUN_WATCH_JITTER=30s"
+  #     - "DIUN_PROVIDERS_DOCKER=true"
+  #   restart: always
+  #   labels:
+  #     - "diun.enable=true"
 
   # nginx
   swag:
@@ -35,13 +45,13 @@ services:
       - SUBDOMAINS=r,ha,tr,jf,jd,nc #optional
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true #optional
-      - STAGING=true #optional
+      - STAGING=false #optional
     volumes:
       - "${RASPICONFIG}/swag/:/config"
     restart: always
     network_mode: host
     depends_on:
-      - diun
+      - watchtower
 
   # transmission
   transmission:
@@ -115,6 +125,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
     network_mode: host
     depends_on:
       - swag
@@ -133,6 +145,8 @@ services:
       - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
       - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
       - MYSQL_HOST=nextcloud-database
+    depends_on:
+      - watchtower
   
   # nextcloud
   nextcloud-server:
