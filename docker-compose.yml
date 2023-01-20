@@ -100,7 +100,7 @@ services:
       - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${RASPICONFIG}/homeassistant/config:/config
-      - ${RASPIMEDIA}:/media
+      - ${RASPIMEDIA}:/media/RASPIMEDIA
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
@@ -152,6 +152,10 @@ services:
       - OVERWRITECLIURL:https://nc.carcheky.com
     volumes:
       - ${RASPICONFIG}/nextcloud/server:/var/www/html/
+      - /media/:/media/
+      # - ${RASPIMEDIA}/nextcloud:/var/www/html/data
+      # - ${RASPIMEDIA}/BibliotecaMultimedia:/media/BibliotecaMultimedia
+      # - ${RASPIMEDIA}/transmission:/media/transmission
       # - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
       # - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
       # - ${RASPICONFIG}/nextcloud/custom_apps:/var/www/html/custom_apps
