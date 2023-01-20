@@ -1,2 +1,7 @@
 /.env
 /RASPICONFIG
+token_extractor_docker/.dockerignore
+token_extractor_docker/Dockerfile
+token_extractor_docker/requirements.txt
+token_extractor_docker/token_extractor.py
+token_extractor_docker.zip

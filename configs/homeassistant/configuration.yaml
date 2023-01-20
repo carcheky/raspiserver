@@ -2,6 +2,8 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
+my:
+
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
@@ -14,21 +16,116 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 
-
 # http integration
 http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
+    - 0.0.0.0
+    - 192.168.8.201
+
+
 
 # google_assistant integration
 google_assistant:
   project_id: home-assistant-raspiserver
   service_account: !include SERVICE_ACCOUNT.JSON
   report_state: true
+  entity_config:
+    input_boolean.default_dashboard:
+      expose: false
+    input_select.default_dashboard:
+      expose: false
+    sensor.temperature_humidity_sensor_fb23_temperature:
+      expose: false
+    sensor.temperature_humidity_sensor_f85c_temperature:
+      expose: false
+    sensor.temperature_humidity_sensor_2d7c_temperature:
+      expose: false
+    sensor.temperature_humidity_sensor_fb23_humidity:
+      expose: false
+    sensor.temperature_humidity_sensor_f85c_humidity:
+      expose: false
+    sensor.temperature_humidity_sensor_2d7c_humidity:
+      expose: false
+
+
 
 # wake on lan integration
 switch:
   - platform: wake_on_lan
-    mac: B0-4A-39-09-B6-69
+    mac: !secret wake_on_lan_mac
     name: PCCK
+
+# homeassistant integration
+homeassistant:
+  name: Drona
+  unit_system: metric
+  currency: EUR
+  country: ES
+  time_zone: "Europe/Madrid"
+  external_url: "https://ha.carcheky.com"
+  internal_url: "http://raspiserver.local:8123"
+
+
+# zigbee integration
+zha:
+  zigpy_config:
+    ezsp_config:
+      CONFIG_APS_UNICAST_MESSAGE_COUNT: 12
+      CONFIG_SOURCE_ROUTE_TABLE_SIZE: 16
+      CONFIG_ADDRESS_TABLE_SIZE: 8
+
+
+
+
+
+
+
+logger:
+  default: warning
+
+
+
+
+
+
+
+# # xiaomi_cloud_map_extractor
+# camera:
+#   - platform: xiaomi_cloud_map_extractor
+#     host: !secret xiaomi_vacuum_host
+#     token: !secret xiaomi_vacuum_token
+#     username: !secret xiaomi_cloud_username
+#     password: !secret xiaomi_cloud_password
+#     country: "sg"
+#     name: "Roborock S6 Pure"
+#     attributes:
+#       - calibration_points
+#       - charger
+#       - cleaned_rooms
+#       - country
+#       - goto
+#       - goto_path
+#       - goto_predicted_path
+#       - image
+#       - is_empty
+#       - map_name
+#       - no_go_areas
+#       - no_mopping_areas
+#       - obstacles
+#       - ignored_obstacles
+#       - obstacles_with_photo
+#       - ignored_obstacles_with_photo
+#       - path
+#       - room_numbers
+#       - rooms
+#       - vacuum_position
+#       - vacuum_room
+#       - vacuum_room_name
+#       - walls
+#       - zones
+#     auto_update: true
+#     store_map_raw: true
+#     store_map_image: true
+# # xiaomi_cloud_map_extractor END
