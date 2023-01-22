@@ -16,9 +16,9 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
       - URL=${DOMAIN}
       - VALIDATION=http
       - SUBDOMAINS=r,ha,tr,jf,jd,nc #optional
@@ -39,9 +39,9 @@ services:
     restart: always
     privileged: true
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/madrid
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
       - USER=${USER} #optional
       - PASS=${PASSWORD} #optional
       - VIRTUAL_HOST=tr.${DOMAIN}
@@ -63,9 +63,9 @@ services:
     restart: always
     privileged: true
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
       - JELLYFIN_PublishedServerUrl=jf.${DOMAIN}
       - VIRTUAL_HOST=jf.${DOMAIN}
       - VIRTUAL_PORT=8096
@@ -91,9 +91,9 @@ services:
     restart: always
     privileged: true
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
       - VIRTUAL_HOST=ha.${DOMAIN}
       - VIRTUAL_PORT=8123
       - LETSENCRYPT_HOST=ha.${DOMAIN}
@@ -132,9 +132,9 @@ services:
     image: nextcloud:latest
     container_name: nextcloud-server
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Madrid
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
       - VIRTUAL_HOST=nc.${DOMAIN}
       - VIRTUAL_PORT=8056
       - LETSENCRYPT_HOST=nc.${DOMAIN}
@@ -145,11 +145,11 @@ services:
       - MYSQL_HOST=nextcloud-database
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
       - NEXTCLOUD_ADMIN_PASSWORD=${PASSWORD}
-      - NEXTCLOUD_TRUSTED_DOMAINS=nc.carcheky.com raspiserver.local:8056 192.168.68.201:8056
+      - NEXTCLOUD_TRUSTED_DOMAINS=nc.${DOMAIN} raspiserver.local:8056 192.168.68.201:8056 localhost
       - TRUSTED_PROXIES=127.0.0.1 localhost 192.168.68.201 0.0.0.0 ::1
-      - OVERWRITEHOST:nc.carcheky.com
+      - OVERWRITEHOST:nc.${DOMAIN}
       - OVERWRITEPROTOCOL:https
-      - OVERWRITECLIURL:https://nc.carcheky.com
+      - OVERWRITECLIURL:https://nc.${DOMAIN}
     volumes:
       - ${RASPICONFIG}/nextcloud/server:/var/www/html/
       - /media/:/media/
