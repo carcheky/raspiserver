@@ -31,23 +31,32 @@ google_assistant:
   project_id: home-assistant-raspiserver
   service_account: !include SERVICE_ACCOUNT.JSON
   report_state: true
-  entity_config:
-    input_boolean.default_dashboard:
-      expose: false
-    input_select.default_dashboard:
-      expose: false
-    sensor.temperature_humidity_sensor_fb23_temperature:
-      expose: false
-    sensor.temperature_humidity_sensor_f85c_temperature:
-      expose: false
-    sensor.temperature_humidity_sensor_2d7c_temperature:
-      expose: false
-    sensor.temperature_humidity_sensor_fb23_humidity:
-      expose: false
-    sensor.temperature_humidity_sensor_f85c_humidity:
-      expose: false
-    sensor.temperature_humidity_sensor_2d7c_humidity:
-      expose: false
+  expose_by_default: true
+  exposed_domains:
+    - light
+    - switch
+    - vacuum
+    - group
+    - scene
+
+
+  # entity_config:
+  #   input_boolean.default_dashboard:
+  #     expose: false
+  #   input_select.default_dashboard:
+  #     expose: false
+  #   sensor.temperature_humidity_sensor_fb23_temperature:
+  #     expose: false
+  #   sensor.temperature_humidity_sensor_f85c_temperature:
+  #     expose: false
+  #   sensor.temperature_humidity_sensor_2d7c_temperature:
+  #     expose: false
+  #   sensor.temperature_humidity_sensor_fb23_humidity:
+  #     expose: false
+  #   sensor.temperature_humidity_sensor_f85c_humidity:
+  #     expose: false
+  #   sensor.temperature_humidity_sensor_2d7c_humidity:
+  #     expose: false
 
 
 
@@ -65,7 +74,7 @@ homeassistant:
   country: ES
   time_zone: "Europe/Madrid"
   external_url: "https://ha.carcheky.com"
-  internal_url: "http://raspiserver.local:8123"
+  internal_url: "http://192.168.68.201:8123"
 
 
 # zigbee integration
@@ -76,56 +85,56 @@ zha:
       CONFIG_SOURCE_ROUTE_TABLE_SIZE: 16
       CONFIG_ADDRESS_TABLE_SIZE: 8
 
-
-
-
-
-
+zha_toolkit:
 
 logger:
-  default: warning
+  default: error
+  # logs:
+  #   custom_components.zha_toolkit: error
+  #   zigpy: error
+  #   zigpy_zcl: error
+  #   homeassistant.loader: error
 
 
-
-
-
-
-
-# # xiaomi_cloud_map_extractor
-# camera:
-#   - platform: xiaomi_cloud_map_extractor
-#     host: !secret xiaomi_vacuum_host
-#     token: !secret xiaomi_vacuum_token
-#     username: !secret xiaomi_cloud_username
-#     password: !secret xiaomi_cloud_password
-#     country: "sg"
-#     name: "Roborock S6 Pure"
-#     attributes:
-#       - calibration_points
-#       - charger
-#       - cleaned_rooms
-#       - country
-#       - goto
-#       - goto_path
-#       - goto_predicted_path
-#       - image
-#       - is_empty
-#       - map_name
-#       - no_go_areas
-#       - no_mopping_areas
-#       - obstacles
-#       - ignored_obstacles
-#       - obstacles_with_photo
-#       - ignored_obstacles_with_photo
-#       - path
-#       - room_numbers
-#       - rooms
-#       - vacuum_position
-#       - vacuum_room
-#       - vacuum_room_name
-#       - walls
-#       - zones
-#     auto_update: true
-#     store_map_raw: true
-#     store_map_image: true
-# # xiaomi_cloud_map_extractor END
+# xiaomi_cloud_map_extractor
+camera:  # logs:
+  #   custom_components.zha_toolkit: error
+  #   zigpy: error
+  #   zigpy_zcl: error
+  #   homeassistant.loader: error
+  - platform: xiaomi_cloud_map_extractor
+    host: !secret xiaomi_vacuum_host
+    token: !secret xiaomi_vacuum_token
+    username: !secret xiaomi_cloud_username
+    password: !secret xiaomi_cloud_password
+    country: "sg"
+    name: "Roborock S6 Pure"
+    attributes:
+      - calibration_points
+      - charger
+      - cleaned_rooms
+      - country
+      - goto
+      - goto_path
+      - goto_predicted_path
+      - image
+      - is_empty
+      - map_name
+      - no_go_areas
+      - no_mopping_areas
+      - obstacles
+      - ignored_obstacles
+      - obstacles_with_photo
+      - ignored_obstacles_with_photo
+      - path
+      - room_numbers
+      - rooms
+      - vacuum_position
+      - vacuum_room
+      - vacuum_room_name
+      - walls
+      - zones
+    auto_update: true
+    store_map_raw: true
+    store_map_image: true
+# xiaomi_cloud_map_extractor END
