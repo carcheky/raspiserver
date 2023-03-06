@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.2.0](https://gitlab.com/carcheky/raspiserver/compare/v6.1.0...v6.2.0) (2023-01-21)
+
+
+### Bug Fixes
+
+* remove diun ([e52cd0b](https://gitlab.com/carcheky/raspiserver/commit/e52cd0ba94d595cc2aeb06979487ba867310d46a))
+
+
+### Features
+
+* working zigbee & watchtower ([456bfed](https://gitlab.com/carcheky/raspiserver/commit/456bfed568c07f9a9e5f12535b6c758d6dc76597))
+
 # [6.1.0](https://gitlab.com/carcheky/raspiserver/compare/v6.0.0...v6.1.0) (2023-01-08)
 
 
