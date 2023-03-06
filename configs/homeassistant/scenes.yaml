@@ -1,0 +1,208 @@
+- id: '1674520232167'
+  name: Dormitorio fade off
+  entities:
+    light.yeelight_color_0x330dc29:
+      min_color_temp_kelvin: 1700
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 588
+      effect_list:
+      - Strobe color
+      - Police
+      - Christmas
+      - RGB
+      - Random Loop
+      - Fast Random Loop
+      - LSD
+      - Slowdown
+      - Night Mode
+      - Date Night
+      - Movie
+      - Sunrise
+      - Sunset
+      - Romance
+      - Happy Birthday
+      - Disco
+      - Strobe epilepsy!
+      - Alarm
+      - Police2
+      - WhatsApp
+      - Facebook
+      - Twitter
+      - Home
+      - Candle Flicker
+      - Slow Temp
+      - Stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      - rgb
+      flowing: true
+      music_mode: false
+      friendly_name: Luz dormitorio
+      supported_features: 44
+      color_mode: color_temp
+      brightness: 115
+      color_temp_kelvin: 2923
+      color_temp: 342
+      hs_color:
+      - 27.957
+      - 59.028
+      rgb_color:
+      - 255
+      - 174
+      - 104
+      xy_color:
+      - 0.504
+      - 0.384
+      effect: Sunset
+      state: 'on'
+  icon: mdi:lightbulb-night
+  metadata: {}
+- id: '1677543891548'
+  name: Dormitorio trankis
+  entities:
+    light.yeelight_color_0x330dc29:
+      min_color_temp_kelvin: 1700
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 588
+      effect_list:
+      - Strobe color
+      - Police
+      - Christmas
+      - RGB
+      - Random Loop
+      - Fast Random Loop
+      - LSD
+      - Slowdown
+      - Night Mode
+      - Date Night
+      - Movie
+      - Sunrise
+      - Sunset
+      - Romance
+      - Happy Birthday
+      - Disco
+      - Strobe epilepsy!
+      - Alarm
+      - Police2
+      - WhatsApp
+      - Facebook
+      - Twitter
+      - Home
+      - Candle Flicker
+      - Slow Temp
+      - Stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      - rgb
+      flowing: true
+      music_mode: false
+      friendly_name: Luz dormitorio
+      supported_features: 44
+      color_mode: color_temp
+      brightness: 82
+      color_temp_kelvin: 2923
+      color_temp: 342
+      hs_color:
+      - 27.957
+      - 59.028
+      rgb_color:
+      - 255
+      - 174
+      - 104
+      xy_color:
+      - 0.504
+      - 0.384
+      effect: Date Night
+      state: 'on'
+  icon: mdi:lightbulb-night
+  metadata: {}
+- id: '1677683268735'
+  name: Salón apagado
+  entities:
+    switch.luz_socket:
+      device_class: outlet
+      friendly_name: luz Socket
+      state: 'off'
+    light.socket:
+      supported_color_modes:
+      - onoff
+      friendly_name: Socket
+      supported_features: 0
+      state: 'off'
+    media_player.tele:
+      friendly_name: Tele
+      supported_features: 152461
+      state: 'off'
+    switch.ladron_socket_1:
+      device_class: outlet
+      friendly_name: Roboenchufe
+      state: 'on'
+    switch.ladron_socket_2:
+      device_class: outlet
+      friendly_name: Luz Socket 2
+      state: 'off'
+    switch.ladron_usb_1:
+      friendly_name: ladron USB 1
+      state: 'off'
+    light.luz_socket_2:
+      supported_color_modes:
+      - onoff
+      friendly_name: Luz Socket 2
+      supported_features: 0
+      state: 'off'
+  icon: mdi:monitor-speaker-off
+  metadata: {}
+- id: '1677683346686'
+  name: Despacho apagado
+  entities:
+    media_player.chromecastultra4596:
+      friendly_name: Despacho
+      supported_features: 152461
+      state: 'off'
+    light.yeelight_color_0x458eb33:
+      min_color_temp_kelvin: 1700
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 588
+      effect_list:
+      - Strobe color
+      - Police
+      - Christmas
+      - RGB
+      - Random Loop
+      - Fast Random Loop
+      - LSD
+      - Slowdown
+      - Night Mode
+      - Date Night
+      - Movie
+      - Sunrise
+      - Sunset
+      - Romance
+      - Happy Birthday
+      - Disco
+      - Strobe epilepsy!
+      - Alarm
+      - Police2
+      - WhatsApp
+      - Facebook
+      - Twitter
+      - Home
+      - Candle Flicker
+      - Slow Temp
+      - Stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      - rgb
+      flowing: false
+      music_mode: false
+      friendly_name: Yeelight Color 0x458eb33
+      supported_features: 44
+      state: 'off'
+  icon: mdi:monitor-speaker-off
+  metadata: {}

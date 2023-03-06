@@ -3,7 +3,13 @@
   description: ''
   trigger:
   - platform: time
-    at: '18:00:00'
+    at: 09:00:00
+  - platform: time
+    at: '13:00:00'
+  - platform: time
+    at: '17:00:00'
+  - platform: time
+    at: '21:00:00'
   condition: []
   action:
   - device_id: f90f267269373f33820eada09da4a0b0
@@ -19,10 +25,10 @@
     event: start
   condition: []
   action:
-  - device_id: f93a212b9fddee7f99d06453e49c085e
+  - device_id: 882e649114b0dd2467188200ebef3ff4
     domain: mobile_app
     type: notify
-    message: Home assistant iniciado
+    message: Home Assistant iniciado
   mode: single
 - id: '1673891885919'
   alias: swich off pcck
@@ -44,7 +50,7 @@
       entity_id: switch.pcck_2
   mode: single
 - id: '1674058994506'
-  alias: 'Batería de TabCheky baja '
+  alias: 'Batería TabCheky baja '
   description: ''
   trigger:
   - type: battery_level
@@ -52,11 +58,129 @@
     device_id: 736773a6b456df98196c168dd7b7eaa3
     entity_id: sensor.tabcheky_battery_level
     domain: sensor
-    below: 20
+    below: 15
+  condition:
+  - condition: state
+    entity_id: person.carcheky
+    state: home
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id:
+      - switch.ladron_socket_1
+      - switch.enchufe_zb_2_switch
+  mode: single
+- id: '1677541510684'
+  alias: Avisa al Pixel7 que te has quedado dormido
+  description: ''
+  trigger: []
   condition: []
   action:
-  - device_id: 0c4c3538cd89ff879934aabb092634d0
-    domain: mobile_app
-    type: notify
-    message: Batería de TabCheky baja
+  - service: notify.mobile_app_pixel_7
+    data:
+      message: durmiendo
+      data:
+        tag: durmiendo
+      title: Hora de ir a dormir
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - service: notify.mobile_app_pixel_7
+    data:
+      data:
+        tag: durmiendo
+      message: clear_notification
+      title: Hora de ir a dormir
+  - service: scene.turn_on
+    target:
+      entity_id: scene.a_dormir
+    metadata: {}
+  mode: single
+- id: '1677683749014'
+  alias: Apagar salón y despacho tras activar la escena dormitorio trankis
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - scene.antes_de_dormir
+  condition: []
+  action:
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+  - service: scene.turn_on
+    target:
+      entity_id: scene.despacho_apagado
+    metadata: {}
+  - service: scene.turn_on
+    target:
+      entity_id: scene.salon_apagado
+    metadata: {}
+  mode: single
+- id: '1677858683165'
+  alias: Batería TabCheky cargada
+  description: ''
+  trigger:
+  - type: battery_level
+    platform: device
+    device_id: 736773a6b456df98196c168dd7b7eaa3
+    entity_id: sensor.tabcheky_battery_level
+    domain: sensor
+    above: 80
+  condition:
+  - condition: state
+    entity_id: person.carcheky
+    state: home
+  action:
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id:
+      - switch.ladron_socket_1
+      - switch.enchufe_zb_2_switch
+  mode: single
+- id: '1677858770125'
+  alias: Batería Pixel 7 cargada
+  description: ''
+  trigger:
+  - type: battery_level
+    platform: device
+    device_id: 882e649114b0dd2467188200ebef3ff4
+    entity_id: sensor.pixel_7_battery_level
+    domain: sensor
+    above: 100
+  condition:
+  - condition: state
+    entity_id: person.carcheky
+    state: home
+  action:
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.ladron_socket_2
+  mode: single
+- id: '1677858869879'
+  alias: Batería Pixel 7 baja
+  description: ''
+  trigger:
+  - type: battery_level
+    platform: device
+    device_id: 882e649114b0dd2467188200ebef3ff4
+    entity_id: sensor.pixel_7_battery_level
+    domain: sensor
+    below: 70
+  condition:
+  - condition: state
+    entity_id: person.carcheky
+    state: home
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.ladron_socket_2
   mode: single
