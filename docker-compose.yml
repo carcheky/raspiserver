@@ -24,8 +24,8 @@ services:
       - TZ=${TIMEZONE}
       - URL=${DOMAIN}
       - VALIDATION=http
-      - SUBDOMAINS=ha,jf,tr #optional
-      # - SUBDOMAINS=r,ha,tr,jf,jd,nc,zb #optional
+      - SUBDOMAINS=r,ha,jf,tr,jd,nc,zb #optional
+      # - SUBDOMAINS=r,ha,jf,tr,jd,nc,zb #optional
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true #optional
       - STAGING=false #optional
@@ -116,6 +116,38 @@ services:
       - swag
     ports:
       - 9091:9091
+
+  # # telegram-bot-api
+  # telegram-bot-api:
+  #   image: riftbit/telegram-bot-api
+  #   container_name: telegram-bot-api
+  #   restart: always
+  #   # privileged: true
+  #   network_mode: host
+  #   environment:
+  #     - API_ID="$TELEGRAM_API_ID"
+  #     - API_HASH="$TELEGRAM_API_HASH"
+  #     - TELEGRAM_STAT=1
+  #     - TELEGRAM_LOG_FILE="/var/lib/telegram-bot-api/telegram-bot-api.log"
+  #     - TELEGRAM_PROXY="http://localhost"
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - USER=${USER} #optional
+  #     - PASS=${PASSWORD} #optional
+  #     - VIRTUAL_HOST=r.${DOMAIN}
+  #     - VIRTUAL_PORT=9091
+  #     - LETSENCRYPT_HOST=tr.${DOMAIN}
+  #     - LETSENCRYPT_EMAIL=${EMAIL}
+  #   volumes:
+  #     - ${RASPICONFIG}/telegram-bot-api/data:/var/lib/telegram-bot-api
+  #   ports:
+  #     - 8081:8081
+  #     - 8082:8082
+  #   depends_on:
+  #     - swag
+  #   # command: "--help"
+  #   command: "--api-id $TELEGRAM_API_ID --api-hash $TELEGRAM_API_HASH --log /var/lib/telegram-bot-api/telegram-bot-api.log --proxy http://localhost:80 --http-port 8081 --http-stat-port 8082 --local -v 3"
 
 
   # # mariadb
