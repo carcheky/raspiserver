@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+
 git reset --hard HEAD &&\
 git checkout beta &&\
 git branch -D alpha &&\
