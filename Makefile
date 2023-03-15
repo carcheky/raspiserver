@@ -4,6 +4,7 @@
 # funciones.o: funciones.c header.h
 # 	gcc -c funciones.c
 
+default: start
 
 
 start: .env
