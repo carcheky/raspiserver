@@ -58,7 +58,7 @@
     device_id: 736773a6b456df98196c168dd7b7eaa3
     entity_id: sensor.tabcheky_battery_level
     domain: sensor
-    below: 15
+    below: 13
   condition:
   - condition: state
     entity_id: person.carcheky
@@ -108,6 +108,10 @@
     - scene.antes_de_dormir
   condition: []
   action:
+  - type: turn_on
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: light.centralita_light
+    domain: light
   - delay:
       hours: 0
       minutes: 1
@@ -121,7 +125,7 @@
     target:
       entity_id: scene.salon_apagado
     metadata: {}
-  mode: single
+  mode: restart
 - id: '1677858683165'
   alias: Batería TabCheky cargada
   description: ''
@@ -131,7 +135,7 @@
     device_id: 736773a6b456df98196c168dd7b7eaa3
     entity_id: sensor.tabcheky_battery_level
     domain: sensor
-    above: 80
+    above: 100
   condition:
   - condition: state
     entity_id: person.carcheky
@@ -153,7 +157,11 @@
     device_id: 882e649114b0dd2467188200ebef3ff4
     entity_id: sensor.pixel_7_battery_level
     domain: sensor
-    above: 100
+    above: 99
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
   condition:
   - condition: state
     entity_id: person.carcheky
@@ -173,7 +181,7 @@
     device_id: 882e649114b0dd2467188200ebef3ff4
     entity_id: sensor.pixel_7_battery_level
     domain: sensor
-    below: 70
+    below: 90
   condition:
   - condition: state
     entity_id: person.carcheky
