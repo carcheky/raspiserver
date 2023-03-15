@@ -2,6 +2,14 @@ git config --global user.email "carcheky@gmail.com"
 git config --global user.name "carcheky"
 git add .
 
+
+# if $1 is not empty, use it as commit message
+if [ -n "$1" ]; then
+    git commit -m "$1"
+    git push
+    exit 0
+fi
+
 # ask commit type
 echo "What type of commit is this?"
 select yn in "feat" "fix" "docs" "style" "refactor" "perf" "test" "chore" "revert"; do
@@ -18,27 +26,11 @@ select yn in "feat" "fix" "docs" "style" "refactor" "perf" "test" "chore" "rever
     esac
 done
 
-# ask commit scope
-echo "What is the scope of this commit?"
-select yn in "core" "ui" "docs" "tests" "deps" "build" "ci" "perf" "refactor" "revert"; do
-    case $yn in
-        core ) break;;
-        ui ) break;;
-        docs ) break;;
-        tests ) break;;
-        deps ) break;;
-        build ) break;;
-        ci ) break;;
-        perf ) break;;
-        refactor ) break;;
-        revert ) break;;
-    esac
-done
 
 # ask commit message
 echo "Enter commit message:"
 read commitMessage
 
 # commit
-git commit -m "${yn}(${REPLY}): ${commitMessage}"
-git push
+git commit -m "$yn: $commitMessage"
+# git push
