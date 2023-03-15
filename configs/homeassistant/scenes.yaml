@@ -130,39 +130,52 @@
     light.socket:
       supported_color_modes:
       - onoff
-      friendly_name: Socket
+      friendly_name: Luz salón
       supported_features: 0
       state: 'off'
     media_player.tele:
       friendly_name: Tele
       supported_features: 152461
       state: 'off'
-    switch.ladron_socket_1:
-      device_class: outlet
-      friendly_name: Roboenchufe
-      state: 'on'
-    switch.ladron_socket_2:
-      device_class: outlet
-      friendly_name: Luz Socket 2
+    switch.enchufe_zb_3_switch:
+      friendly_name: Lucecita salón
       state: 'off'
-    switch.ladron_usb_1:
-      friendly_name: ladron USB 1
-      state: 'off'
-    light.luz_socket_2:
+    light.lucecita_salon:
       supported_color_modes:
       - onoff
-      friendly_name: Luz Socket 2
+      friendly_name: Lucecita salón
+      supported_features: 0
+      state: 'off'
+    media_player.altavoz_salon:
+      device_class: speaker
+      friendly_name: Altavoz Salón
+      supported_features: 152461
+      state: 'off'
+    light.centralita_light:
+      supported_color_modes:
+      - hs
+      friendly_name: Centralita Luz
+      supported_features: 0
+      state: 'off'
+    light.luces_salon:
+      supported_color_modes:
+      - onoff
+      entity_id:
+      - light.lucecita_salon
+      - light.socket
+      icon: mdi:lightbulb-group
+      friendly_name: Luces salón
       supported_features: 0
       state: 'off'
   icon: mdi:monitor-speaker-off
-  metadata: {}
+  metadata:
+    light.centralita_light:
+      entity_only: true
+    light.luces_salon:
+      entity_only: true
 - id: '1677683346686'
   name: Despacho apagado
   entities:
-    media_player.chromecastultra4596:
-      friendly_name: Despacho
-      supported_features: 152461
-      state: 'off'
     light.yeelight_color_0x458eb33:
       min_color_temp_kelvin: 1700
       max_color_temp_kelvin: 6535
@@ -201,8 +214,17 @@
       - rgb
       flowing: false
       music_mode: false
-      friendly_name: Yeelight Color 0x458eb33
+      friendly_name: Luz despacho
       supported_features: 44
+      state: 'off'
+    media_player.chromecastultra4596:
+      friendly_name: Despacho
+      supported_features: 152461
+      state: 'off'
+    media_player.altavoz_dormitorio:
+      device_class: speaker
+      friendly_name: Altavoz despacho
+      supported_features: 152461
       state: 'off'
   icon: mdi:monitor-speaker-off
   metadata: {}

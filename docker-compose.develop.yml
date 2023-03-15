@@ -1,0 +1,165 @@
+
+# # telegram-bot-api
+# telegram-bot-api:
+#   image: riftbit/telegram-bot-api
+#   container_name: telegram-bot-api
+#   restart: always
+#   # privileged: true
+#   network_mode: host
+#   environment:
+#     - API_ID="$TELEGRAM_API_ID"
+#     - API_HASH="$TELEGRAM_API_HASH"
+#     - TELEGRAM_STAT=1
+#     - TELEGRAM_LOG_FILE="/var/lib/telegram-bot-api/telegram-bot-api.log"
+#     - TELEGRAM_PROXY="http://localhost"
+#     - PUID=${PUID}
+#     - PGID=${PGID}
+#     - TZ=${TIMEZONE}
+#     - USER=${USER} #optional
+#     - PASS=${PASSWORD} #optional
+#     - VIRTUAL_HOST=r.${DOMAIN}
+#     - VIRTUAL_PORT=9091
+#     - LETSENCRYPT_HOST=tr.${DOMAIN}
+#     - LETSENCRYPT_EMAIL=${EMAIL}
+#   volumes:
+#     - ${RASPICONFIG}/telegram-bot-api/data:/var/lib/telegram-bot-api
+#   ports:
+#     - 8081:8081
+#     - 8082:8082
+#   depends_on:
+#     - swag
+#   # command: "--help"
+#   command: "--api-id $TELEGRAM_API_ID --api-hash $TELEGRAM_API_HASH --log /var/lib/telegram-bot-api/telegram-bot-api.log --proxy http://localhost:80 --http-port 8081 --http-stat-port 8082 --local -v 3"
+
+
+# # mariadb
+# nextcloud-database:
+#   image: mariadb:10.5
+#   container_name: nextcloud-database
+#   restart: always
+#   command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+#   volumes:
+#     - ${RASPICONFIG}/nextcloud/database/:/var/lib/mysql
+#   environment:
+#     - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+#     - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+#     - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+#     - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+#     - MYSQL_HOST=nextcloud-database
+#   depends_on:
+#     - watchtower
+#
+# # nextcloud
+# nextcloud-server:
+#   image: nextcloud:latest
+#   container_name: nextcloud-server
+#   environment:
+#     - PUID=${PUID}
+#     - PGID=${PGID}
+#     - TZ=${TIMEZONE}
+#     - VIRTUAL_HOST=nc.${DOMAIN}
+#     - VIRTUAL_PORT=8056
+#     - LETSENCRYPT_HOST=nc.${DOMAIN}
+#     - LETSENCRYPT_EMAIL=${EMAIL}
+#     - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+#     - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+#     - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+#     - MYSQL_HOST=nextcloud-database
+#     - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER}
+#     - NEXTCLOUD_ADMIN_PASSWORD=${PASSWORD}
+#     - NEXTCLOUD_TRUSTED_DOMAINS=nc.${DOMAIN} raspiserver.local:8056 192.168.68.201:8056 localhost
+#     - TRUSTED_PROXIES=127.0.0.1 localhost 192.168.68.201 0.0.0.0 ::1
+#     - OVERWRITEHOST:nc.${DOMAIN}
+#     - OVERWRITEPROTOCOL:https
+#     - OVERWRITECLIURL:https://nc.${DOMAIN}
+#   volumes:
+#     - ${RASPICONFIG}/nextcloud/server:/var/www/html/
+#     - /media/:/media/
+#     # - ${RASPIMEDIA}/nextcloud:/var/www/html/data
+#     # - ${RASPIMEDIA}/BibliotecaMultimedia:/media/BibliotecaMultimedia
+#     # - ${RASPIMEDIA}/transmission:/media/transmission
+#     # - ${RASPICONFIG}/nextcloud/config:/var/www/html/config
+#     # - ${RASPICONFIG}/nextcloud/data:/var/www/html/data:rw
+#     # - ${RASPICONFIG}/nextcloud/custom_apps:/var/www/html/custom_apps
+#     # - ${RASPICONFIG}/nextcloud/themes:/var/www/html/themes/
+#   ports:
+#     - 8056:80
+#   restart: always
+#   links:
+#     - swag
+#     - nextcloud-database
+# 
+#
+# # mqtt
+# mqtt:
+#   container_name: mqtt
+#   image: eclipse-mosquitto:2.0
+#   restart: always
+#   # network_mode: host
+#   volumes:
+#     - "${RASPICONFIG}/mosquitto/data:/mosquitto"
+#   # ports:
+#   #   - "1883:1883"
+#   #   - "9001:9001"
+#   command: "mosquitto -c /mosquitto-no-auth.conf"
+
+# # zigbee2mqtt
+# zigbee2mqtt:
+#   container_name: zigbee2mqtt
+#   image: koenkk/zigbee2mqtt
+#   platform: linux/arm64/v8
+#   restart: always
+#   # privileged: true
+#   # network_mode: host
+#   volumes:
+#     - ${RASPICONFIG}/zigbee2mqtt/data:/app/data
+#     - /run/udev:/run/udev:ro
+#   environment:
+#     - PUID=${PUID}
+#     - PGID=${PGID}
+#     - TZ=${TIMEZONE}
+#     - VIRTUAL_HOST=zb.${DOMAIN}
+#     - VIRTUAL_PORT=8080
+#     - LETSENCRYPT_HOST=r.${DOMAIN}
+#     - LETSENCRYPT_EMAIL=${EMAIL}
+#   devices:
+#     - "/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0:/dev/ttyUSB0"
+#     # - "/dev/ttyUSB0:/dev/ttyUSB0"
+#   ports:
+#     - "8080:8080"
+
+
+
+# #Mosquitto
+# mosquitto:
+#   # network_mode: host
+#   container_name: mosquitto
+#   image: eclipse-mosquitto:latest
+#   ports:
+#     - 1883:1883
+#   # This port is for Webhooks
+#     - 9001:9001
+#   volumes:
+#     - ${RASPICONFIG}/mosquitto/config:/mosquitto/config
+#     - ${RASPICONFIG}/mosquitto/data:/mosquitto/data
+#     - ${RASPICONFIG}/mosquitto/log:/mosquitto/log
+  
+# #Zigbee2MQTT
+# zigbee2mqtt:
+#   # network_mode: host
+#   container_name: zigbee2mqtt
+#   depends_on:
+#     - mosquitto
+#   image: koenkk/zigbee2mqtt:latest
+#   volumes:
+#     - ${RASPICONFIG}/zigbee2mqtt/data:/app/data
+#     - /run/udev:/run/udev:ro
+#   ports:
+#     # Frontend port
+#     - 8080:8080
+#   devices:
+#     - /dev/ttyUSB0:/dev/ttyUSB0
+#   restart: always
+#   privileged: true
+#   environment:
+#     - TZ=${TIMEZONE}
