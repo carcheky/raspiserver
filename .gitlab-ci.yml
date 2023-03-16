@@ -12,10 +12,10 @@ stages:
 release:
   image: node:18
   stage: release
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      when: always
-      allow_failure: false
+  only:
+    - stable
+  when: delayed
+  start_in: 24 hours
   script:
     - cp .releaserc.changelog .releaserc
     - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
