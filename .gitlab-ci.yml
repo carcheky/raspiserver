@@ -12,8 +12,6 @@ stages:
 release:
   image: node:18
   stage: release
-  only:
-    - stable
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: always
