@@ -56,7 +56,7 @@ beta-update: .env
 
 # pull changes in beta branch then
 # merge latest changes in beta branch into stable branch
-new-release: .env
+release: .env
 	@echo "Pulling changes in beta branch..."
 	@git checkout beta
 	@git pull
