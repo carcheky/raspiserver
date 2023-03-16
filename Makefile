@@ -51,5 +51,5 @@ beta:
 	@git pull
 	@echo "Merging latest changes in stable branch into beta branch..."
 	@git checkout beta
-	@git merge stable
+	@git merge stable --no-edit
 	@git push
