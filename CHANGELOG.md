@@ -1,5 +1,12 @@
 # CHANGELOG
 
+# [6.3.0](https://gitlab.com/carcheky/raspiserver/compare/v6.2.0...v6.3.0) (2023-03-16)
+
+
+### Features
+
+* auto install script for small tower ([d6d01c5](https://gitlab.com/carcheky/raspiserver/commit/d6d01c55b5a502d8690f3fc7d3fba70540b91bba))
+
 # [6.2.0](https://gitlab.com/carcheky/raspiserver/compare/v6.1.0...v6.2.0) (2023-01-21)
 
 
