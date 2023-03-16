@@ -15,7 +15,9 @@ release:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: always
+      allow_failure: false
     - when: manual
+      allow_failure: true
   script:
     - cp .releaserc.changelog .releaserc
     - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
