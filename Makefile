@@ -64,6 +64,7 @@ release: .env
 	@git checkout stable
 	@git merge beta --no-edit
 	@git push
+	@git checkout beta
 
 commit: .env
 	@echo "Committing changes..."
