@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# make a pre-commit hook that will run this script
+
+# install on first run
+if [ ! -f .git/hooks/pre-commit ]; then
+    cp scripts/git-commit-helper.sh .git/hooks/pre-commit
+    chmod +x .git/hooks/pre-commit
+fi
+
+# test if commit message follows the rules
+if ! grep -q -E "^(fix|feat|docs|style|refactor|perf|test|chore)(\(.+\))?: .{1,50}" $1; then
+    echo "Commit message does not follow the conventional commit rules"
+    echo "See https://www.conventionalcommits.org/en/v1.0.0/ for more information"
+    # ask new commit message
+    echo -n "Enter new commit message: "
+    read newCommitMessage
+    # replace commit message
+    sed -i "1s/.*/$newCommitMessage/" $1
+else
+    echo "Commit message follows the conventional commit rules"
+    echo "See https://www.conventionalcommits.org/en/v1.0.0/ for more information"
+fi
