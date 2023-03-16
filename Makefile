@@ -42,3 +42,14 @@ kill: .env
 recreate: .env
 	@echo "Recreating all containers..."
 	@docker compose up -d --force-recreate
+
+# pull changes in stable branch then
+# merge latest changes in stable branch into beta branch
+beta:
+	@echo "Pulling changes in stable branch..."
+	@git checkout stable
+	@git pull
+	@echo "Merging latest changes in stable branch into beta branch..."
+	@git checkout beta
+	@git merge stable
+	@git push
