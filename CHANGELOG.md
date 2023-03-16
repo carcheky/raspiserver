@@ -1,3 +1,15 @@
+## Unreleased
+
+### Feat
+
+- **makefile**: added new command make commit
+- **comitizen-install.sh**: added script for install comitizen
+
+### Fix
+
+- **makefile**: go to beta branch after publish new release to stable branch
+- **makefile**: renamed new-release command to release
+
 ## v6.4.0 (2023-03-16)
 
 ## v6.4.0-beta.1 (2023-03-16)
