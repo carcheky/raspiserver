@@ -1,8 +1,8 @@
-# main: funciones.o
-# 	gcc -o main main.c funciones.o
+ifeq (feature,$(firstword $(MAKECMDGOALS)))
+  name := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  $(eval $(name):;@:)
+endif
 
-# funciones.o: funciones.c header.h
-# 	gcc -c funciones.c
 
 default: start
 
@@ -70,3 +70,7 @@ commit: .env
 	@echo "Committing changes..."
 	@cz c
 	@git push
+
+feature:
+	@echo "Creating new feature branch..."
+	@git checkout -b feature/$(name)
