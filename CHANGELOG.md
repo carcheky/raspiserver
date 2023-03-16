@@ -1,3 +1,20 @@
+# CHANGELOG
+
+# [6.5.0](https://gitlab.com/carcheky/raspiserver/compare/v6.4.0...v6.5.0) (2023-03-16)
+
+
+### Bug Fixes
+
+* **makefile:** go to beta branch after publish new release to stable branch ([b564fc1](https://gitlab.com/carcheky/raspiserver/commit/b564fc16d0e163f6d2836eb1114eedff411c7eea))
+* **makefile:** renamed new-release command to release ([4708777](https://gitlab.com/carcheky/raspiserver/commit/47087771733aa71d0a26dbc3fa95b8980f9471e1))
+
+
+### Features
+
+* **comitizen-install.sh:** added script for install comitizen ([f0104f7](https://gitlab.com/carcheky/raspiserver/commit/f0104f79d99900e43c912e129495dfbd6377ca71))
+* **makefile:** added new command make commit ([8a4a6eb](https://gitlab.com/carcheky/raspiserver/commit/8a4a6eb4581d0e7b883a0a41a24b5a21c7f9d023))
+* **makefile:** feature command ([2537b3c](https://gitlab.com/carcheky/raspiserver/commit/2537b3c45c22619e2c87a672c4880fd064c47402))
+
 ## Unreleased
 
 ### Feat
