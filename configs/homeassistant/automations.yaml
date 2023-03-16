@@ -49,28 +49,6 @@
     target:
       entity_id: switch.pcck_2
   mode: single
-- id: '1674058994506'
-  alias: 'Batería TabCheky baja '
-  description: ''
-  trigger:
-  - type: battery_level
-    platform: device
-    device_id: 736773a6b456df98196c168dd7b7eaa3
-    entity_id: sensor.tabcheky_battery_level
-    domain: sensor
-    below: 13
-  condition:
-  - condition: state
-    entity_id: person.carcheky
-    state: home
-  action:
-  - service: switch.turn_on
-    data: {}
-    target:
-      entity_id:
-      - switch.ladron_socket_1
-      - switch.enchufe_zb_2_switch
-  mode: single
 - id: '1677541510684'
   alias: Avisa al Pixel7 que te has quedado dormido
   description: ''
@@ -126,8 +104,8 @@
       entity_id: scene.salon_apagado
     metadata: {}
   mode: restart
-- id: '1677858683165'
-  alias: Batería TabCheky cargada
+- id: '1678986779495'
+  alias: Tabcheky cargado
   description: ''
   trigger:
   - type: battery_level
@@ -135,21 +113,37 @@
     device_id: 736773a6b456df98196c168dd7b7eaa3
     entity_id: sensor.tabcheky_battery_level
     domain: sensor
-    above: 100
-  condition:
-  - condition: state
-    entity_id: person.carcheky
-    state: home
+    above: 99
+  condition: []
   action:
   - service: switch.turn_off
     data: {}
     target:
       entity_id:
-      - switch.ladron_socket_1
       - switch.enchufe_zb_2_switch
+      - switch.ladron_socket_1
   mode: single
-- id: '1677858770125'
-  alias: Batería Pixel 7 cargada
+- id: '1678986795419'
+  alias: Tabcheky descargado
+  description: ''
+  trigger:
+  - type: battery_level
+    platform: device
+    device_id: 736773a6b456df98196c168dd7b7eaa3
+    entity_id: sensor.tabcheky_battery_level
+    domain: sensor
+    below: 14
+  condition: []
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id:
+      - switch.enchufe_zb_2_switch
+      - switch.ladron_socket_1
+  mode: single
+- id: '1678986877807'
+  alias: Pixel 7 cargado
   description: ''
   trigger:
   - type: battery_level
@@ -157,23 +151,16 @@
     device_id: 882e649114b0dd2467188200ebef3ff4
     entity_id: sensor.pixel_7_battery_level
     domain: sensor
-    above: 99
-    for:
-      hours: 0
-      minutes: 10
-      seconds: 0
-  condition:
-  - condition: state
-    entity_id: person.carcheky
-    state: home
+    above: 90
+  condition: []
   action:
   - service: switch.turn_off
     data: {}
     target:
       entity_id: switch.ladron_socket_2
   mode: single
-- id: '1677858869879'
-  alias: Batería Pixel 7 baja
+- id: '1678986907570'
+  alias: Pixel 7 descargado
   description: ''
   trigger:
   - type: battery_level
@@ -181,11 +168,8 @@
     device_id: 882e649114b0dd2467188200ebef3ff4
     entity_id: sensor.pixel_7_battery_level
     domain: sensor
-    below: 90
-  condition:
-  - condition: state
-    entity_id: person.carcheky
-    state: home
+    below: 70
+  condition: []
   action:
   - service: switch.turn_on
     data: {}
