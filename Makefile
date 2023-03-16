@@ -64,3 +64,8 @@ new-release: .env
 	@git checkout stable
 	@git merge beta --no-edit
 	@git push
+
+commit: .env
+	@echo "Committing changes..."
+	@cz c
+	@git push
