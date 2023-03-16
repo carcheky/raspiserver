@@ -74,3 +74,6 @@ commit: .env
 feature:
 	@echo "Creating new feature branch..."
 	@git checkout -b feature/$(name)
+
+clean:
+	@git branch | grep -v "master" | xargs git branch -D
