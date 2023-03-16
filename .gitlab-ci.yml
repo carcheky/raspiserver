@@ -14,7 +14,12 @@ release:
   stage: release
   only:
     - stable
-  when: delayed
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+      allow_failure: false
+    - when: manual
+      allow_failure: true
   start_in: 24 hours
   script:
     - cp .releaserc.changelog .releaserc
