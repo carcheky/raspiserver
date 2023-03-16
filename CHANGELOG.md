@@ -1,5 +1,18 @@
 # CHANGELOG
 
+# [6.4.0](https://gitlab.com/carcheky/raspiserver/compare/v6.3.0...v6.4.0) (2023-03-16)
+
+
+### Bug Fixes
+
+* **makefile:** no edit commit message when update beta from stable ([3831173](https://gitlab.com/carcheky/raspiserver/commit/3831173ae8696575dc7ec60a07b8973b075a5e1b))
+* **makefile:** renamed make command beta to beta-update ([6814ee6](https://gitlab.com/carcheky/raspiserver/commit/6814ee6a10f9886190af64c7bcf7358b54d629ca))
+
+
+### Features
+
+* **makefile:** new make command new-release ([bca0081](https://gitlab.com/carcheky/raspiserver/commit/bca0081b6032db955f29f367130bbb3dc9aa3a53))
+
 # [6.3.0](https://gitlab.com/carcheky/raspiserver/compare/v6.2.0...v6.3.0) (2023-03-16)
 
 
