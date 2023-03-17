@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.6.0](https://gitlab.com/carcheky/raspiserver/compare/v6.5.0...v6.6.0) (2023-03-17)
+
+
+### Bug Fixes
+
+* **homeassistant:** rewrited battery control automations ([6bbb314](https://gitlab.com/carcheky/raspiserver/commit/6bbb31449f581c1a91e995b226bee5115ebeaf3e))
+
+
+### Features
+
+* **makefile:** added clean command ([6ca7bad](https://gitlab.com/carcheky/raspiserver/commit/6ca7badd1ca87eb95405f3d074cd260f743cd5af))
+
 # [6.5.0](https://gitlab.com/carcheky/raspiserver/compare/v6.4.0...v6.5.0) (2023-03-16)
 
 
