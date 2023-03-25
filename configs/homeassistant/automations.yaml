@@ -113,7 +113,7 @@
     device_id: 736773a6b456df98196c168dd7b7eaa3
     entity_id: sensor.tabcheky_battery_level
     domain: sensor
-    above: 99
+    above: 80
   condition: []
   action:
   - service: switch.turn_off
@@ -132,7 +132,7 @@
     device_id: 736773a6b456df98196c168dd7b7eaa3
     entity_id: sensor.tabcheky_battery_level
     domain: sensor
-    below: 14
+    below: 20
   condition: []
   action:
   - service: switch.turn_on
@@ -158,6 +158,11 @@
     data: {}
     target:
       entity_id: switch.ladron_socket_2
+  - delay:
+      hours: 1
+      minutes: 0
+      seconds: 0
+      milliseconds: 0
   mode: single
 - id: '1678986907570'
   alias: Pixel 7 descargado
