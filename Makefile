@@ -62,6 +62,7 @@ release: .env
 	@git pull
 	@echo "Merging latest changes in beta branch into stable branch..."
 	@git checkout stable
+	@git pull --no-edit
 	@git merge beta --no-edit
 	@git push
 	@git checkout beta
