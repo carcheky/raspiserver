@@ -57,12 +57,18 @@ beta-update: .env
 # pull changes in beta branch then
 # merge latest changes in beta branch into stable branch
 release: .env
+	@echo "Pulling changes in stable branch..."
+	@git checkout stable
+	@git pull
+	@echo "Merging latest changes in stable branch into beta branch..."
+	@git checkout beta
+	@git merge stable --no-edit
+	@git push
 	@echo "Pulling changes in beta branch..."
 	@git checkout beta
 	@git pull
 	@echo "Merging latest changes in beta branch into stable branch..."
 	@git checkout stable
-	@git pull --no-edit
 	@git merge beta --no-edit
 	@git push
 	@git checkout beta
