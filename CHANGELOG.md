@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [6.7.0](https://gitlab.com/carcheky/raspiserver/compare/v6.6.0...v6.7.0) (2023-03-29)
+
+
+### Bug Fixes
+
+* fixed make release that not pull before merge ([e571c97](https://gitlab.com/carcheky/raspiserver/commit/e571c97a174cd78479b2ac999c908c2cfc49799c))
+* make release now merge develop 2 beta before ([b9f6a20](https://gitlab.com/carcheky/raspiserver/commit/b9f6a201c5343b3507207a53f9c2cccabacd2a8a))
+* some fixes in scenes ([8054bfc](https://gitlab.com/carcheky/raspiserver/commit/8054bfca784cbb866b48929bbd681b78641adcc7))
+
+
+### Features
+
+* **automation:** automation battery >20 <80 for ([00e9508](https://gitlab.com/carcheky/raspiserver/commit/00e95083fd8b9083c200b5be1de7d5e00a7b3d96))
+
 # [6.6.0](https://gitlab.com/carcheky/raspiserver/compare/v6.5.0...v6.6.0) (2023-03-17)
 
 
