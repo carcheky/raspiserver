@@ -25,7 +25,7 @@
     event: start
   condition: []
   action:
-  - device_id: 882e649114b0dd2467188200ebef3ff4
+  - device_id: 63201e9542c7845ef55cddebf7e051c3
     domain: mobile_app
     type: notify
     message: Home Assistant iniciado
@@ -36,7 +36,7 @@
   trigger:
   - platform: state
     entity_id:
-    - switch.pcck_2
+    - switch.pcck
     to: 'on'
     for:
       hours: 0
@@ -47,7 +47,7 @@
   - service: switch.turn_off
     data: {}
     target:
-      entity_id: switch.pcck_2
+      entity_id: switch.pcck
   mode: single
 - id: '1677541510684'
   alias: Avisa al Pixel7 que te has quedado dormido
@@ -197,9 +197,72 @@
     domain: device_tracker
     entity_id: device_tracker.pixel_7
     type: is_home
+  - condition: state
+    entity_id: binary_sensor.pcck
+    state: 'on'
   action:
-  - service: scene.turn_on
-    target:
-      entity_id: scene.luces_apagadas
-    metadata: {}
+  - type: turn_off
+    device_id: b3966c17c5c785d6fcbe3d32b741b298
+    entity_id: light.yeelight_color_0x458eb33
+    domain: light
+  mode: single
+- id: '1680088087368'
+  alias: 'centralita: encender al detectar movimiento'
+  description: ''
+  trigger:
+  - type: motion
+    platform: device
+    device_id: b978a4f0434103ec02ca8aecf7526a92
+    entity_id: binary_sensor.motion_sensor_iaszone
+    domain: binary_sensor
+  condition:
+  - type: is_value
+    condition: device
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: sensor.centralita_illuminance
+    domain: sensor
+    below: 800
+  action:
+  - type: turn_on
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: light.centralita_light
+    domain: light
+  mode: single
+- id: '1680088128727'
+  alias: 'centralita: apagar al no detectar movimiento'
+  description: ''
+  trigger:
+  - type: no_motion
+    platform: device
+    device_id: b978a4f0434103ec02ca8aecf7526a92
+    entity_id: binary_sensor.motion_sensor_iaszone
+    domain: binary_sensor
+  condition: []
+  action:
+  - type: turn_off
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: light.centralita_light
+    domain: light
+  mode: single
+- id: '1680089318607'
+  alias: apagar centralita si la luz está encendida
+  description: ''
+  trigger:
+  - type: value
+    platform: device
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: sensor.centralita_illuminance
+    domain: sensor
+    above: 800
+  condition:
+  - condition: device
+    type: is_on
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: light.centralita_light
+    domain: light
+  action:
+  - type: turn_off
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: light.centralita_light
+    domain: light
   mode: single

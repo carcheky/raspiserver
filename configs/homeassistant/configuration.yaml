@@ -66,6 +66,19 @@ switch:
     mac: !secret wake_on_lan_mac
     name: PCCK
 
+binary_sensor:  
+  - platform: ping
+    host: 192.168.68.200
+    name: PCCK
+  - platform: template
+    sensors:
+      desktop_online:
+        friendly_name: "PCCK Desktop Online"
+        delay_off:
+          minutes: 5
+        value_template: >-
+          {{ states('binary_sensor.pcck')}}
+
 # homeassistant integration
 homeassistant:
   name: Drona
