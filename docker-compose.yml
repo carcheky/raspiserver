@@ -120,3 +120,27 @@ services:
   #     - swag
   #   ports:
   #     - 9091:9091
+
+  # room-assistant:
+  #   image: mkerix/room-assistant
+  #   container_name: room-assistant
+  #   network_mode: host
+  #   volumes:
+  #     - /var/run/dbus:/var/run/dbus
+  #   environment:
+  #     RA_GLOBAL_INSTANCE_NAME: living-room
+  #     NODE_CONFIG: >
+  #       {
+  #         "global": {
+  #           "integrations": ["homeAssistant", "bluetoothClassic"]
+  #         }
+  #       }
+
+  mosquitto:
+      image: eclipse-mosquitto
+      container_name: mosquitto
+      volumes:
+        -  ${RASPICONFIG}/mosquitto:/mosquitto
+      ports:
+        - 1883:1883
+        - 9001:9001
