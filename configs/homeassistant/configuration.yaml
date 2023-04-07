@@ -78,6 +78,17 @@ binary_sensor:
           minutes: 5
         value_template: >-
           {{ states('binary_sensor.pcck')}}
+  - platform: ping
+    host: 192.168.68.124
+    name: cmartinezv-lpt
+  - platform: template
+    sensors:
+      desktop_online2:
+        friendly_name: "cmartinezv-lpt Desktop Online"
+        delay_off:
+          minutes: 5
+        value_template: >-
+          {{ states('binary_sensor.cmartinezv-lpt')}}
 
 # homeassistant integration
 homeassistant:

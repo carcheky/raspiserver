@@ -1,5 +1,5 @@
 - id: '1673455450832'
-  alias: Roborock
+  alias: 'Roborock: Limpieza programada'
   description: ''
   trigger:
   - platform: time
@@ -18,20 +18,20 @@
     type: clean
   mode: single
 - id: '1673686532506'
-  alias: Home Assistant Iniciado
+  alias: 'Home Assistant: manda mensaje al iniciar'
   description: ''
   trigger:
   - platform: homeassistant
     event: start
   condition: []
   action:
-  - device_id: 63201e9542c7845ef55cddebf7e051c3
+  - device_id: 57b12107744bb3c305458a2f262baf92
     domain: mobile_app
     type: notify
-    message: Home Assistant iniciado
+    message: iniciado
   mode: single
 - id: '1673891885919'
-  alias: swich off pcck
+  alias: 'PCCK: auto turn off switch wol'
   description: ''
   trigger:
   - platform: state
@@ -50,12 +50,12 @@
       entity_id: switch.pcck
   mode: single
 - id: '1677541510684'
-  alias: Avisa al Pixel7 que te has quedado dormido
+  alias: 'Pixel 4archeky: Avisa que te has quedado dormido'
   description: ''
   trigger: []
   condition: []
   action:
-  - service: notify.mobile_app_pixel_7
+  - service: notify.mobile_app_pixel_4archeky
     data:
       message: durmiendo
       data:
@@ -66,7 +66,7 @@
       minutes: 0
       seconds: 1
       milliseconds: 0
-  - service: notify.mobile_app_pixel_7
+  - service: notify.mobile_app_pixel_4archeky
     data:
       data:
         tag: durmiendo
@@ -105,7 +105,7 @@
     metadata: {}
   mode: restart
 - id: '1678986779495'
-  alias: Tabcheky cargado
+  alias: 'Tabcheky: cargado'
   description: ''
   trigger:
   - type: battery_level
@@ -124,7 +124,7 @@
       - switch.ladron_socket_1
   mode: single
 - id: '1678986795419'
-  alias: Tabcheky descargado
+  alias: 'Tabcheky: descargado'
   description: ''
   trigger:
   - type: battery_level
@@ -143,15 +143,15 @@
       - switch.ladron_socket_1
   mode: single
 - id: '1678986877807'
-  alias: Pixel 7 cargado
+  alias: 'Pixel 4archeky: cargado'
   description: ''
   trigger:
   - type: battery_level
     platform: device
-    device_id: 882e649114b0dd2467188200ebef3ff4
-    entity_id: sensor.pixel_7_battery_level
+    device_id: 57b12107744bb3c305458a2f262baf92
+    entity_id: sensor.pixel_4archeky_battery_level
     domain: sensor
-    above: 90
+    above: 80
   condition: []
   action:
   - service: switch.turn_off
@@ -165,13 +165,13 @@
       milliseconds: 0
   mode: single
 - id: '1678986907570'
-  alias: Pixel 7 descargado
+  alias: 'Pixel 4archeky: descargado'
   description: ''
   trigger:
   - type: battery_level
     platform: device
     device_id: 882e649114b0dd2467188200ebef3ff4
-    entity_id: sensor.pixel_7_battery_level
+    entity_id: sensor.pixel_4archeky_battery_level
     domain: sensor
     below: 70
   condition: []
@@ -185,21 +185,31 @@
   alias: Apagar luces de día
   description: ''
   trigger:
-  - type: illuminance
+  - type: battery_level
     platform: device
-    device_id: 63201e9542c7845ef55cddebf7e051c3
-    entity_id: sensor.pixel_7_light_sensor
+    device_id: 57b12107744bb3c305458a2f262baf92
+    entity_id: sensor.pixel_4archeky_battery_level
     domain: sensor
-    above: 60
+    above: 70
   condition:
-  - condition: device
-    device_id: 63201e9542c7845ef55cddebf7e051c3
-    domain: device_tracker
-    entity_id: device_tracker.pixel_7
-    type: is_home
-  - condition: state
-    entity_id: binary_sensor.pcck
-    state: 'on'
+  - condition: and
+    conditions:
+    - condition: device
+      device_id: 57b12107744bb3c305458a2f262baf92
+      domain: device_tracker
+      entity_id: device_tracker.pixel_4archeky
+      type: is_home
+    - condition: or
+      conditions:
+      - condition: state
+        entity_id: binary_sensor.pcck
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.cmartinezv_lpt
+        state: 'on'
+    - condition: sun
+      after: sunrise
+      after_offset: 00:30
   action:
   - type: turn_off
     device_id: b3966c17c5c785d6fcbe3d32b741b298
@@ -245,7 +255,7 @@
     domain: light
   mode: single
 - id: '1680089318607'
-  alias: apagar centralita si la luz está encendida
+  alias: 'centralita: apagar si la luz está encendida'
   description: ''
   trigger:
   - type: value
@@ -262,6 +272,28 @@
     domain: light
   action:
   - type: turn_off
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: light.centralita_light
+    domain: light
+  mode: single
+- id: '1680502321908'
+  alias: 'centralita: encender si la luz se apaga'
+  description: ''
+  trigger:
+  - type: value
+    platform: device
+    device_id: 6ca15effa507a96063d197cd717d68bc
+    entity_id: sensor.centralita_illuminance
+    domain: sensor
+    below: 800
+  condition:
+  - type: is_motion
+    condition: device
+    device_id: b978a4f0434103ec02ca8aecf7526a92
+    entity_id: binary_sensor.motion_sensor_iaszone
+    domain: binary_sensor
+  action:
+  - type: turn_on
     device_id: 6ca15effa507a96063d197cd717d68bc
     entity_id: light.centralita_light
     domain: light
