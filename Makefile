@@ -7,9 +7,9 @@ endif
 default: start
 
 
-start: .env
+up: .env
 	@echo "Starting raspiserver..."
-	@docker compose up -d
+	@docker compose up -d --remove-orphans
 
 stop: .env
 	@echo "Stopping raspiserver..."
@@ -19,13 +19,29 @@ restart: .env
 	@echo "Restarting raspiserver..."
 	@docker compose restart
 
+swag: .env
+	@echo "Starting Swag..."
+	@docker compose up swag -d --force-recreate
+
+swagl: .env
+	@make swag
+	@docker compose logs swag -f
+
 ha: .env
 	@echo "Starting Home Assistant..."
-	@docker compose up -d homeassistant --force-recreate
+	@docker compose up homeassistant -d --force-recreate
+
+hal: .env
+	@make ha
+	@docker compose logs homeassistant -f
 
 jf: .env
 	@echo "Starting JF..."
-	@docker compose up -d jellyfin --force-recreate
+	@docker compose up jellyfin -d --force-recreate
+
+jfl: .env
+	@make jf
+	@docker compose logs jellyfin -f
 
 orphans: .env
 	@echo "Removing orphans..."
