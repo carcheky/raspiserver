@@ -162,3 +162,11 @@ camera:  # logs:
     store_map_raw: true
     store_map_image: true
 # xiaomi_cloud_map_extractor END
+
+
+# xiaomi_aqara:
+#   discovery_retry: 20
+#   gateways:
+#     - key: !secret xiaomi_key_gateway
+#       host: 192.168.68.104
+#       mac: !secret xiaomi_mac_gateway
