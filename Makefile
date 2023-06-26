@@ -43,6 +43,14 @@ jfl: .env
 	@make jf
 	@docker compose logs jellyfin -f
 
+ra: .env
+	@echo "Starting room-assistant..."
+	@docker compose up room-assistant -d --force-recreate
+
+ral: .env
+	@make ra
+	@docker compose logs room-assistant -f
+
 orphans: .env
 	@echo "Removing orphans..."
 	@docker compose up -d --remove-orphans

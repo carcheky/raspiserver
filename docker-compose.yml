@@ -129,16 +129,18 @@ services:
     volumes:
       - /var/run/dbus:/var/run/dbus
       - ${RASPICONFIG}/room-assistant/config:/room-assistant/config
-    environment:
-      RA_GLOBAL_INSTANCE_NAME: living-room
-      NODE_CONFIG: >
-        {
-          "global": {
-            "integrations": ["homeAssistant", "bluetoothClassic"]
-          }
-        }
+    # environment:
+    #   RA_GLOBAL_INSTANCE_NAME: living-room
+    #   NODE_CONFIG: >
+    #     {
+    #       "global": {
+    #         "integrations": ["homeAssistant", "bluetoothClassic"]
+    #       }
+    #     }
     depends_on:
       - swag
+    cap_add:
+      - NET_ADMIN
 
   mosquitto:
     image: eclipse-mosquitto
