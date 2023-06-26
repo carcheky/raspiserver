@@ -1,5 +1,13 @@
 # CHANGELOG
 
+# [6.8.0](https://gitlab.com/carcheky/raspiserver/compare/v6.7.0...v6.8.0) (2023-04-02)
+
+
+### Features
+
+* added sensor pcck power state ([b5334a7](https://gitlab.com/carcheky/raspiserver/commit/b5334a774310c837ac9dcd0e8b66592f501c21ac))
+* mosquitto server ([d8aa59f](https://gitlab.com/carcheky/raspiserver/commit/d8aa59f95a5a173b32edf7427b1652486a8bbb48))
+
 # [6.7.0](https://gitlab.com/carcheky/raspiserver/compare/v6.6.0...v6.7.0) (2023-03-29)
 
 
