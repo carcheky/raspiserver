@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [6.8.1](https://gitlab.com/carcheky/raspiserver/compare/v6.8.0...v6.8.1) (2023-06-27)
+
+
+### Bug Fixes
+
+* mosquitto ([3d099ea](https://gitlab.com/carcheky/raspiserver/commit/3d099ea636bd14781468add7fe30dff806da4496))
+* updated config ([ec6186a](https://gitlab.com/carcheky/raspiserver/commit/ec6186ab98bcd044999c0b731903bf155c8c7896))
+
 # [6.8.0](https://gitlab.com/carcheky/raspiserver/compare/v6.7.0...v6.8.0) (2023-04-02)
 
 
