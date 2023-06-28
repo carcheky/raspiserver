@@ -24,8 +24,6 @@ http:
     - 0.0.0.0
     - 192.168.8.201
 
-
-
 # google_assistant integration
 google_assistant:
   project_id: home-assistant-raspiserver
@@ -38,8 +36,6 @@ google_assistant:
     - vacuum
     - group
     - scene
-
-
   # entity_config:
   #   input_boolean.default_dashboard:
   #     expose: false
@@ -58,14 +54,13 @@ google_assistant:
   #   sensor.temperature_humidity_sensor_2d7c_humidity:
   #     expose: false
 
-
-
 # wake on lan integration
 switch:
   - platform: wake_on_lan
     mac: !secret wake_on_lan_mac
     name: PCCK
 
+# pc online
 binary_sensor:  
   - platform: ping
     host: 192.168.68.200
@@ -100,7 +95,6 @@ homeassistant:
   external_url: "https://ha.carcheky.com"
   internal_url: "http://192.168.68.201:8123"
 
-
 # zigbee integration
 zha:
   zigpy_config:
@@ -119,50 +113,54 @@ logger:
   #   zigpy_zcl: error
   #   homeassistant.loader: error
 
-
 # xiaomi_cloud_map_extractor
-# camera:  # logs:
-#   #   custom_components.zha_toolkit: error
-#   #   zigpy: error
-#   #   zigpy_zcl: error
-#   #   homeassistant.loader: error
-#   - platform: xiaomi_cloud_map_extractor
-#     host: !secret xiaomi_vacuum_host
-#     token: !secret xiaomi_vacuum_token
-#     username: !secret xiaomi_cloud_username
-#     password: !secret xiaomi_cloud_password
-#     country: "sg"
-#     name: "Roborock S6 Pure"
-#     attributes:
-#       - calibration_points
-#       - charger
-#       - cleaned_rooms
-#       - country
-#       - goto
-#       - goto_path
-#       - goto_predicted_path
-#       - image
-#       - is_empty
-#       - map_name
-#       - no_go_areas
-#       - no_mopping_areas
-#       - obstacles
-#       - ignored_obstacles
-#       - obstacles_with_photo
-#       - ignored_obstacles_with_photo
-#       - path
-#       - room_numbers
-#       - rooms
-#       - vacuum_position
-#       - vacuum_room
-#       - vacuum_room_name
-#       - walls
-#       - zones
-#     auto_update: true
-#     store_map_raw: true
-#     store_map_image: true
-# # xiaomi_cloud_map_extractor END
-
+camera:  
+  - platform: xiaomi_cloud_map_extractor
+    host: !secret xiaomi_vacuum_host
+    token: !secret xiaomi_vacuum_token
+    username: !secret xiaomi_cloud_username
+    password: !secret xiaomi_cloud_password
+    draw: ['all']
+    map_transformation:
+      scale: 1
+      trim: 
+        top: 20
+        left: 10
+        bottom: 15
+        right: 30
+    # attributes:
+    #   - calibration_points
+    country: "sg"
+    name: "Roborock S6 Pure"
+    attributes:
+      - calibration_points
+      - charger
+      - cleaned_rooms
+      - country
+      - goto
+      - goto_path
+      - goto_predicted_path
+      - image
+      - is_empty
+      - map_name
+      - no_go_areas
+      - no_mopping_areas
+      - obstacles
+      - ignored_obstacles
+      - obstacles_with_photo
+      - ignored_obstacles_with_photo
+      - path
+      - room_numbers
+      - rooms
+      - vacuum_position
+      - vacuum_room
+      - vacuum_room_name
+      - walls
+      - zones
+    auto_update: true
+    store_map_raw: true
+    store_map_image: true
+# xiaomi_cloud_map_extractor END
 
 # xiaomi_aqara:
 #   discovery_retry: 20

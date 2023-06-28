@@ -59,6 +59,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
+      - /dev/serial/by-path:/dev/serial/by-path
       - /dev/serial/by-id:/dev/serial/by-id
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
