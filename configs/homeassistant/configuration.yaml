@@ -23,6 +23,7 @@ http:
     - 127.0.0.1
     - 0.0.0.0
     - 192.168.8.201
+    - ha.carcheky.com
 
 # google_assistant integration
 google_assistant:
@@ -36,6 +37,7 @@ google_assistant:
     - vacuum
     - group
     - scene
+    - climate
   # entity_config:
   #   input_boolean.default_dashboard:
   #     expose: false
@@ -85,7 +87,7 @@ binary_sensor:
         value_template: >-
           {{ states('binary_sensor.cmartinezv-lpt')}}
 
-# homeassistant integration
+# sdistant integration
 homeassistant:
   name: Drona
   unit_system: metric
@@ -106,7 +108,7 @@ zha:
 zha_toolkit:
 
 logger:
-  default: info
+  default: warn
   # logs:
   #   custom_components.zha_toolkit: error
   #   zigpy: error
@@ -121,6 +123,7 @@ camera:
     username: !secret xiaomi_cloud_username
     password: !secret xiaomi_cloud_password
     draw: ['all']
+    scan_interval: 30
     map_transformation:
       scale: 1
       trim: 
@@ -157,9 +160,10 @@ camera:
       - vacuum_room_name
       - walls
       - zones
-    auto_update: true
-    store_map_raw: true
-    store_map_image: true
+    # auto_update: false
+    # store_map_raw: true
+    # store_map_image: true
+    
 # xiaomi_cloud_map_extractor END
 
 # xiaomi_aqara:

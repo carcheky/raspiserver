@@ -98,80 +98,134 @@
       - color_temp
       - hs
       - rgb
-      flowing: true
-      music_mode: false
       friendly_name: Luz dormitorio
       supported_features: 44
-      color_mode: color_temp
-      brightness: 82
-      color_temp_kelvin: 2923
-      color_temp: 342
-      hs_color:
-      - 27.957
-      - 59.028
-      rgb_color:
-      - 255
-      - 174
-      - 104
-      xy_color:
-      - 0.504
-      - 0.384
-      effect: Date Night
-      state: 'on'
+      flowing: 0
+      music_mode: false
+      state: 'off'
+    switch.luz_salon_socket:
+      device_class: outlet
+      friendly_name: Luz salon Socket
+      state: 'off'
+    light.luz_salon_socket:
+      supported_color_modes:
+      - onoff
+      friendly_name: Luz salon
+      supported_features: 0
+      state: 'off'
+    climate.aire:
+      hvac_modes:
+      - 'off'
+      - cool
+      - heat
+      - dry
+      - fan_only
+      min_temp: 16
+      max_temp: 31
+      target_temp_step: 1
+      fan_modes:
+      - low
+      - mid
+      - high
+      - auto
+      current_temperature: 25
+      temperature: 22
+      fan_mode: high
+      friendly_name: Aire
+      supported_features: 9
+      state: 'off'
+    switch.enchufe_zb_3_steam_link_switch:
+      friendly_name: Steam Link
+      state: 'off'
+    light.yeelight_color_0x458eb33:
+      min_color_temp_kelvin: 1700
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 588
+      effect_list:
+      - Strobe color
+      - Police
+      - Christmas
+      - RGB
+      - Random Loop
+      - Fast Random Loop
+      - LSD
+      - Slowdown
+      - Night Mode
+      - Date Night
+      - Movie
+      - Sunrise
+      - Sunset
+      - Romance
+      - Happy Birthday
+      - Disco
+      - Strobe epilepsy!
+      - Alarm
+      - Police2
+      - WhatsApp
+      - Facebook
+      - Twitter
+      - Home
+      - Candle Flicker
+      - Slow Temp
+      - Stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      - rgb
+      flowing: false
+      music_mode: false
+      friendly_name: Luz despacho
+      supported_features: 44
+      state: 'off'
   icon: mdi:lightbulb-night
   metadata: {}
 - id: '1677683268735'
   name: Salón apagado
   entities:
-    switch.luz_socket:
-      device_class: outlet
-      friendly_name: luz Socket
-      state: 'off'
-    light.socket:
-      supported_color_modes:
-      - onoff
-      friendly_name: Luz salón
-      supported_features: 0
-      state: 'off'
     media_player.tele:
       friendly_name: Tele
       supported_features: 152461
-      state: 'off'
-    switch.enchufe_zb_3_switch:
-      friendly_name: Lucecita salón
-      state: 'off'
-    light.lucecita_salon:
-      supported_color_modes:
-      - onoff
-      friendly_name: Lucecita salón
-      supported_features: 0
       state: 'off'
     media_player.altavoz_salon:
       device_class: speaker
       friendly_name: Altavoz Salón
       supported_features: 152461
       state: 'off'
-    light.centralita_light:
-      supported_color_modes:
-      - hs
-      friendly_name: Centralita Luz
-      supported_features: 0
+    climate.aire:
+      hvac_modes:
+      - 'off'
+      - cool
+      - heat
+      - dry
+      - fan_only
+      min_temp: 16
+      max_temp: 31
+      target_temp_step: 1
+      fan_modes:
+      - low
+      - mid
+      - high
+      - auto
+      current_temperature: 25
+      temperature: 22
+      fan_mode: high
+      friendly_name: Aire
+      supported_features: 9
+      state: cool
+    switch.luz_salon_socket:
+      device_class: outlet
+      friendly_name: Luz salon Socket
       state: 'off'
-    light.luces_salon:
+    light.luz_salon_socket:
       supported_color_modes:
       - onoff
-      entity_id:
-      - light.lucecita_salon
-      - light.socket
-      icon: mdi:lightbulb-group
-      friendly_name: Luces salón
+      friendly_name: Luz salon
       supported_features: 0
       state: 'off'
   icon: mdi:monitor-speaker-off
   metadata:
-    light.centralita_light:
-      entity_only: true
-    light.luces_salon:
+    climate.aire:
       entity_only: true
 - id: '1677683346686'
   name: Despacho apagado

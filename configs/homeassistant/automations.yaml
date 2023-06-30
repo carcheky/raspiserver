@@ -3,11 +3,9 @@
   description: ''
   trigger:
   - platform: time
-    at: '11:00:00'
+    at: '12:00:00'
   - platform: time
-    at: sensor.sun_next_noon
-  - platform: time
-    at: sensor.sun_next_dusk
+    at: '17:00:00'
   condition: []
   action:
   - device_id: f90f267269373f33820eada09da4a0b0
@@ -160,8 +158,7 @@
     - service: switch.turn_on
       data: {}
       target:
-        entity_id:
-        - switch.tabcheky_switch
+        entity_id: switch.tabcheky_switch
     alias: Tabcheky<70
   mode: single
 - id: '1679915483592'
@@ -422,4 +419,36 @@
     device_id: b3966c17c5c785d6fcbe3d32b741b298
     entity_id: light.yeelight_color_0x458eb33
     domain: light
+  mode: single
+- id: '1687987871735'
+  alias: 'Roborock: pause en base'
+  description: apaga la "cámara" cuando está en la base
+  trigger:
+  - platform: device
+    device_id: f90f267269373f33820eada09da4a0b0
+    domain: vacuum
+    entity_id: vacuum.roborock_s6_pure
+    type: docked
+  condition: []
+  action:
+  - service: camera.turn_off
+    data: {}
+    target:
+      entity_id: camera.roborock_s6_pure
+  mode: single
+- id: '1687988559797'
+  alias: 'Roborock: limpiandon'
+  description: enciende la "cámara" cuando está limpiando-ón
+  trigger:
+  - platform: device
+    device_id: f90f267269373f33820eada09da4a0b0
+    domain: vacuum
+    entity_id: vacuum.roborock_s6_pure
+    type: cleaning
+  condition: []
+  action:
+  - service: camera.turn_on
+    data: {}
+    target:
+      entity_id: camera.roborock_s6_pure
   mode: single
