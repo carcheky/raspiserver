@@ -23,7 +23,6 @@ http:
     - 127.0.0.1
     - 0.0.0.0
     - 192.168.8.201
-    - ha.carcheky.com
 
 # google_assistant integration
 google_assistant:
