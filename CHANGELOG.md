@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.8.2](https://gitlab.com/carcheky/raspiserver/compare/v6.8.1...v6.8.2) (2023-07-03)
+
+
+### Bug Fixes
+
+* config ([658d1b1](https://gitlab.com/carcheky/raspiserver/commit/658d1b1c4092194c049eebc35c796296c5017b20))
+
 ## [6.8.1](https://gitlab.com/carcheky/raspiserver/compare/v6.8.0...v6.8.1) (2023-06-27)
 
 
