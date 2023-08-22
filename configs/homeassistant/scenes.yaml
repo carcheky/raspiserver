@@ -181,12 +181,8 @@
   icon: mdi:lightbulb-night
   metadata: {}
 - id: '1677683268735'
-  name: Salón apagado
+  name: Apagar Salón
   entities:
-    media_player.tele:
-      friendly_name: Tele
-      supported_features: 152461
-      state: 'off'
     media_player.altavoz_salon:
       device_class: speaker
       friendly_name: Altavoz Salón
@@ -207,12 +203,12 @@
       - mid
       - high
       - auto
-      current_temperature: 25
-      temperature: 22
-      fan_mode: high
+      current_temperature: 27
+      temperature: 25
+      fan_mode: low
       friendly_name: Aire
       supported_features: 9
-      state: cool
+      state: 'off'
     switch.luz_salon_socket:
       device_class: outlet
       friendly_name: Luz salon Socket

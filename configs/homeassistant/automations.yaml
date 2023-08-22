@@ -5,7 +5,7 @@
   - platform: time
     at: '12:00:00'
   - platform: time
-    at: '17:00:00'
+    at: '16:00:00'
   condition: []
   action:
   - device_id: f90f267269373f33820eada09da4a0b0
@@ -51,23 +51,18 @@
   trigger: []
   condition: []
   action:
-  - service: notify.mobile_app_pixel_4archeky
+  - service: notify.mobile_app_chekyphone
     data:
-      message: durmiendo
-      data:
-        tag: durmiendo
-      title: Hora de ir a dormir
+      message: Durmiendo
   - delay:
       hours: 0
       minutes: 0
       seconds: 1
       milliseconds: 0
-  - service: notify.mobile_app_pixel_4archeky
+  - service: notify.mobile_app_chekyphone
     data:
-      data:
-        tag: durmiendo
-      message: clear_notification
-      title: Hora de ir a dormir
+      message: Durmiendo
+    enabled: false
   - service: scene.turn_on
     target:
       entity_id: scene.a_dormir
@@ -99,14 +94,22 @@
     target:
       entity_id: scene.salon_apagado
     metadata: {}
+  - device_id: dbd81c7825ebe1f333404794f40bab96
+    domain: climate
+    entity_id: 058d63a63f0ad16f61cd289e94acb4c2
+    type: set_hvac_mode
+    hvac_mode: 'off'
   mode: restart
 - id: '1678986779495'
-  alias: Carga inteligente!!!!
+  alias: 'ChekyPhone: Carga inteligente'
   description: ''
   trigger:
   - platform: time_pattern
-    minutes: /10
-  condition: []
+    minutes: /1
+  condition:
+  - condition: state
+    entity_id: input_boolean.cargar_al_100
+    state: 'off'
   action:
   - if:
     - type: is_battery_level
@@ -134,32 +137,6 @@
       target:
         entity_id: switch.ladron_socket_2
     alias: ChekyPhone<75
-  - if:
-    - type: is_battery_level
-      condition: device
-      device_id: 736773a6b456df98196c168dd7b7eaa3
-      entity_id: sensor.tabcheky_battery_level
-      domain: sensor
-      above: 80
-    then:
-    - service: switch.turn_off
-      data: {}
-      target:
-        entity_id: switch.tabcheky_switch
-    alias: Tabcheky>80
-  - if:
-    - type: is_battery_level
-      condition: device
-      device_id: 736773a6b456df98196c168dd7b7eaa3
-      entity_id: sensor.tabcheky_battery_level
-      domain: sensor
-      below: 70
-    then:
-    - service: switch.turn_on
-      data: {}
-      target:
-        entity_id: switch.tabcheky_switch
-    alias: Tabcheky<70
   mode: single
 - id: '1679915483592'
   alias: Apagar luces de día
@@ -451,4 +428,93 @@
     data: {}
     target:
       entity_id: camera.roborock_s6_pure
+  mode: single
+- id: '1691147866863'
+  alias: 'TabCheky: carga inteligente '
+  description: ''
+  trigger:
+  - platform: time_pattern
+    hours: /1
+  condition: []
+  action:
+  - if:
+    - type: is_battery_level
+      condition: device
+      device_id: 736773a6b456df98196c168dd7b7eaa3
+      entity_id: sensor.tabcheky_battery_level
+      domain: sensor
+      above: 80
+    then:
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.tabcheky_switch
+    alias: Tabcheky>80
+  - if:
+    - type: is_battery_level
+      condition: device
+      device_id: 736773a6b456df98196c168dd7b7eaa3
+      entity_id: sensor.tabcheky_battery_level
+      domain: sensor
+      below: 70
+    then:
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.tabcheky_switch
+    alias: Tabcheky<70
+  mode: single
+- id: '1691148760862'
+  alias: 'ChekyPhone: cargado al 100%'
+  description: ''
+  trigger:
+  - type: battery_level
+    platform: device
+    device_id: 1434f347839ffff0fa9439a0f56dae34
+    entity_id: f2406bc2fdf59b441b5cb004f93a9b15
+    domain: sensor
+    above: 99
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  - platform: state
+    entity_id:
+    - input_boolean.cargar_al_100
+    to: 'off'
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id: input_boolean.cargar_al_100
+  - service: automation.turn_on
+    data: {}
+    target:
+      entity_id: automation.tabcheky_cargado
+  - service: automation.trigger
+    data:
+      skip_condition: true
+    target:
+      entity_id: automation.tabcheky_cargado
+  mode: single
+- id: '1691148837634'
+  alias: 'ChekyPhone: cargar al 100%'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.cargar_al_100
+    to: 'on'
+  condition: []
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.ladron_socket_2
+  - service: automation.turn_off
+    data:
+      stop_actions: true
+    target:
+      entity_id: automation.tabcheky_cargado
   mode: single

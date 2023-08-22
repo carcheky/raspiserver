@@ -104,7 +104,7 @@ zha:
       CONFIG_SOURCE_ROUTE_TABLE_SIZE: 16
       CONFIG_ADDRESS_TABLE_SIZE: 8
 
-zha_toolkit:
+# zha_toolkit:
 
 logger:
   default: warn
