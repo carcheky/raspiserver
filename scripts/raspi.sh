@@ -11,7 +11,7 @@ if [ ! -d ${RASPISERVER} ]; then
   echo "Select channel (alpha,beta,stable):" && read readchannel
   CHANNEL=${readchannel}
   echo "$CHANNEL selected"
-  git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git  ~/raspiserver
+  git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
   update
 fi
 set -eux && [ $CHANNEL == 'stable' ] && set -eu
@@ -110,19 +110,19 @@ _install_bin() {
   reboot
   exit 0
 }
-_create_env(){
+_create_env() {
   if [ ! -f ${RASPISERVER}/.env ]; then
     cp ${RASPISERVER}/.env.dist ${RASPISERVER}/.env
     echo "######################################################"
     echo "contraseña genérica?: " && read readpass
-    echo PASSWORD=$readpass >> ${RASPISERVER}/.env
+    echo PASSWORD=$readpass >>${RASPISERVER}/.env
     echo "contraseña root mysql?: " && read readmysqlrootpass
-    echo MYSQL_ROOT_PASSWORD=$readmysqlrootpass >> ${RASPISERVER}/.env
+    echo MYSQL_ROOT_PASSWORD=$readmysqlrootpass >>${RASPISERVER}/.env
     echo "contraseña mysql?: " && read readmysqlpass
-    echo NEXTCLOUD_MYSQL_PASSWORD=$readmysqlpass >> ${RASPISERVER}/.env
-    echo RASPISERVER="${HOME}/raspiserver" >> ${RASPISERVER}/.env
-    echo RASPIMEDIA='/media/RASPIMEDIA/' >> ${RASPISERVER}/.env
-    echo RASPICONFIG='~/raspiserver/RASPICONFIG' >> ${RASPISERVER}/.env
+    echo NEXTCLOUD_MYSQL_PASSWORD=$readmysqlpass >>${RASPISERVER}/.env
+    echo RASPISERVER="${HOME}/raspiserver" >>${RASPISERVER}/.env
+    echo RASPIMEDIA='/media/RASPIMEDIA/' >>${RASPISERVER}/.env
+    echo RASPICONFIG='~/raspiserver/RASPICONFIG' >>${RASPISERVER}/.env
   fi
 }
 ## run: install, update & run
@@ -223,7 +223,7 @@ retry() {
   sudo rm -fr \
     /usr/bin/raspi \
     /usr/local/bin/raspi \
-    ${RASPISERVER}\
+    ${RASPISERVER} \
     ~/.oh-my-zsh \
     ~/.zshrc \
     ~/.docker \
@@ -257,21 +257,24 @@ reboot() {
 }
 
 ## configs_copy: copy configs if exists containers data
-configs_copy(){
+configs_copy() {
   [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/configs/nginx/*.conf ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/
 }
 ## configs_backup: backup to repo configs if exists containers data
-configs_backup(){
+configs_backup() {
   # backup swag subdomains
   [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/*.conf ${RASPISERVER}/configs/nginx/
   # backup homeassistant configs
-  [ -d ${RASPISERVER}/RASPICONFIG/homeassistant/config/ ] &&\
-    ( 
-      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ ; 
-      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/ ; 
-      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ ; 
-      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/ ; 
+  [ -d ${RASPISERVER}/RASPICONFIG/homeassistant/config/ ] &&
+    (
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/
+      sudo cp -f ${RASPISERVER}/RASPICONFIG/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
     )
+  # RASPICONFIG/swag/www/index.html
+  [ -f ${RASPISERVER}/RASPICONFIG/swag/www/index.html ] &&
+    sudo cp -f ${RASPISERVER}/RASPICONFIG/swag/www/index.html ${RASPISERVER}/configs/swag/index.html
 }
 
 # this line print help if no arguments

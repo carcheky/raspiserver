@@ -1,5 +1,6 @@
 services:
 
+  # watchtower
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
@@ -11,7 +12,8 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-
+      
+  # nginx
   swag:
     image: linuxserver/swag:latest
     container_name: swag
@@ -35,8 +37,8 @@ services:
     depends_on:
       - watchtower
 
+  # homeassistant
   homeassistant:
-    # https://ha.carcheky.com http://192.168.68.202:8123
     image: "homeassistant/home-assistant:stable"
     container_name: homeassistant
     restart: always
@@ -46,10 +48,10 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=ha.${DOMAIN}
       - VIRTUAL_HOST=ha.${DOMAIN}
       - VIRTUAL_PORT=8123
+      - LETSENCRYPT_HOST=ha.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${RASPICONFIG}/homeassistant/config:/config
       - ${RASPIMEDIA}:/media/RASPIMEDIA
@@ -63,20 +65,22 @@ services:
     depends_on:
       - swag
 
+  # jellyfin
   jellyfin:
-    # jellyfin https://jellyfin.carcheky.com http://192.168.68.202:8096
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
     restart: always
+    # privileged: true
+    # network_mode: host
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       - JELLYFIN_PublishedServerUrl=jellyfin.${DOMAIN}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=jellyfin.${DOMAIN}
       - VIRTUAL_HOST=jellyfin.${DOMAIN}
       - VIRTUAL_PORT=8096
+      - LETSENCRYPT_HOST=jellyfin.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
       - ${RASPICONFIG}/jellyfin/config:/config
@@ -90,9 +94,70 @@ services:
       - swag
     ports:
       - 8096:8096
+    # # transmission
+    # transmission:
+    #   image: linuxserver/transmission:latest
+    #   container_name: transmission
+    #   restart: always
+    #   # privileged: true
+    #   # network_mode: host
+    #   environment:
+    #     - PUID=${PUID}
+    #     - PGID=${PGID}
+    #     - TZ=${TIMEZONE}
+    #     - USER=${USER} #optional
+    #     - PASS=${PASSWORD} #optional
+    #     - VIRTUAL_HOST=tr.${DOMAIN}
+    #     - VIRTUAL_PORT=9091
+    #     - LETSENCRYPT_HOST=tr.${DOMAIN}
+    #     - LETSENCRYPT_EMAIL=${EMAIL}
+    #   volumes:
+    #     - ${RASPICONFIG}/transmission/config:/config
+    #     - ${RASPICONFIG}/transmission/incomplete:/downloads/incomplete
+    #     - ${RASPIMEDIA}/transmission/:/downloads
+    #   depends_on:
+    #     - swag
+    #   ports:
+    #     - 9091:9091
 
+  # room-assistant
+  room-assistant:
+    image: mkerix/room-assistant
+    container_name: room-assistant
+    network_mode: host
+    restart: always
+    volumes:
+      - /var/run/dbus:/var/run/dbus
+      - ${RASPICONFIG}/room-assistant/config:/room-assistant/config
+    # environment:
+    #   RA_GLOBAL_INSTANCE_NAME: living-room
+    #   NODE_CONFIG: >
+    #     {
+    #       "global": {
+    #         "integrations": ["homeAssistant", "bluetoothClassic"]
+    #       }
+    #     }
+    depends_on:
+      - swag
+    cap_add:
+      - NET_ADMIN
+
+  # mosquitto
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    network_mode: host
+    restart: always
+    volumes:
+      - ${RASPICONFIG}/mosquitto:/mosquitto
+    # ports:
+    #   - 1883:1883
+    #   - 9001:9001
+    depends_on:
+      - swag
+
+  # prowlarr
   prowlarr:
-    # prowlarr https://prowlarr.carcheky.com http://192.168.68.202:9696
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     restart: always
@@ -102,11 +167,12 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - FILE__PASSWORD=${PASSWORD}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=prowlarr.${DOMAIN}
+      - JELLYFIN_PublishedServerUrl=prowlarr.${DOMAIN}
       - VIRTUAL_HOST=prowlarr.${DOMAIN}
       - VIRTUAL_PORT=9696
+      - LETSENCRYPT_HOST=prowlarr.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+      - FILE__PASSWORD=${PASSWORD}
     volumes:
       - ${RASPICONFIG}/prowlarr/config:/config
     depends_on:

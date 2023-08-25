@@ -73,7 +73,7 @@ kill: .env
 
 recreate: .env
 	@echo "Recreating all containers..."
-	@docker compose up -d --force-recreate
+	@docker compose up -d --force-recreate --remove-orphans
 
 # pull changes in stable branch then
 # merge latest changes in stable branch into beta branch
@@ -115,3 +115,11 @@ feature:
 
 clean:
 	@git branch | grep -v "master" | xargs git branch -D
+
+
+sv:
+	ifneq ($(service),)
+		docker compose up -d --remove-orphans --force-recrate $(service)
+	else
+		docker compose up -d --remove-orphans --force-recrate
+	endif
