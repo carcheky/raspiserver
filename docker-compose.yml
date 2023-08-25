@@ -28,7 +28,7 @@ services:
       - VALIDATION=http
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
-      - STAGING=true
+      - STAGING=false
       - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,lidarr,transmission
     volumes:
       - "${RASPICONFIG}/swag/:/config"
