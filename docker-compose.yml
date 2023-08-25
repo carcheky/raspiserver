@@ -29,18 +29,18 @@ services:
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
       - STAGING=false
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,lidarr,transmission
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,lidarr,transmission,jellyseerr
     volumes:
       - "${RASPICONFIG}/swag/:/config"
       - ./configs/swag/index.html:/config/www/index.html
       - ./configs/nginx/_homeassistant.subdomain.conf:/config/nginx/proxy-confs/_homeassistant.subdomain.conf
       - ./configs/nginx/_jellyfin.subdomain.conf:/config/nginx/proxy-confs/_jellyfin.subdomain.conf
+      - ./configs/nginx/_jellyseerr.subdomain.conf:/config/nginx/proxy-confs/_jellyseerr.subdomain.conf
       - ./configs/nginx/_lidarr.subdomain.conf:/config/nginx/proxy-confs/_lidarr.subdomain.conf
       - ./configs/nginx/_prowlarr.subdomain.conf:/config/nginx/proxy-confs/_prowlarr.subdomain.conf
       - ./configs/nginx/_radarr.subdomain.conf:/config/nginx/proxy-confs/_radarr.subdomain.conf
       - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
       - ./configs/nginx/_transmission.subdomain.conf:/config/nginx/proxy-confs/_transmission.subdomain.conf
-
     depends_on:
       - watchtower
 
@@ -135,8 +135,10 @@ services:
       - VIRTUAL_PORT=8989
     volumes:
       - ${RASPICONFIG}/sonarr/config:/config
-      - ${RASPICONFIG}/sonarr/tvshows:/tv
       - ${RASPICONFIG}/sonarr/downloads:/downloads
+    volumes_from:
+      - jellyfin
+      - transmission
     depends_on:
       - swag
     ports:
@@ -158,35 +160,38 @@ services:
       - VIRTUAL_PORT=7878
     volumes:
       - ${RASPICONFIG}/radarr/config:/config
-      - ${RASPICONFIG}/radarr/movies:/movies
       - ${RASPICONFIG}/radarr/downloads:/downloads
+      # - ${RASPIMEDIA}/BibliotecaMultimedia/Peliculas:/movies
+    volumes_from:
+      - jellyfin
+      - transmission
     depends_on:
       - swag
     ports:
       - 7878:7878
 
-  lidarr:
-    # lidarr https://lidarr.carcheky.com http://192.168.68.202:8686
-    image: linuxserver/lidarr:latest
-    container_name: lidarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-      # - FILE__PASSWORD=${PASSWORD}  
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=lidarr.${DOMAIN}
-      - VIRTUAL_HOST=lidarr.${DOMAIN}
-      - VIRTUAL_PORT=8686
-    volumes:
-      - ${RASPICONFIG}/lidarr/config:/config
-      - ${RASPICONFIG}/lidarr/music:/music
-      - ${RASPICONFIG}/lidarr/downloads:/downloads
-    depends_on:
-      - swag
-    ports:
-      - 8686:8686
+  # lidarr:
+  #   # lidarr https://lidarr.carcheky.com http://192.168.68.202:8686
+  #   image: linuxserver/lidarr:latest
+  #   container_name: lidarr
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     # - FILE__PASSWORD=${PASSWORD}  
+  #     - LETSENCRYPT_EMAIL=${EMAIL}
+  #     - LETSENCRYPT_HOST=lidarr.${DOMAIN}
+  #     - VIRTUAL_HOST=lidarr.${DOMAIN}
+  #     - VIRTUAL_PORT=8686
+  #   volumes:
+  #     - ${RASPICONFIG}/lidarr/config:/config
+  #     - ${RASPICONFIG}/lidarr/music:/music
+  #     - ${RASPICONFIG}/lidarr/downloads:/downloads
+  #   depends_on:
+  #     - swag
+  #   ports:
+  #     - 8686:8686
 
   transmission:
     # transmission https://transmission.carcheky.com http://192.168.68.202:9091
@@ -211,4 +216,19 @@ services:
       - swag
     ports:
       - 9091:9091
-      
+
+  jellyseerr:
+    # jellyseerr https://jellyseerr.carcheky.com http://192.168.68.202:5055
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TIMEZONE}
+    ports:
+      - 5055:5055
+    # network_mode: host
+    volumes:
+      - ${RASPICONFIG}/jellyseerr/config:/app/config
+    volumes_from:
+      - jellyfin
+    restart: always
