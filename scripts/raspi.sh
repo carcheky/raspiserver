@@ -259,6 +259,10 @@ reboot() {
 ## configs_copy: copy configs if exists containers data
 configs_copy() {
   [ -d ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/ ] && sudo cp -f ${RASPISERVER}/configs/nginx/*.conf ${RASPISERVER}/RASPICONFIG/swag/nginx/proxy-confs/
+
+  # RASPICONFIG/swag/www/index.html
+  [ -f ${RASPISERVER}/RASPICONFIG/swag/www/index.html ] &&
+    sudo cp -f ${RASPISERVER}/configs/swag/index.html ${RASPISERVER}/RASPICONFIG/swag/www/index.html 
 }
 ## configs_backup: backup to repo configs if exists containers data
 configs_backup() {
