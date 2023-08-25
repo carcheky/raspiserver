@@ -29,9 +29,18 @@ services:
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
       - STAGING=true
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,lidarr,sonarr,radarr
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,lidarr,transmission
     volumes:
       - "${RASPICONFIG}/swag/:/config"
+      - ./configs/swag/index.html:/config/www/index.html
+      - ./configs/nginx/_homeassistant.subdomain.conf:/config/nginx/proxy-confs/_homeassistant.subdomain.conf
+      - ./configs/nginx/_jellyfin.subdomain.conf:/config/nginx/proxy-confs/_jellyfin.subdomain.conf
+      - ./configs/nginx/_lidarr.subdomain.conf:/config/nginx/proxy-confs/_lidarr.subdomain.conf
+      - ./configs/nginx/_prowlarr.subdomain.conf:/config/nginx/proxy-confs/_prowlarr.subdomain.conf
+      - ./configs/nginx/_radarr.subdomain.conf:/config/nginx/proxy-confs/_radarr.subdomain.conf
+      - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
+      - ./configs/nginx/_transmission.subdomain.conf:/config/nginx/proxy-confs/_transmission.subdomain.conf
+
     depends_on:
       - watchtower
 
@@ -109,7 +118,7 @@ services:
       - swag
     ports:
       - 9696:9696
-  
+
   sonarr:
     # sonarr https://sonarr.carcheky.com http://192.168.68.202:8989
     image: linuxserver/sonarr:latest
@@ -178,3 +187,28 @@ services:
       - swag
     ports:
       - 8686:8686
+
+  transmission:
+    # transmission https://transmission.carcheky.com http://192.168.68.202:9091
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - USER=${USER}
+      - PASS=${PASSWORD}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+      - LETSENCRYPT_HOST=transmission.${DOMAIN}
+      - VIRTUAL_HOST=transmission.${DOMAIN}
+      - VIRTUAL_PORT=9091
+    volumes:
+      - ${RASPICONFIG}/transmission/config:/config
+      - ${RASPICONFIG}/transmission/downloads:/downloads
+      # - ${RASPICONFIG}/transmission/downloads/incomplete:/downloads/incomplete
+    depends_on:
+      - swag
+    ports:
+      - 9091:9091
+      
