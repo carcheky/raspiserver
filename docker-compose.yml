@@ -29,7 +29,7 @@ services:
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
       - STAGING=true
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,lidarr
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,lidarr,sonarr
     volumes:
       - "${RASPICONFIG}/swag/:/config"
     depends_on:
@@ -119,7 +119,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      # - FILE__PASSWORD=${PASSWORD}
+      # - FILE__PASSWORD=${PASSWORD}  
       - LETSENCRYPT_EMAIL=${EMAIL}
       - LETSENCRYPT_HOST=lidarr.${DOMAIN}
       - VIRTUAL_HOST=lidarr.${DOMAIN}
@@ -132,3 +132,26 @@ services:
       - swag
     ports:
       - 8686:8686
+
+  sonarr:
+    # sonarr https://sonarr.carcheky.com http://192.168.68.202:8989
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      # - FILE__PASSWORD=${PASSWORD}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+      - LETSENCRYPT_HOST=sonarr.${DOMAIN}
+      - VIRTUAL_HOST=sonarr.${DOMAIN}
+      - VIRTUAL_PORT=8989
+    volumes:
+      - ${RASPICONFIG}/sonarr/config:/config
+      - ${RASPICONFIG}/sonarr/video:/video
+      - ${RASPICONFIG}/sonarr/downloads:/downloads
+    depends_on:
+      - swag
+    ports:
+      - 8989:8989
