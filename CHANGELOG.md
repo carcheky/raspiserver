@@ -1,5 +1,23 @@
 # CHANGELOG
 
+# [6.9.0](https://gitlab.com/carcheky/raspiserver/compare/v6.8.2...v6.9.0) (2023-08-25)
+
+
+### Bug Fixes
+
+* enable ssl ([d4155b7](https://gitlab.com/carcheky/raspiserver/commit/d4155b7939d6012a6901abdef1c573aaa020c310))
+* **prowlarr:** working ([0be088c](https://gitlab.com/carcheky/raspiserver/commit/0be088ca0f03fe69ba9ae15d20a4cc7255393612))
+* restore index.htlm ([88bd3df](https://gitlab.com/carcheky/raspiserver/commit/88bd3df13116552718a2b8183fdbd044101723b5))
+
+
+### Features
+
+* **lidarr:** added lidarr ([c40c641](https://gitlab.com/carcheky/raspiserver/commit/c40c641f0384aa4844ba3696f0f2d5e0af6fcff6))
+* **prowlarr:** added prowlarr ([117a7f6](https://gitlab.com/carcheky/raspiserver/commit/117a7f675ba81808467e72a2b8da3cd290998c4c))
+* **radarr:** added radarr ([df0ee66](https://gitlab.com/carcheky/raspiserver/commit/df0ee66fe68677082a89ba1491cb38a790d12eac))
+* **sonarr:** added sonarr ([e29c82e](https://gitlab.com/carcheky/raspiserver/commit/e29c82e09cace9dbe7a8cea3dfc56be104392fd2))
+* **transmission:** added transmission ([b9078c6](https://gitlab.com/carcheky/raspiserver/commit/b9078c6bee09e63991c3df565896ac35873037ff))
+
 ## [6.8.2](https://gitlab.com/carcheky/raspiserver/compare/v6.8.1...v6.8.2) (2023-07-03)
 
 
