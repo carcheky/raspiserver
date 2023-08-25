@@ -29,7 +29,7 @@ services:
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
       - STAGING=true
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,lidarr,sonarr
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,lidarr,sonarr,radarr
     volumes:
       - "${RASPICONFIG}/swag/:/config"
     depends_on:
@@ -109,6 +109,52 @@ services:
       - swag
     ports:
       - 9696:9696
+  
+  sonarr:
+    # sonarr https://sonarr.carcheky.com http://192.168.68.202:8989
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      # - FILE__PASSWORD=${PASSWORD}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+      - LETSENCRYPT_HOST=sonarr.${DOMAIN}
+      - VIRTUAL_HOST=sonarr.${DOMAIN}
+      - VIRTUAL_PORT=8989
+    volumes:
+      - ${RASPICONFIG}/sonarr/config:/config
+      - ${RASPICONFIG}/sonarr/tvshows:/tv
+      - ${RASPICONFIG}/sonarr/downloads:/downloads
+    depends_on:
+      - swag
+    ports:
+      - 8989:8989
+
+  radarr:
+    # radarr https://radarr.carcheky.com http://192.168.68.202:7878
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      # - FILE__PASSWORD=${PASSWORD}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+      - LETSENCRYPT_HOST=radarr.${DOMAIN}
+      - VIRTUAL_HOST=radarr.${DOMAIN}
+      - VIRTUAL_PORT=7878
+    volumes:
+      - ${RASPICONFIG}/radarr/config:/config
+      - ${RASPICONFIG}/radarr/movies:/movies
+      - ${RASPICONFIG}/radarr/downloads:/downloads
+    depends_on:
+      - swag
+    ports:
+      - 7878:7878
 
   lidarr:
     # lidarr https://lidarr.carcheky.com http://192.168.68.202:8686
@@ -132,26 +178,3 @@ services:
       - swag
     ports:
       - 8686:8686
-
-  sonarr:
-    # sonarr https://sonarr.carcheky.com http://192.168.68.202:8989
-    image: linuxserver/sonarr:latest
-    container_name: sonarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-      # - FILE__PASSWORD=${PASSWORD}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=sonarr.${DOMAIN}
-      - VIRTUAL_HOST=sonarr.${DOMAIN}
-      - VIRTUAL_PORT=8989
-    volumes:
-      - ${RASPICONFIG}/sonarr/config:/config
-      - ${RASPICONFIG}/sonarr/video:/video
-      - ${RASPICONFIG}/sonarr/downloads:/downloads
-    depends_on:
-      - swag
-    ports:
-      - 8989:8989
