@@ -27,9 +27,9 @@ services:
       - URL=${DOMAIN}
       - VALIDATION=http
       - EMAIL=${EMAIL}
-      - ONLY_SUBDOMAINS=true #optional
-      - STAGING=true #optional
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr #optional
+      - ONLY_SUBDOMAINS=true
+      - STAGING=true
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,lidarr
     volumes:
       - "${RASPICONFIG}/swag/:/config"
     depends_on:
@@ -56,8 +56,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
-      # - /dev/serial/by-path:/dev/serial/by-path
-      # - /dev/serial/by-id:/dev/serial/by-id
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
     depends_on:
@@ -93,11 +91,9 @@ services:
 
   prowlarr:
     # prowlarr https://prowlarr.carcheky.com http://192.168.68.202:9696
-    image: lscr.io/linuxserver/prowlarr:latest
+    image: linuxserver/prowlarr:latest
     container_name: prowlarr
     restart: always
-    # privileged: true
-    # network_mode: host
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -113,3 +109,26 @@ services:
       - swag
     ports:
       - 9696:9696
+
+  lidarr:
+    # lidarr https://lidarr.carcheky.com http://192.168.68.202:8686
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      # - FILE__PASSWORD=${PASSWORD}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+      - LETSENCRYPT_HOST=lidarr.${DOMAIN}
+      - VIRTUAL_HOST=lidarr.${DOMAIN}
+      - VIRTUAL_PORT=8686
+    volumes:
+      - ${RASPICONFIG}/lidarr/config:/config
+      - ${RASPICONFIG}/lidarr/music:/music
+      - ${RASPICONFIG}/lidarr/downloads:/downloads
+    depends_on:
+      - swag
+    ports:
+      - 8686:8686
