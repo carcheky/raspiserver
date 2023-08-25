@@ -101,9 +101,7 @@ release: .env
 	@git pull
 	@echo "Merging latest changes in beta branch into stable branch..."
 	@git checkout stable
-	@git merge beta --no-edit
-	@git push
-	@git checkout beta
+	@git merge beta --no-edit && git push && git branch -D beta
 
 commit: .env
 	@echo "Committing changes..."
