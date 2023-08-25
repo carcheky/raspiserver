@@ -51,6 +51,14 @@ ral: .env
 	@make ra
 	@docker compose logs room-assistant -f
 
+pl: .env
+	@echo "Starting prowlarr..."
+	@docker compose up prowlarr -d --force-recreate
+
+pll: .env
+	@make pl
+	@docker compose logs prowlarr -f
+
 orphans: .env
 	@echo "Removing orphans..."
 	@docker compose up -d --remove-orphans

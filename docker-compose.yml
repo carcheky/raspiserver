@@ -28,11 +28,10 @@ services:
       - TZ=${TIMEZONE}
       - URL=${DOMAIN}
       - VALIDATION=http
-      - SUBDOMAINS=r,ha,jf,tr,jd,nc,zb #optional
-      # - SUBDOMAINS=r,ha,jf,tr,jd,nc,zb #optional
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true #optional
-      - STAGING=false #optional
+      - STAGING=true #optional
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr #optional
     volumes:
       - "${RASPICONFIG}/swag/:/config"
     depends_on:
@@ -77,10 +76,10 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - JELLYFIN_PublishedServerUrl=jf.${DOMAIN}
-      - VIRTUAL_HOST=jf.${DOMAIN}
+      - JELLYFIN_PublishedServerUrl=jellyfin.${DOMAIN}
+      - VIRTUAL_HOST=jellyfin.${DOMAIN}
       - VIRTUAL_PORT=8096
-      - LETSENCRYPT_HOST=jf.${DOMAIN}
+      - LETSENCRYPT_HOST=jellyfin.${DOMAIN}
       - LETSENCRYPT_EMAIL=${EMAIL}
     volumes:
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
@@ -95,33 +94,33 @@ services:
       - swag
     ports:
       - 8096:8096
-  
-  # # transmission
-  # transmission:
-  #   image: linuxserver/transmission:latest
-  #   container_name: transmission
-  #   restart: always
-  #   # privileged: true
-  #   # network_mode: host
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-  #     - USER=${USER} #optional
-  #     - PASS=${PASSWORD} #optional
-  #     - VIRTUAL_HOST=tr.${DOMAIN}
-  #     - VIRTUAL_PORT=9091
-  #     - LETSENCRYPT_HOST=tr.${DOMAIN}
-  #     - LETSENCRYPT_EMAIL=${EMAIL}
-  #   volumes:
-  #     - ${RASPICONFIG}/transmission/config:/config
-  #     - ${RASPICONFIG}/transmission/incomplete:/downloads/incomplete
-  #     - ${RASPIMEDIA}/transmission/:/downloads
-  #   depends_on:
-  #     - swag
-  #   ports:
-  #     - 9091:9091
+    # # transmission
+    # transmission:
+    #   image: linuxserver/transmission:latest
+    #   container_name: transmission
+    #   restart: always
+    #   # privileged: true
+    #   # network_mode: host
+    #   environment:
+    #     - PUID=${PUID}
+    #     - PGID=${PGID}
+    #     - TZ=${TIMEZONE}
+    #     - USER=${USER} #optional
+    #     - PASS=${PASSWORD} #optional
+    #     - VIRTUAL_HOST=tr.${DOMAIN}
+    #     - VIRTUAL_PORT=9091
+    #     - LETSENCRYPT_HOST=tr.${DOMAIN}
+    #     - LETSENCRYPT_EMAIL=${EMAIL}
+    #   volumes:
+    #     - ${RASPICONFIG}/transmission/config:/config
+    #     - ${RASPICONFIG}/transmission/incomplete:/downloads/incomplete
+    #     - ${RASPIMEDIA}/transmission/:/downloads
+    #   depends_on:
+    #     - swag
+    #   ports:
+    #     - 9091:9091
 
+  # room-assistant
   room-assistant:
     image: mkerix/room-assistant
     container_name: room-assistant
@@ -143,6 +142,7 @@ services:
     cap_add:
       - NET_ADMIN
 
+  # mosquitto
   mosquitto:
     image: eclipse-mosquitto
     container_name: mosquitto
@@ -155,3 +155,21 @@ services:
     #   - 9001:9001
     depends_on:
       - swag
+
+  # prowlarr
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - VIRTUAL_HOST=prowlarr.${DOMAIN}
+      - VIRTUAL_PORT=8096
+      - LETSENCRYPT_HOST=prowlarr.${DOMAIN}
+      - LETSENCRYPT_EMAIL=${EMAIL}
+    volumes:
+      - ${RASPICONFIG}/prowlarr/config:/config
+    ports:
+      - 9696:9696
+    restart: always
