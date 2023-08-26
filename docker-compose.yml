@@ -33,6 +33,7 @@ services:
     volumes:
       - "${RASPICONFIG}/swag/:/config"
       - ./configs/swag/index.html:/config/www/index.html
+      - ${RASPICONFIG}/heimdall/config/www:/heimdall
       - ./configs/nginx/_homeassistant.subdomain.conf:/config/nginx/proxy-confs/_homeassistant.subdomain.conf
       - ./configs/nginx/_jellyfin.subdomain.conf:/config/nginx/proxy-confs/_jellyfin.subdomain.conf
       - ./configs/nginx/_jellyseerr.subdomain.conf:/config/nginx/proxy-confs/_jellyseerr.subdomain.conf
@@ -41,8 +42,29 @@ services:
       - ./configs/nginx/_radarr.subdomain.conf:/config/nginx/proxy-confs/_radarr.subdomain.conf
       - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
       - ./configs/nginx/_transmission.subdomain.conf:/config/nginx/proxy-confs/_transmission.subdomain.conf
+      - ./configs/nginx/_heimdall.subdomain.conf:/config/nginx/proxy-confs/_heimdall.subdomain.conf
     depends_on:
       - watchtower
+
+  heimdall:
+    image: linuxserver/heimdall:latest
+    container_name: heimdall
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=r.${DOMAIN}
+      # - VIRTUAL_HOST=r.${DOMAIN}
+      # - VIRTUAL_PORT=8080
+    volumes:
+      - ${RASPICONFIG}/heimdall/config:/config
+    # network_mode: host
+    ports:
+      - 8080:80
+    depends_on:
+      - swag
 
   homeassistant:
     # https://ha.carcheky.com http://192.168.68.202:8123
@@ -55,10 +77,10 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=ha.${DOMAIN}
-      - VIRTUAL_HOST=ha.${DOMAIN}
-      - VIRTUAL_PORT=8123
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=ha.${DOMAIN}
+      # - VIRTUAL_HOST=ha.${DOMAIN}
+      # - VIRTUAL_PORT=8123
     volumes:
       - ${RASPICONFIG}/homeassistant/config:/config
       - ${RASPIMEDIA}:/media/RASPIMEDIA
@@ -80,10 +102,10 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       - JELLYFIN_PublishedServerUrl=jellyfin.${DOMAIN}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=jellyfin.${DOMAIN}
-      - VIRTUAL_HOST=jellyfin.${DOMAIN}
-      - VIRTUAL_PORT=8096
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=jellyfin.${DOMAIN}
+      # - VIRTUAL_HOST=jellyfin.${DOMAIN}
+      # - VIRTUAL_PORT=8096
     volumes:
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
       - ${RASPICONFIG}/jellyfin/config:/config
@@ -95,8 +117,9 @@ services:
       - /dev/vchiq:/dev/vchi
     depends_on:
       - swag
-    ports:
-      - 8096:8096
+    network_mode: host
+    # ports:
+    #   - 8096:8096
 
   prowlarr:
     # prowlarr https://prowlarr.carcheky.com http://192.168.68.202:9696
@@ -108,16 +131,17 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       - FILE__PASSWORD=${PASSWORD}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=prowlarr.${DOMAIN}
-      - VIRTUAL_HOST=prowlarr.${DOMAIN}
-      - VIRTUAL_PORT=9696
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=prowlarr.${DOMAIN}
+      # - VIRTUAL_HOST=prowlarr.${DOMAIN}
+      # - VIRTUAL_PORT=9696
     volumes:
       - ${RASPICONFIG}/prowlarr/config:/config
     depends_on:
       - swag
-    ports:
-      - 9696:9696
+    network_mode: host
+    # ports:
+    #   - 9696:9696
 
   sonarr:
     # sonarr https://sonarr.carcheky.com http://192.168.68.202:8989
@@ -129,10 +153,10 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       # - FILE__PASSWORD=${PASSWORD}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=sonarr.${DOMAIN}
-      - VIRTUAL_HOST=sonarr.${DOMAIN}
-      - VIRTUAL_PORT=8989
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=sonarr.${DOMAIN}
+      # - VIRTUAL_HOST=sonarr.${DOMAIN}
+      # - VIRTUAL_PORT=8989
     volumes:
       - ${RASPICONFIG}/sonarr/config:/config
       - ${RASPICONFIG}/sonarr/downloads:/downloads
@@ -141,8 +165,9 @@ services:
       - transmission
     depends_on:
       - swag
-    ports:
-      - 8989:8989
+    network_mode: host
+    # ports:
+    #   - 8989:8989
 
   radarr:
     # radarr https://radarr.carcheky.com http://192.168.68.202:7878
@@ -154,21 +179,23 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       # - FILE__PASSWORD=${PASSWORD}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=radarr.${DOMAIN}
-      - VIRTUAL_HOST=radarr.${DOMAIN}
-      - VIRTUAL_PORT=7878
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=radarr.${DOMAIN}
+      # - VIRTUAL_HOST=radarr.${DOMAIN}
+      # - VIRTUAL_PORT=7878
     volumes:
       - ${RASPICONFIG}/radarr/config:/config
-      - ${RASPICONFIG}/radarr/downloads:/downloads
+      # - ${RASPICONFIG}/radarr/downloads:/downloads
+      - ${RASPICONFIG}/transmission/downloads:/downloads
+      - ${RASPICONFIG}/transmission/downloads/complete/radarr:/downloads/complete/radarr
       # - ${RASPIMEDIA}/BibliotecaMultimedia/Peliculas:/movies
     volumes_from:
       - jellyfin
-      - transmission
     depends_on:
       - swag
-    ports:
-      - 7878:7878
+    network_mode: host
+    # ports:
+    #   - 7878:7878
 
   # lidarr:
   #   # lidarr https://lidarr.carcheky.com http://192.168.68.202:8686
@@ -180,16 +207,17 @@ services:
   #     - PGID=${PGID}
   #     - TZ=${TIMEZONE}
   #     # - FILE__PASSWORD=${PASSWORD}  
-  #     - LETSENCRYPT_EMAIL=${EMAIL}
-  #     - LETSENCRYPT_HOST=lidarr.${DOMAIN}
-  #     - VIRTUAL_HOST=lidarr.${DOMAIN}
-  #     - VIRTUAL_PORT=8686
+  # #     - LETSENCRYPT_EMAIL=${EMAIL}
+  # #     - LETSENCRYPT_HOST=lidarr.${DOMAIN}
+  # #     - VIRTUAL_HOST=lidarr.${DOMAIN}
+  # #     - VIRTUAL_PORT=8686
   #   volumes:
   #     - ${RASPICONFIG}/lidarr/config:/config
   #     - ${RASPICONFIG}/lidarr/music:/music
   #     - ${RASPICONFIG}/lidarr/downloads:/downloads
   #   depends_on:
   #     - swag
+    # network_mode: host
   #   ports:
   #     - 8686:8686
 
@@ -204,18 +232,20 @@ services:
       - TZ=${TIMEZONE}
       - USER=${USER}
       - PASS=${PASSWORD}
-      - LETSENCRYPT_EMAIL=${EMAIL}
-      - LETSENCRYPT_HOST=transmission.${DOMAIN}
-      - VIRTUAL_HOST=transmission.${DOMAIN}
-      - VIRTUAL_PORT=9091
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=transmission.${DOMAIN}
+      # - VIRTUAL_HOST=transmission.${DOMAIN}
+      # - VIRTUAL_PORT=9091
     volumes:
       - ${RASPICONFIG}/transmission/config:/config
       - ${RASPICONFIG}/transmission/downloads:/downloads
+      # - ${RASPICONFIG}/transmission/downloads/complete:/downloads/complete
       # - ${RASPICONFIG}/transmission/downloads/incomplete:/downloads/incomplete
     depends_on:
       - swag
-    ports:
-      - 9091:9091
+    network_mode: host
+    # ports:
+    #   - 9091:9091
 
   jellyseerr:
     # jellyseerr https://jellyseerr.carcheky.com http://192.168.68.202:5055
@@ -224,8 +254,13 @@ services:
     environment:
       - LOG_LEVEL=debug
       - TZ=${TIMEZONE}
-    ports:
-      - 5055:5055
+      # - LETSENCRYPT_EMAIL=${EMAIL}
+      # - LETSENCRYPT_HOST=jellyseerr.${DOMAIN}
+      # - VIRTUAL_HOST=jellyseerr.${DOMAIN}
+      # - VIRTUAL_PORT=5055
+    network_mode: host
+    # ports:
+    #   - 5055:5055
     # network_mode: host
     volumes:
       - ${RASPICONFIG}/jellyseerr/config:/app/config
