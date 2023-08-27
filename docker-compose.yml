@@ -138,6 +138,9 @@ services:
       # - FILE__PASSWORD=${PASSWORD}
     volumes:
       - ${RASPICONFIG}/prowlarr/config:/config
+    volumes_from:
+      - jellyfin
+      - transmission
     depends_on:
       - swag
     network_mode: host
