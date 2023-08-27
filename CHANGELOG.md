@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [6.10.1](https://gitlab.com/carcheky/raspiserver/compare/v6.10.0...v6.10.1) (2023-08-27)
+
+
+### Bug Fixes
+
+* only radarr ([656e4c9](https://gitlab.com/carcheky/raspiserver/commit/656e4c949ef0291206c7aacf1455ab09e72f1ad9))
+* volumes for radarr ([d6e3030](https://gitlab.com/carcheky/raspiserver/commit/d6e30304864f674bf1d2afef3c463f71b5301d33))
+
 # [6.10.0](https://gitlab.com/carcheky/raspiserver/compare/v6.9.0...v6.10.0) (2023-08-27)
 
 
