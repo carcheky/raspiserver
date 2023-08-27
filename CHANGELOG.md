@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.10.0](https://gitlab.com/carcheky/raspiserver/compare/v6.9.0...v6.10.0) (2023-08-27)
+
+
+### Bug Fixes
+
+* **jellyseer:** configs ([e859dc8](https://gitlab.com/carcheky/raspiserver/commit/e859dc8b7721c2ed716f507d40e8eb736468282d))
+
+
+### Features
+
+* added heimdall ([9b15308](https://gitlab.com/carcheky/raspiserver/commit/9b153081da5f1548556cb254b651e0fba0c75ece))
+
 # [6.9.0](https://gitlab.com/carcheky/raspiserver/compare/v6.8.2...v6.9.0) (2023-08-25)
 
 
