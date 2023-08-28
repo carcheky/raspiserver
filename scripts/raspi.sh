@@ -103,11 +103,11 @@ _install() {
   fi
 }
 _install_bin() {
-  sudo ln -fs ${RASPISERVER}/configs/raspbian/rc.local /etc/rc.local
+  sudo cp -f ${RASPISERVER}/configs/raspbian/rc.local /etc/rc.local
   sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
   echo -e "\u2023 necesita reinicio"
-  reboot
+  # reboot
   exit 0
 }
 _create_env() {
@@ -162,9 +162,10 @@ mount() {
     fi
     sudo mkdir -p ${RASPIMEDIA}
     sudo chmod 777 ${RASPIMEDIA}
-    sudo mount -L raspimedia ${RASPIMEDIA}
+    sudo mount -L ${RASPIMEDIA_TO_MOUNT} ${RASPIMEDIA}
   done
   sudo systemctl start docker
+  ls -la ${RASPIMEDIA}
 }
 ## umount: umount hard disks
 umount() {
