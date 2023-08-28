@@ -47,6 +47,7 @@ services:
       - watchtower
 
   heimdall:
+    # https://heimdall.carcheky.com http://192.168.68.202
     image: linuxserver/heimdall:latest
     container_name: heimdall
     restart: always
@@ -81,7 +82,7 @@ services:
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
     depends_on:
-      - swag
+      - heimdall
 
   jellyfin:
     # jellyfin https://jellyfin.carcheky.com http://192.168.68.202:8096
@@ -103,74 +104,8 @@ services:
     devices:
       - /dev/vchiq:/dev/vchi
     depends_on:
-      - swag
+      - heimdall
     network_mode: host
-    # ports:
-    #   - 8096:8096
-
-  jellyseerr:
-    # jellyseerr https://jellyseerr.carcheky.com http://192.168.68.202:5055
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
-    environment:
-      - LOG_LEVEL=info
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    ports:
-      - 5055:5055
-    volumes:
-      - ${RASPICONFIG}/jellyseerr/config:/app/config
-    volumes_from:
-      - jellyfin
-    restart: always
-
-  prowlarr:
-    # prowlarr https://prowlarr.carcheky.com http://192.168.68.202:9696
-    image: linuxserver/prowlarr:latest
-    container_name: prowlarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-      - USER=${USER}
-      # - FILE__PASSWORD=${PASSWORD}
-    volumes:
-      - ${RASPICONFIG}/prowlarr/config:/config
-    volumes_from:
-      - jellyfin
-      - transmission
-    depends_on:
-      - swag
-    network_mode: host
-    # ports:
-    #   - 9696:9696
-
-  radarr:
-    # radarr https://radarr.carcheky.com http://192.168.68.202:7878
-    image: linuxserver/radarr:latest
-    container_name: radarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-      - USER=${USER}
-      # - FILE__PASSWORD=${PASSWORD}
-    volumes:
-      - ${RASPICONFIG}/radarr/config:/config
-      # - ${RASPICONFIG}/transmission/downloads:/downloads
-      # - ${RASPIMEDIA}/BibliotecaMultimedia/Peliculas:/Peliculas
-      # - ${RASPIMEDIA}/BibliotecaMultimedia:/downloads/complete/
-    volumes_from:
-      - jellyfin
-      - transmission
-    depends_on:
-      - swag
-    network_mode: host
-    # ports:
-    #   - 7878:7878
 
   transmission:
     # transmission https://transmission.carcheky.com http://192.168.68.202:9091
@@ -186,62 +121,63 @@ services:
     volumes:
       - ${RASPICONFIG}/transmission/config:/config
       - ${RASPICONFIG}/transmission/downloads:/downloads
-      # - ${RASPICONFIG}/transmission/downloads/incomplete:/downloads/incomplete
-      # - ${RASPICONFIG}/transmission/downloads/complete:/downloads/complete
     depends_on:
-      - swag
+      - heimdall
     network_mode: host
-    # ports:
-    #   - 9091:9091
 
+  prowlarr:
+    # prowlarr https://prowlarr.carcheky.com http://192.168.68.202:9696
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/prowlarr/config:/config
+    volumes_from:
+      - jellyfin
+      - transmission
+    network_mode: host
 
-  # sonarr:
-  #   # sonarr https://sonarr.carcheky.com http://192.168.68.202:8989
-  #   image: linuxserver/sonarr:latest
-  #   container_name: sonarr
-  #   restart: always
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-  #     # - FILE__PASSWORD=${PASSWORD}
-  #     # - LETSENCRYPT_EMAIL=${EMAIL}
-  #     # - LETSENCRYPT_HOST=sonarr.${DOMAIN}
-  #     # - VIRTUAL_HOST=sonarr.${DOMAIN}
-  #     # - VIRTUAL_PORT=8989
-  #   volumes:
-  #     - ${RASPICONFIG}/sonarr/config:/config
-  #     - ${RASPICONFIG}/sonarr/downloads:/downloads
-  #     - ${RASPIMEDIA}/BibliotecaMultimedia:/downloads/complete/
-  #   volumes_from:
-  #     - jellyfin
-  #     - transmission
-  #   depends_on:
-  #     - swag
-  #   network_mode: host
-  #   # ports:
-  #   #   - 8989:8989
-  # lidarr:
-  #   # lidarr https://lidarr.carcheky.com http://192.168.68.202:8686
-  #   image: linuxserver/lidarr:latest
-  #   container_name: lidarr
-  #   restart: always
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-  #     # - FILE__PASSWORD=${PASSWORD}  
-  # #     - LETSENCRYPT_EMAIL=${EMAIL}
-  # #     - LETSENCRYPT_HOST=lidarr.${DOMAIN}
-  # #     - VIRTUAL_HOST=lidarr.${DOMAIN}
-  # #     - VIRTUAL_PORT=8686
-  #   volumes:
-  #     - ${RASPICONFIG}/lidarr/config:/config
-  #     - ${RASPICONFIG}/lidarr/music:/music
-  #     - ${RASPICONFIG}/lidarr/downloads:/downloads
-  #   depends_on:
-  #     - swag
-  #   network_mode: host
-  #   ports:
-  #     - 8686:8686
+  radarr:
+    # radarr https://radarr.carcheky.com http://192.168.68.202:7878
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/radarr/config:/config
+    volumes_from:
+      - jellyfin
+      - transmission
+      - prowlarr
+    depends_on:
+      - jellyfin
+      - transmission
+      - prowlarr
+    network_mode: host
 
+  jellyseerr:
+    # jellyseerr https://jellyseerr.carcheky.com http://192.168.68.202:5055
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - LOG_LEVEL=info
+    ports:
+      - 5055:5055
+    volumes:
+      - ${RASPICONFIG}/jellyseerr/config:/app/config
+    # volumes_from:
+    #   - jellyfin
+    depends_on:
+      - jellyfin
+      - radarr
