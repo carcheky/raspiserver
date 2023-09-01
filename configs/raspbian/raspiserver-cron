@@ -1,3 +1,3 @@
-@hourly carcheky    echo "$(date): docker updated" >> /raspi/docker-update.log ; cd /home/carcheky/raspiserver ; docker compose up -d --pull always --scale jellyfin=2 --scale homeassistant=2
-@daily  root        echo "$(date): rebooted" >> /raspi/reboot.log ; reboot
-@reboot root        echo "$(date): date updated " >> /raspi/date.log ; sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
+@hourly carcheky    echo "$(date): docker updated" >> /var/log/raspiserver.log ; cd /home/carcheky/raspiserver ; docker compose up -d --pull always --scale jellyfin=2 --scale homeassistant=2
+@daily  root        echo "$(date): rebooted" >> /var/log/raspiserver.log ; reboot
+@reboot root        echo "$(date): date updated " >> /var/log/raspiserver.log ; sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
