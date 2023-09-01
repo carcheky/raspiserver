@@ -19,7 +19,6 @@ services:
       - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,lidarr,transmission,jellyseerr
     volumes:
       - "${RASPICONFIG}/swag/:/config"
-      - ./configs/swag/index.html:/config/www/index.html
       - ${RASPICONFIG}/heimdall/config/www:/heimdall
       - ./configs/nginx/_homeassistant.subdomain.conf:/config/nginx/proxy-confs/_homeassistant.subdomain.conf
       - ./configs/nginx/_jellyfin.subdomain.conf:/config/nginx/proxy-confs/_jellyfin.subdomain.conf

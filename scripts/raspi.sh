@@ -103,10 +103,15 @@ _install() {
   fi
 }
 _install_bin() {
-  sudo cp -f ${RASPISERVER}/configs/raspbian/rc.local /etc/rc.local
+
+  set -eux
+  sudo ln -fs ${RASPISERVER}/configs/raspbian/raspiserver-cron /etc/cron.d/raspiserver-cron
+  sudo chmod +x /etc/cron.d/raspiserver-cron
+
   sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
-  echo -e "\u2023 necesita reinicio"
+
+  echo -e "\u2023 reinicia para comprobar si funciona /raspi/reboot.log"
   # reboot
   exit 0
 }
