@@ -111,7 +111,7 @@ _install_bin() {
   sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x /usr/local/bin/raspi
 
-  echo -e "\u2023 reinicia para comprobar si funciona /raspi/reboot.log"
+  echo -e "\u2023 logs en /var/log/raspiserver.log"
   # reboot
   exit 0
 }
