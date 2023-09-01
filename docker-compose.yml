@@ -1,20 +1,7 @@
 services:
 
-  watchtower:
-    image: containrrr/watchtower
-    container_name: watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: always
-    command: --cleanup --interval 3600
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-
   swag:
     image: linuxserver/swag:latest
-    container_name: swag
     restart: always
     privileged: true
     network_mode: host
@@ -43,13 +30,10 @@ services:
       - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
       - ./configs/nginx/_transmission.subdomain.conf:/config/nginx/proxy-confs/_transmission.subdomain.conf
       - ./configs/nginx/_heimdall.subdomain.conf:/config/nginx/proxy-confs/_heimdall.subdomain.conf
-    depends_on:
-      - watchtower
 
   heimdall:
-    # https://heimdall.carcheky.com http://192.168.68.202
+    # https://heimdall.carcheky.com http://192.168.68.201
     image: linuxserver/heimdall:latest
-    container_name: heimdall
     restart: always
     environment:
       - PUID=${PUID}
@@ -63,9 +47,8 @@ services:
       - swag
 
   homeassistant:
-    # https://ha.carcheky.com http://192.168.68.202:8123
+    # https://ha.carcheky.com http://192.168.68.201:8123
     image: "homeassistant/home-assistant:stable"
-    container_name: homeassistant
     restart: always
     privileged: true
     network_mode: host
@@ -77,7 +60,7 @@ services:
       - ${RASPICONFIG}/homeassistant/config:/config
       - ${RASPIMEDIA}:/media/RASPIMEDIA
       - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      # - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
@@ -85,9 +68,8 @@ services:
       - heimdall
 
   jellyfin:
-    # jellyfin https://jellyfin.carcheky.com http://192.168.68.202:8096
+    # jellyfin https://jellyfin.carcheky.com http://192.168.68.201:8096
     image: linuxserver/jellyfin:latest
-    container_name: jellyfin
     restart: always
     environment:
       - PUID=${PUID}
@@ -95,56 +77,36 @@ services:
       - TZ=${TIMEZONE}
       - JELLYFIN_PublishedServerUrl=jellyfin.${DOMAIN}
     volumes:
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
       - ${RASPICONFIG}/jellyfin/config:/config
-      - ${RASPICONFIG}/jellyfin/movies:/data/movies
-      - ${RASPICONFIG}/jellyfin/tvshows:/data/tvshows
-      - /etc/localtime:/etc/localtime:ro
-      - /opt/vc/lib:/opt/vc/lib
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
     devices:
-      - /dev/vchiq:/dev/vchi
+      - /dev/video10:/dev/video10
+      - /dev/video11:/dev/video11
+      - /dev/video12:/dev/video12
     depends_on:
       - heimdall
     network_mode: host
 
   transmission:
-    # transmission https://transmission.carcheky.com http://192.168.68.202:9091
+    # transmission https://transmission.carcheky.com http://192.168.68.201:9091
     image: linuxserver/transmission:latest
-    container_name: transmission
     restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - USER=${USER}
-      - PASS=${PASSWORD}
+      # - USER=${USER}
+      # - PASS=${PASSWORD}
     volumes:
       - ${RASPICONFIG}/transmission/config:/config
-      - ${RASPICONFIG}/transmission/downloads:/downloads
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
     depends_on:
       - heimdall
     network_mode: host
 
-  prowlarr:
-    # prowlarr https://prowlarr.carcheky.com http://192.168.68.202:9696
-    image: linuxserver/prowlarr:latest
-    container_name: prowlarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ${RASPICONFIG}/prowlarr/config:/config
-    volumes_from:
-      - jellyfin
-      - transmission
-    network_mode: host
-
   radarr:
-    # radarr https://radarr.carcheky.com http://192.168.68.202:7878
+    # radarr https://radarr.carcheky.com http://192.168.68.201:7878
     image: linuxserver/radarr:latest
-    container_name: radarr
     restart: always
     environment:
       - PUID=${PUID}
@@ -152,20 +114,27 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/radarr/config:/config
-    volumes_from:
-      - jellyfin
-      - transmission
-      - prowlarr
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+    network_mode: host
     depends_on:
-      - jellyfin
-      - transmission
       - prowlarr
+      - transmission
+
+  prowlarr:
+    # prowlarr https://prowlarr.carcheky.com http://192.168.68.201:9696
+    image: linuxserver/prowlarr:latest
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/prowlarr/config:/config
     network_mode: host
 
   jellyseerr:
-    # jellyseerr https://jellyseerr.carcheky.com http://192.168.68.202:5055
+    # jellyseerr https://jellyseerr.carcheky.com http://192.168.68.201:5055
     image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
     restart: always
     environment:
       - PUID=${PUID}
@@ -176,8 +145,7 @@ services:
       - 5055:5055
     volumes:
       - ${RASPICONFIG}/jellyseerr/config:/app/config
-    # volumes_from:
-    #   - jellyfin
     depends_on:
       - jellyfin
       - radarr
+
