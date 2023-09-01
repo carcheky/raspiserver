@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.10.2](https://gitlab.com/carcheky/raspiserver/compare/v6.10.1...v6.10.2) (2023-08-29)
+
+
+### Bug Fixes
+
+* source hd as var ([903ce09](https://gitlab.com/carcheky/raspiserver/commit/903ce093ec4c51b321f6c95ea6db84115da0e0dc))
+
 ## [6.10.1](https://gitlab.com/carcheky/raspiserver/compare/v6.10.0...v6.10.1) (2023-08-27)
 
 
