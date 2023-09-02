@@ -3,7 +3,8 @@
 # Then it changes the current directory to /home/carcheky/raspiserver
 # Finally, it runs the command "docker compose up -d --pull always --scale jellyfin=2 --scale homeassistant=2" to start the docker containers
 
-4 4 * * * root echo "$(date): dockered" &>> /var/log/raspiserver.log && cd /home/carcheky/raspiserver && (docker-compose up -d --pull always &>> /var/log/raspiserver.log)
+@reboot root sudo echo "$(date): dockered" &>> /var/log/raspiserver.log && cd /home/carcheky/raspiserver && (docker-compose up -d --pull always &>> /var/log/raspiserver.log)
+4 4 * * * root sudo echo "$(date): dockered" &>> /var/log/raspiserver.log && cd /home/carcheky/raspiserver && (docker-compose up -d --pull always &>> /var/log/raspiserver.log)
 
 
 # This cron job runs every day
