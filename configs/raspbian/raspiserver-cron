@@ -6,8 +6,7 @@
 current_date=date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
 
 @reboot root sudo echo "$current_date: dockered" &>> /var/log/raspiserver.log && cd /home/carcheky/raspiserver && (docker-compose up -d --pull always &>> /var/log/raspiserver.log)
-4 4 * * * root sudo echo "$current_date: dockered" &>> /var/log/raspiserver.log && cd /home/carcheky/raspiserver && (docker-compose up -d --pull always &>> /var/log/raspiserver.log)
-
+* * * * * root sudo echo "$current_date: dockered" &>> /var/log/raspiserver.log && cd /home/carcheky/raspiserver && (docker-compose up -d --pull always &>> /var/log/raspiserver.log)
 
 # This cron job runs every day
 # It echoes the current date and time along with the message "rebooted" to the log file /var/log/raspiserver.log
@@ -20,3 +19,4 @@ current_date=date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date:
 # Then it sets the system date and time to the date and time obtained from google.com
 
 @reboot root sudo echo "$current_date: datered " &>> /var/log/raspiserver.log &&  sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
+

@@ -106,7 +106,6 @@ _install_bin() {
 
   # set -eux
   sudo cp -f ${RASPISERVER}/configs/raspbian/raspiserver-cron /etc/cron.d/raspiserver-cron
-  sudo chmod +x /etc/cron.d/raspiserver-cron
 
   sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
