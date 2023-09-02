@@ -31,7 +31,7 @@ services:
       - ./configs/nginx/_heimdall.subdomain.conf:/config/nginx/proxy-confs/_heimdall.subdomain.conf
 
   heimdall:
-    # https://heimdall.carcheky.com http://192.168.68.201
+    # http://localhost:8080 
     image: linuxserver/heimdall:latest
     restart: always
     environment:
@@ -46,11 +46,9 @@ services:
       - swag
 
   homeassistant:
-    # https://ha.carcheky.com http://192.168.68.201:8123
+    # http://localhost:8123
     image: "homeassistant/home-assistant:stable"
     restart: always
-    privileged: true
-    network_mode: host
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -59,15 +57,16 @@ services:
       - ${RASPICONFIG}/homeassistant/config:/config
       - ${RASPIMEDIA}:/media/RASPIMEDIA
       - /etc/localtime:/etc/localtime:ro
-      # - /var/run/docker.sock:/var/run/docker.sock
       - /run/dbus:/run/dbus:ro # bluethooth
+    depends_on:
+      - swag
+    network_mode: host
+    privileged: true
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
-    depends_on:
-      - heimdall
 
   jellyfin:
-    # jellyfin https://jellyfin.carcheky.com http://192.168.68.201:8096
+    # http://localhost:8096
     image: linuxserver/jellyfin:latest
     restart: always
     environment:
@@ -78,33 +77,35 @@ services:
     volumes:
       - ${RASPICONFIG}/jellyfin/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+    depends_on:
+      - swag
+    ports:
+      - 8096:8096
     devices:
       - /dev/video10:/dev/video10
       - /dev/video11:/dev/video11
       - /dev/video12:/dev/video12
-    depends_on:
-      - heimdall
-    network_mode: host
 
   transmission:
-    # transmission https://transmission.carcheky.com http://192.168.68.201:9091
+    # http://localhost:9091
     image: linuxserver/transmission:latest
     restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      # - USER=${USER}
-      # - PASS=${PASSWORD}
+      - USER=${USER}
+      - PASS=${TRANSMISSION_PASSWORD}
     volumes:
       - ${RASPICONFIG}/transmission/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
     depends_on:
-      - heimdall
-    network_mode: host
+      - swag
+    ports:
+      - 9091:9091
 
   radarr:
-    # radarr https://radarr.carcheky.com http://192.168.68.201:7878
+    # http://localhost:7878
     image: linuxserver/radarr:latest
     restart: always
     environment:
@@ -114,13 +115,13 @@ services:
     volumes:
       - ${RASPICONFIG}/radarr/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
-    network_mode: host
     depends_on:
-      - prowlarr
-      - transmission
+      - swag
+    ports:
+      - 7878:7878
 
   prowlarr:
-    # prowlarr https://prowlarr.carcheky.com http://192.168.68.201:9696
+    # http://localhost:9696
     image: linuxserver/prowlarr:latest
     restart: always
     environment:
@@ -129,10 +130,13 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/prowlarr/config:/config
-    network_mode: host
+    depends_on:
+      - swag
+    ports:
+      - 9696:9696
 
   jellyseerr:
-    # jellyseerr https://jellyseerr.carcheky.com http://192.168.68.201:5055
+    # http://localhost:5055
     image: fallenbagel/jellyseerr:latest
     restart: always
     environment:
@@ -140,11 +144,9 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       - LOG_LEVEL=info
-    ports:
-      - 5055:5055
     volumes:
       - ${RASPICONFIG}/jellyseerr/config:/app/config
     depends_on:
-      - jellyfin
-      - radarr
-
+      - swag
+    ports:
+      - 5055:5055

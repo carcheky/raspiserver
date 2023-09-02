@@ -14,7 +14,7 @@ if [ ! -d ${RASPISERVER} ]; then
   git clone -b ${CHANNEL} https://gitlab.com/carcheky/raspiserver.git ~/raspiserver
   update
 fi
-set -eux && [ $CHANNEL == 'stable' ] && set -eu
+# set -eux && [ $CHANNEL == 'stable' ] && set -eu
 
 [ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
 
@@ -104,13 +104,14 @@ _install() {
 }
 _install_bin() {
 
-  set -eux
-  sudo ln -fs ${RASPISERVER}/configs/raspbian/raspiserver-cron /etc/cron.d/raspiserver-cron
+  # set -eux
+  sudo cp -f ${RASPISERVER}/configs/raspbian/raspiserver-cron /etc/cron.d/raspiserver-cron
   sudo chmod +x /etc/cron.d/raspiserver-cron
 
   sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
-  sudo chmod +x /usr/local/bin/raspi
+  sudo chmod +x ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
 
+  ls -la /etc/cron.d/raspiserver-cron /usr/local/bin/raspi /var/log/raspiserver.log
   echo -e "\u2023 logs en /var/log/raspiserver.log"
   # reboot
   exit 0
@@ -198,7 +199,7 @@ kill() {
   if cd ${RASPISERVER}; then
     set -v
     docker compose kill
-    set -eux && [ $CHANNEL == 'stable' ] && set -eu
+    # set -eux && [ $CHANNEL == 'stable' ] && set -eu
   fi
 }
 ## down: docker compose down
