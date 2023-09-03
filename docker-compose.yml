@@ -16,14 +16,14 @@ services:
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
       - STAGING=false
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,lidarr,transmission,jellyseerr
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,bazarr,transmission,jellyseerr
     volumes:
       - "${RASPICONFIG}/swag/:/config"
       - ${RASPICONFIG}/heimdall/config/www:/heimdall
       - ./configs/nginx/_homeassistant.subdomain.conf:/config/nginx/proxy-confs/_homeassistant.subdomain.conf
       - ./configs/nginx/_jellyfin.subdomain.conf:/config/nginx/proxy-confs/_jellyfin.subdomain.conf
       - ./configs/nginx/_jellyseerr.subdomain.conf:/config/nginx/proxy-confs/_jellyseerr.subdomain.conf
-      - ./configs/nginx/_lidarr.subdomain.conf:/config/nginx/proxy-confs/_lidarr.subdomain.conf
+      - ./configs/nginx/_bazarr.subdomain.conf:/config/nginx/proxy-confs/_bazarr.subdomain.conf
       - ./configs/nginx/_prowlarr.subdomain.conf:/config/nginx/proxy-confs/_prowlarr.subdomain.conf
       - ./configs/nginx/_radarr.subdomain.conf:/config/nginx/proxy-confs/_radarr.subdomain.conf
       - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
