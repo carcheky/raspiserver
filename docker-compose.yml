@@ -143,10 +143,25 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - LOG_LEVEL=info
     volumes:
       - ${RASPICONFIG}/jellyseerr/config:/app/config
     depends_on:
       - swag
     ports:
       - 5055:5055
+
+  bazarr:
+    # http://localhost:6767
+    image: linuxserver/bazarr:latest
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/bazarr/config:/config
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+    depends_on:
+      - swag
+    ports:
+      - 6767:6767
