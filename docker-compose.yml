@@ -80,6 +80,19 @@ services:
       - /dev/video11:/dev/video11
       - /dev/video12:/dev/video12
 
+  jellyseerr:
+    # http://localhost:5055
+    image: fallenbagel/jellyseerr:latest
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/jellyseerr/config:/app/config
+    ports:
+      - 5055:5055
+
   transmission:
     # http://localhost:9091
     image: linuxserver/transmission:latest
@@ -95,21 +108,6 @@ services:
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 9091:9091
-      - 51413:51413
-
-  radarr:
-    # http://localhost:7878
-    image: linuxserver/radarr:latest
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ${RASPICONFIG}/radarr/config:/config
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
-    ports:
-      - 7878:7878
 
   prowlarr:
     # http://localhost:9696
@@ -124,18 +122,19 @@ services:
     ports:
       - 9696:9696
 
-  jellyseerr:
-    # http://localhost:5055
-    image: fallenbagel/jellyseerr:latest
+  radarr:
+    # http://localhost:7878
+    image: linuxserver/radarr:latest
     restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${RASPICONFIG}/jellyseerr/config:/app/config
+      - ${RASPICONFIG}/radarr/config:/config
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
-      - 5055:5055
+      - 7878:7878
 
   bazarr:
     # http://localhost:6767
