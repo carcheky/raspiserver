@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [6.11.0](https://gitlab.com/carcheky/raspiserver/compare/v6.10.2...v6.11.0) (2023-09-03)
+
+
+### Bug Fixes
+
+* crontab working ([abbb4bc](https://gitlab.com/carcheky/raspiserver/commit/abbb4bcfb8cbf6618b6c743e956992c8c0cc6a73))
+* fix path raspiserver.log ([5926c29](https://gitlab.com/carcheky/raspiserver/commit/5926c2949757dfa4ce8bd17f6103d084c9b1abcc))
+* move logs to /var/log ([ef388e4](https://gitlab.com/carcheky/raspiserver/commit/ef388e443c45a6027f37f14ba77163a7aaaa3dbd))
+* removed watchtower ([5d27527](https://gitlab.com/carcheky/raspiserver/commit/5d27527ff6113979714ea4b325809231e4b10b52))
+
+
+### Features
+
+* actualizar docker images mediante cron ([a1bf987](https://gitlab.com/carcheky/raspiserver/commit/a1bf987f6f9d777df2cba0b1dde49ef62e536ca7))
+
 ## [6.10.2](https://gitlab.com/carcheky/raspiserver/compare/v6.10.1...v6.10.2) (2023-08-29)
 
 
