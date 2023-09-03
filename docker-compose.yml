@@ -42,8 +42,8 @@ services:
       - ${RASPICONFIG}/heimdall/config:/config
     ports:
       - 8080:80
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
 
   homeassistant:
     # http://localhost:8123
@@ -58,8 +58,8 @@ services:
       - ${RASPIMEDIA}:/media/RASPIMEDIA
       - /etc/localtime:/etc/localtime:ro
       - /run/dbus:/run/dbus:ro # bluethooth
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
     network_mode: host
     privileged: true
     devices:
@@ -77,8 +77,8 @@ services:
     volumes:
       - ${RASPICONFIG}/jellyfin/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
     ports:
       - 8096:8096
     devices:
@@ -99,8 +99,8 @@ services:
     volumes:
       - ${RASPICONFIG}/transmission/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
     ports:
       - 9091:9091
 
@@ -115,8 +115,8 @@ services:
     volumes:
       - ${RASPICONFIG}/radarr/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
     ports:
       - 7878:7878
 
@@ -130,8 +130,8 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/prowlarr/config:/config
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
     ports:
       - 9696:9696
 
@@ -145,8 +145,8 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/jellyseerr/config:/app/config
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
     ports:
       - 5055:5055
 
@@ -161,7 +161,7 @@ services:
     volumes:
       - ${RASPICONFIG}/bazarr/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
-    depends_on:
-      - swag
+    # depends_on:
+    #   - swag
     ports:
       - 6767:6767
