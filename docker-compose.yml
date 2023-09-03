@@ -28,20 +28,21 @@ services:
       - ./configs/nginx/_radarr.subdomain.conf:/config/nginx/proxy-confs/_radarr.subdomain.conf
       - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
       - ./configs/nginx/_transmission.subdomain.conf:/config/nginx/proxy-confs/_transmission.subdomain.conf
-      - ./configs/nginx/_heimdall.subdomain.conf:/config/nginx/proxy-confs/_heimdall.subdomain.conf
 
-  heimdall:
-    # http://localhost:8080 
-    image: linuxserver/heimdall:latest
+  homarr:
+    # http://localhost:7575
+    image: ghcr.io/ajnart/homarr:latest
     restart: always
     environment:
+      - PASSWORD=${PASSWORD}
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${RASPICONFIG}/heimdall/config:/config
+      - ${RASPICONFIG}/homarr/config:/app/data/configs
+      - ${RASPICONFIG}/homarr/icons:/app/public/iconss
     ports:
-      - 8080:80
+      - '7575:7575'
 
   homeassistant:
     # http://localhost:8123
