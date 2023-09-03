@@ -135,6 +135,20 @@ services:
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 7878:7878
+  
+  sonarr:
+    # http://localhost:8989
+    image: linuxserver/sonarr:latest
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/sonarr/config:/config
+      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+    ports:
+      - 8989:8989
 
   bazarr:
     # http://localhost:6767
