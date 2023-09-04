@@ -1,5 +1,28 @@
 # CHANGELOG
 
+# [6.12.0](https://gitlab.com/carcheky/raspiserver/compare/v6.11.0...v6.12.0) (2023-09-04)
+
+
+### Bug Fixes
+
+* added domain for bazarr ([e7554be](https://gitlab.com/carcheky/raspiserver/commit/e7554bedc0967633e50f1a9ea5f429fa6e873496))
+* cron ([8fc1900](https://gitlab.com/carcheky/raspiserver/commit/8fc1900ed8f8e0dac864fdf62945ed1823b2ff71))
+* cron ([b7f2eab](https://gitlab.com/carcheky/raspiserver/commit/b7f2eab37032dbb464ae4fee3d5b45a9b40abd7c))
+* cron ([c506579](https://gitlab.com/carcheky/raspiserver/commit/c506579da30618324ed4cc61f7933ccdbdd7b049))
+* cron once a day ([a852cd4](https://gitlab.com/carcheky/raspiserver/commit/a852cd4dd6db89b8e34ca12339b259ed60978f23))
+* date 2 times per hour ([f1d4bed](https://gitlab.com/carcheky/raspiserver/commit/f1d4bed6f449f5211b9c1a4eacc7a4c1063a5ed9))
+* docker pll on boot ([4eb6f1d](https://gitlab.com/carcheky/raspiserver/commit/4eb6f1dbc4245efef0c1f4762ba3c53953eaf311))
+* homarr nginx ([c282cb7](https://gitlab.com/carcheky/raspiserver/commit/c282cb7bd179d7fb2f8f64044eec119ca4c84bb1))
+* open transmission port ([cc9b5a4](https://gitlab.com/carcheky/raspiserver/commit/cc9b5a4048fbf6368356385bd25bc9043732abc0))
+* remove docker services as dependencies ([8c1ce6b](https://gitlab.com/carcheky/raspiserver/commit/8c1ce6b20598fed0bc8c7cbcf29109aa907bf800))
+
+
+### Features
+
+* added radarr service ([e35a62d](https://gitlab.com/carcheky/raspiserver/commit/e35a62dcfbf49c6a97c801cfba60b6e36c89911e))
+* **bazaar:** added bazaar ([0691413](https://gitlab.com/carcheky/raspiserver/commit/06914131b6af77530abcd1360540e410c7020015))
+* replace heimdall with homarr ([a159e66](https://gitlab.com/carcheky/raspiserver/commit/a159e66f6654cbea4399e8e3fba7969a5ef915d4))
+
 # [6.11.0](https://gitlab.com/carcheky/raspiserver/compare/v6.10.2...v6.11.0) (2023-09-03)
 
 
