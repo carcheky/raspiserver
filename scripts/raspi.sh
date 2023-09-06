@@ -106,12 +106,13 @@ _install_bin() {
 
   # set -eux
   sudo cp -f ${RASPISERVER}/configs/raspbian/raspiserver-cron /etc/cron.d/raspiserver-cron
+  sudo chown root:root /etc/cron.d/raspiserver-cron
+  sudo chmod 644 /etc/cron.d/raspiserver-cron
 
   sudo ln -fs ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
   sudo chmod +x ${RASPISERVER}/scripts/raspi.sh /usr/local/bin/raspi
+  echo hecho
 
-  ls -la /etc/cron.d/raspiserver-cron /usr/local/bin/raspi /var/log/raspiserver.log
-  echo -e "\u2023 logs en /var/log/raspiserver.log"
   # reboot
   exit 0
 }
@@ -183,7 +184,8 @@ umount() {
 up() {
   mount
   if cd ${RASPISERVER}; then
-    docker compose up -d --remove-orphans --pull always
+    # docker compose up -d --remove-orphans --pull always
+    echo $(date) >>/tmp/raspiserver.log
   fi
 }
 ## stop: docker compose stop -d --remove-orphans

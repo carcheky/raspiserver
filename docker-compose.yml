@@ -16,7 +16,7 @@ services:
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
       - STAGING=false
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,bazarr,transmission,jellyseerr
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,bazarr,transmission,jellyseerr,wizarr
     volumes:
       - "${RASPICONFIG}/swag/:/config"
       - ${RASPICONFIG}/heimdall/config/www:/heimdall
@@ -29,6 +29,7 @@ services:
       - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
       - ./configs/nginx/_transmission.subdomain.conf:/config/nginx/proxy-confs/_transmission.subdomain.conf
       - ./configs/nginx/_homarr.subdomain.conf:/config/nginx/proxy-confs/_homarr.subdomain.conf
+      - ./configs/nginx/_wizarr.subdomain.conf:/config/nginx/proxy-confs/_wizarr.subdomain.conf
 
   homarr:
     # http://localhost:7575
@@ -81,6 +82,20 @@ services:
       - /dev/video10:/dev/video10
       - /dev/video11:/dev/video11
       - /dev/video12:/dev/video12
+
+  wizarr:
+    # http://localhost:5690
+    image: ghcr.io/wizarrrr/wizarr:latest
+    # restart: always
+    user: 1000:1000 #Optional but recommended, sets the user uid that Wizarr will run with
+    ports:
+      - 5690:5690
+    volumes:
+      - ${RASPICONFIG}/wizarr/database:/data/database
+    environment:
+      - APP_URL=https://wizarr.${DOMAIN} #URL at which you will access and share 
+      - DISABLE_BUILTIN_AUTH=false #Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
+      - TZ=Europe/Madrid #Set your timezone here
 
   jellyseerr:
     # http://localhost:5055
