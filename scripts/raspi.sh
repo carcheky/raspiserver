@@ -184,7 +184,7 @@ umount() {
 up() {
   mount
   if cd ${RASPISERVER}; then
-    # docker compose up -d --remove-orphans --pull always
+    docker compose up -d --remove-orphans --pull always
     echo $(date) >>/tmp/raspiserver.log
   fi
 }

@@ -86,7 +86,7 @@ services:
   wizarr:
     # http://localhost:5690
     image: ghcr.io/wizarrrr/wizarr:latest
-    # restart: always
+    restart: always
     user: 1000:1000 #Optional but recommended, sets the user uid that Wizarr will run with
     ports:
       - 5690:5690
@@ -96,6 +96,8 @@ services:
       - APP_URL=https://wizarr.${DOMAIN} #URL at which you will access and share 
       - DISABLE_BUILTIN_AUTH=false #Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
       - TZ=Europe/Madrid #Set your timezone here
+    depends_on:
+      - jellyfin
 
   jellyseerr:
     # http://localhost:5055

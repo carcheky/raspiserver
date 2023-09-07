@@ -1,6 +1,6 @@
 # This cron job runs every hour
 
-@reboot root raspi up
+@reboot root /usr/local/bin/raspi up
+*/30 * * * * root /usr/local/bin/raspi up
+4 4 * * * root /usr/local/bin/raspi reboot
 @reboot root echo test >>/tmp/test
-
-# Context from Code Snippet scripts/raspi.sh:
