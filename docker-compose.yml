@@ -2,6 +2,7 @@ services:
 
   swag:
     image: linuxserver/swag:latest
+    container_name: swag
     restart: always
     privileged: true
     network_mode: host
@@ -16,24 +17,15 @@ services:
       - EMAIL=${EMAIL}
       - ONLY_SUBDOMAINS=true
       - STAGING=false
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,bazarr,transmission,jellyseerr,wizarr
+      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,bazarr,transmission,jellyseerr,wizarr,pihole
     volumes:
       - "${RASPICONFIG}/swag/:/config"
-      - ${RASPICONFIG}/heimdall/config/www:/heimdall
-      - ./configs/nginx/_homeassistant.subdomain.conf:/config/nginx/proxy-confs/_homeassistant.subdomain.conf
-      - ./configs/nginx/_jellyfin.subdomain.conf:/config/nginx/proxy-confs/_jellyfin.subdomain.conf
-      - ./configs/nginx/_jellyseerr.subdomain.conf:/config/nginx/proxy-confs/_jellyseerr.subdomain.conf
-      - ./configs/nginx/_bazarr.subdomain.conf:/config/nginx/proxy-confs/_bazarr.subdomain.conf
-      - ./configs/nginx/_prowlarr.subdomain.conf:/config/nginx/proxy-confs/_prowlarr.subdomain.conf
-      - ./configs/nginx/_radarr.subdomain.conf:/config/nginx/proxy-confs/_radarr.subdomain.conf
-      - ./configs/nginx/_sonarr.subdomain.conf:/config/nginx/proxy-confs/_sonarr.subdomain.conf
-      - ./configs/nginx/_transmission.subdomain.conf:/config/nginx/proxy-confs/_transmission.subdomain.conf
-      - ./configs/nginx/_homarr.subdomain.conf:/config/nginx/proxy-confs/_homarr.subdomain.conf
-      - ./configs/nginx/_wizarr.subdomain.conf:/config/nginx/proxy-confs/_wizarr.subdomain.conf
+      - ./configs/nginx/:/config/nginx/proxy-confs/
 
+# homarr http://localhost:7575
   homarr:
-    # http://localhost:7575
     image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
     restart: always
     environment:
       - PASSWORD=${PASSWORD}
@@ -42,13 +34,13 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/homarr/config:/app/data/configs
-      - ${RASPICONFIG}/homarr/icons:/app/public/iconss
     ports:
       - '7575:7575'
 
+# homeassistant http://localhost:8123
   homeassistant:
-    # http://localhost:8123
     image: "homeassistant/home-assistant:stable"
+    container_name: homeassistant
     restart: always
     environment:
       - PUID=${PUID}
@@ -64,9 +56,10 @@ services:
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
 
+# jellyfin http://localhost:8096
   jellyfin:
-    # http://localhost:8096
     image: linuxserver/jellyfin:latest
+    container_name: jellyfin
     restart: always
     environment:
       - PUID=${PUID}
@@ -83,9 +76,10 @@ services:
       - /dev/video11:/dev/video11
       - /dev/video12:/dev/video12
 
+# wizarr http://localhost:5690
   wizarr:
-    # http://localhost:5690
     image: ghcr.io/wizarrrr/wizarr:latest
+    container_name: wizarr
     restart: always
     user: 1000:1000 #Optional but recommended, sets the user uid that Wizarr will run with
     ports:
@@ -99,9 +93,10 @@ services:
     depends_on:
       - jellyfin
 
+# jellyseerr http://localhost:5055
   jellyseerr:
-    # http://localhost:5055
     image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
     restart: always
     environment:
       - PUID=${PUID}
@@ -112,9 +107,10 @@ services:
     ports:
       - 5055:5055
 
+# transmission http://localhost:9091
   transmission:
-    # http://localhost:9091
     image: linuxserver/transmission:latest
+    container_name: transmission
     restart: always
     environment:
       - PUID=${PUID}
@@ -128,9 +124,10 @@ services:
     ports:
       - 9091:9091
 
+# prowlarr http://localhost:9696
   prowlarr:
-    # http://localhost:9696
     image: linuxserver/prowlarr:latest
+    container_name: prowlarr
     restart: always
     environment:
       - PUID=${PUID}
@@ -141,9 +138,10 @@ services:
     ports:
       - 9696:9696
 
+# radarr http://localhost:7878
   radarr:
-    # http://localhost:7878
     image: linuxserver/radarr:latest
+    container_name: radarr
     restart: always
     environment:
       - PUID=${PUID}
@@ -155,9 +153,10 @@ services:
     ports:
       - 7878:7878
   
+# sonarr http://localhost:8989
   sonarr:
-    # http://localhost:8989
     image: linuxserver/sonarr:latest
+    container_name: sonarr
     restart: always
     environment:
       - PUID=${PUID}
@@ -169,9 +168,10 @@ services:
     ports:
       - 8989:8989
 
+# bazarr http://localhost:6767
   bazarr:
-    # http://localhost:6767
     image: linuxserver/bazarr:latest
+    container_name: bazarr
     restart: always
     environment:
       - PUID=${PUID}
@@ -182,3 +182,26 @@ services:
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
     ports:
       - 6767:6767
+
+# pihole http://localhost:53
+  pihole:
+  # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+    image: pihole/pihole:latest
+    container_name: pihole
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
+      - "8080:80/tcp"
+    environment:
+      TZ: 'Europe/Madrid'
+      WEBPASSWORD: ${PASSWORD}
+    # Volumes store your data between container upgrades
+    volumes:
+      - '${RASPICONFIG}/pihole/etc-pihole:/etc/pihole'
+      - '${RASPICONFIG}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    cap_add:
+      - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
+    restart: always
