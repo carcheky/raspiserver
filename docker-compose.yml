@@ -184,7 +184,7 @@ services:
     ports:
       - 6767:6767
 
-# pihole http://localhost:53
+# pihole http://localhost:8080
   pihole:
   # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
     image: pihole/pihole:latest
