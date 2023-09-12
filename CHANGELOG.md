@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [6.13.0](https://gitlab.com/carcheky/raspiserver/compare/v6.12.0...v6.13.0) (2023-09-08)
+
+
+### Bug Fixes
+
+* cron? ([491b73b](https://gitlab.com/carcheky/raspiserver/commit/491b73b958db077d3332ce5b50b6a0f4724d6f7f))
+* final ([b28278a](https://gitlab.com/carcheky/raspiserver/commit/b28278aba2da49d304f3a7317ae482c1138b8d80))
+* pihole ([46209ca](https://gitlab.com/carcheky/raspiserver/commit/46209cab1c55d5de7ebff4cd5d5b35ee5cfacb11))
+* tz var ([17bbecc](https://gitlab.com/carcheky/raspiserver/commit/17bbecc7859a2b3d7a38fc6cf089de62def1f7a3))
+
+
+### Features
+
+* added wizarr ([3134acb](https://gitlab.com/carcheky/raspiserver/commit/3134acb03a96e0cf4e07754151ebed7d537e1a9b))
+
 # [6.12.0](https://gitlab.com/carcheky/raspiserver/compare/v6.11.0...v6.12.0) (2023-09-04)
 
 
