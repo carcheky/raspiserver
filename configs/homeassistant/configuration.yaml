@@ -22,7 +22,8 @@ http:
   trusted_proxies:
     - 127.0.0.1
     - 0.0.0.0
-    - 192.168.8.201
+    - 192.168.68.201
+    - 192.168.68.202
 
 # google_assistant integration
 google_assistant:
@@ -93,7 +94,7 @@ homeassistant:
   currency: EUR
   country: ES
   time_zone: "Europe/Madrid"
-  external_url: "https://ha.carcheky.com"
+  external_url: "https://ha.mediacheky.com"
   internal_url: "http://192.168.68.201:8123"
 
 # zigbee integration

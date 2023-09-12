@@ -8,19 +8,47 @@ services:
     network_mode: host
     cap_add:
       - NET_ADMIN
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-      - URL=${DOMAIN}
-      - VALIDATION=http
-      - EMAIL=${EMAIL}
-      - ONLY_SUBDOMAINS=true
-      - STAGING=false
-      - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,bazarr,transmission,jellyseerr,wizarr,pihole
+    # environment:
+      # - PUID=${PUID}
+      # - PGID=${PGID}
+      # - TZ=${TIMEZONE}
+      # - URL=${DOMAIN}
+      # - VALIDATION=http
+      # - EMAIL=${EMAIL}
+      # - ONLY_SUBDOMAINS=false
+      # - STAGING=true
+      # - SUBDOMAINS=r,ha,jellyfin,prowlarr,sonarr,radarr,bazarr,transmission,jellyseerr,wizarr,pihole
     volumes:
-      - "${RASPICONFIG}/swag/:/config"
+      - "${RASPICONFIG}/swag/config:/config"
+      - "${RASPICONFIG}/swag/dashboard/:/dashboard"
+      - "${RASPICONFIG}/swag/cloudflared/:/cloudflared"
       - ./configs/nginx/:/config/nginx/proxy-confs/
+    environment:
+      STAGING: false
+      PUID: ${PUID}
+      PGID: ${PGID}
+      TZ: ${TIMEZONE}
+      EMAIL: ${EMAIL}
+      URL: ${DOMAIN}
+      VALIDATION: dns
+      SUBDOMAINS: wildcard
+      DNSPLUGIN: cloudflare
+      DOCKER_MODS: linuxserver/mods:swag-auto-reload|linuxserver/mods:swag-dashboard|linuxserver/mods:universal-cloudflared|linuxserver/mods:swag-cloudflare-real-ip
+      # CF_ZONE_ID: ${CF_ZONE_ID}
+      # CF_ACCOUNT_ID: ${CF_ACCOUNT_ID}
+      # CF_API_TOKEN: ${CF_API_TOKEN}
+      # CF_TUNNEL_NAME: ${CF_TUNNEL_NAME}
+      # CF_TUNNEL_PASSWORD: ${CF_TUNNEL_PASSWORD}
+      # CF_TUNNEL_CONFIG: |
+      #     ingress:
+      #       - hostname: ${DOMAIN}
+      #         service: http://localhost:7575
+      #       - hostname: ha.${DOMAIN}
+      #         service: http://localhost:8123
+      #       - service: http_status:404
+      # - FILE__CF_TUNNEL_CONFIG=/config/tunnelconfig.yml
+    extra_hosts:
+      - ${DOMAIN}:127.0.0.1
 
 # homarr http://localhost:7575
   homarr:
@@ -28,7 +56,7 @@ services:
     container_name: homarr
     restart: always
     environment:
-      - PASSWORD=${PASSWORD}
+      - PASSWORD=${HOMARR_PASSWORD}
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
@@ -66,7 +94,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - JELLYFIN_PublishedServerUrl=jellyfin.${DOMAIN}
+      - JELLYFIN_PublishedServerUrl=${DOMAIN}
     volumes:
       - ${RASPICONFIG}/jellyfin/config:/config
       - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
@@ -90,6 +118,8 @@ services:
     environment:
       - APP_URL=https://wizarr.${DOMAIN} #URL at which you will access and share 
       - DISABLE_BUILTIN_AUTH=false #Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=${TIMEZONE} #Set your timezone here
     depends_on:
       - jellyfin
@@ -184,25 +214,25 @@ services:
     ports:
       - 6767:6767
 
-# pihole http://localhost:8080
-  pihole:
-  # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
-    image: pihole/pihole:latest
-    container_name: pihole
-    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
-      - "8080:80/tcp"
-    environment:
-      TZ: 'Europe/Madrid'
-      WEBPASSWORD: ${PASSWORD}
-    # Volumes store your data between container upgrades
-    volumes:
-      - '${RASPICONFIG}/pihole/etc-pihole:/etc/pihole'
-      - '${RASPICONFIG}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
-    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
-    cap_add:
-      - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
-    restart: always
+# # pihole http://localhost:8080
+#   pihole:
+#   # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+#     image: pihole/pihole:latest
+#     container_name: pihole
+#     # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+#     ports:
+#       - "53:53/tcp"
+#       - "53:53/udp"
+#       - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
+#       - "8080:80/tcp"
+#     environment:
+#       TZ: 'Europe/Madrid'
+#       WEBPASSWORD: ${PASSWORD}
+#     # Volumes store your data between container upgrades
+#     volumes:
+#       - '${RASPICONFIG}/pihole/etc-pihole:/etc/pihole'
+#       - '${RASPICONFIG}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+#     #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+#     cap_add:
+#       - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
+#     restart: always
