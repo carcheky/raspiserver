@@ -1,0 +1,20 @@
+services:
+
+# homeassistant http://localhost:8123
+  homeassistant:
+    image: "homeassistant/home-assistant:stable"
+    container_name: homeassistant
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/homeassistant/config:/config
+      - ${RASPIMEDIA}:/media/RASPIMEDIA
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro # bluethooth
+    network_mode: host
+    privileged: true
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
