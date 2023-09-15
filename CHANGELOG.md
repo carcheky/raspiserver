@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.13.1](https://gitlab.com/carcheky/raspiserver/compare/v6.13.0...v6.13.1) (2023-09-13)
+
+
+### Bug Fixes
+
+* working ([5004b2b](https://gitlab.com/carcheky/raspiserver/commit/5004b2b313be003a0a91988893520eb85232a3d3))
+
 # [6.13.0](https://gitlab.com/carcheky/raspiserver/compare/v6.12.0...v6.13.0) (2023-09-08)
 
 
