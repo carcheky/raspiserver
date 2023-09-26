@@ -26,15 +26,18 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       - JELLYFIN_PublishedServerUrl=${DOMAIN}
+      - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
     volumes:
       - ${RASPICONFIG}/jellyfin/config:/config
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+      # - ${RASPICONFIG}/jellyfin/plugins:/var/lib/jellyfin/plugins/
+      - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
     ports:
       - 8096:8096
     devices:
-      - /dev/video10:/dev/video10
-      - /dev/video11:/dev/video11
-      - /dev/video12:/dev/video12
+      - /dev/dri:/dev/dri
+    #   - /dev/video10:/dev/video10
+    #   - /dev/video11:/dev/video11
+    #   - /dev/video12:/dev/video12
 
 # wizarr http://localhost:5690
   wizarr:
@@ -82,7 +85,7 @@ services:
       - PASS=${TRANSMISSION_PASSWORD}
     volumes:
       - ${RASPICONFIG}/transmission/config:/config
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 9091:9091
 
@@ -111,7 +114,7 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/radarr/config:/config
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 7878:7878
   
@@ -126,7 +129,7 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/sonarr/config:/config
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 8989:8989
 
@@ -141,6 +144,6 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ${RASPICONFIG}/bazarr/config:/config
-      - ${RASPIMEDIA}/BibliotecaMultimedia:/BibliotecaMultimedia
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 6767:6767
