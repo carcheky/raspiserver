@@ -182,7 +182,7 @@ umount() {
 }
 ## up: docker compose up -d --remove-orphans
 up() {
-  mount
+  # mount
   if cd ${RASPISERVER}; then
     docker compose up -d --remove-orphans --pull always
     echo $(date) >>/tmp/raspiserver.log
@@ -190,7 +190,7 @@ up() {
 }
 ## stop: docker compose stop -d --remove-orphans
 stop() {
-  mount
+  # mount
   if cd ${RASPISERVER}; then
     docker compose stop -d --remove-orphans
   fi
@@ -212,7 +212,7 @@ down() {
 }
 ## up: docker compose restart
 restart() {
-  mount
+  # mount
   if cd ${RASPISERVER}; then
     docker compose restart
     docker compose up -d

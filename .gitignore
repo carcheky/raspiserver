@@ -6,3 +6,4 @@ token_extractor_docker/requirements.txt
 token_extractor_docker/token_extractor.py
 token_extractor_docker.zip
 *.sample
+docker-compose.yml
