@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [6.13.2](https://gitlab.com/carcheky/raspiserver/compare/v6.13.1...v6.13.2) (2023-09-27)
+
+
+### Bug Fixes
+
+* mediacheky working ([b8f58b1](https://gitlab.com/carcheky/raspiserver/commit/b8f58b1d79242ec1163d431ed4d3ce7b7d20c57c))
+* point to internal server ([cf1c6f0](https://gitlab.com/carcheky/raspiserver/commit/cf1c6f0aa38a9f52238030a2746a29c5321a85a8))
+* raspiserver only swag and ha ([01dc735](https://gitlab.com/carcheky/raspiserver/commit/01dc73507213ab43d6750e0a0c61e6bab111eef8))
+
 ## [6.13.1](https://gitlab.com/carcheky/raspiserver/compare/v6.13.0...v6.13.1) (2023-09-13)
 
 
