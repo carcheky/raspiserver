@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [6.13.3](https://gitlab.com/carcheky/raspiserver/compare/v6.13.2...v6.13.3) (2023-10-11)
+
+
+### Bug Fixes
+
+* **swag:** latest ([44ab759](https://gitlab.com/carcheky/raspiserver/commit/44ab759d2b1fb320979cc943cda7d803e09e60b8))
+* **swag:** lock version to 2.6.0 ([c9b191f](https://gitlab.com/carcheky/raspiserver/commit/c9b191f1f86493f404f2644a09377e330929febf))
+* **wizarr:** updated to v3 ([976515a](https://gitlab.com/carcheky/raspiserver/commit/976515af8d53d57a22a0ac964a5f7484936ec91f))
+
 ## [6.13.2](https://gitlab.com/carcheky/raspiserver/compare/v6.13.1...v6.13.2) (2023-09-27)
 
 
