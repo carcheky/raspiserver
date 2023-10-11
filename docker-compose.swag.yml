@@ -1,7 +1,7 @@
 services:
 
   swag:
-    image: linuxserver/swag:2.6.0
+    image: linuxserver/swag:latest
     container_name: swag
     restart: always
     privileged: true
@@ -21,6 +21,8 @@ services:
       VALIDATION: dns
       SUBDOMAINS: wildcard
       DNSPLUGIN: cloudflare
-      DOCKER_MODS: linuxserver/mods:swag-auto-reload|linuxserver/mods:swag-dashboard|linuxserver/mods:universal-cloudflared|linuxserver/mods:swag-cloudflare-real-ip
+      DOCKER_MODS: linuxserver/mods:swag-auto-reload|linuxserver/mods:swag-cloudflare-real-ip
+      PROPAGATION: 60
+      # DOCKER_MODS: linuxserver/mods:swag-auto-reload|linuxserver/mods:swag-dashboard|linuxserver/mods:universal-cloudflared|linuxserver/mods:swag-cloudflare-real-ip
     extra_hosts:
       - ${DOMAIN}:127.0.0.1
