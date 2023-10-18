@@ -9,6 +9,7 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
+      - DOCKER_MODS=linuxserver/mods:homeassistant-hacs
     volumes:
       - ${RASPICONFIG}/homeassistant/config:/config
       - ${RASPIMEDIA}:/media/RASPIMEDIA
