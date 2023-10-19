@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.14.0](https://gitlab.com/carcheky/raspiserver/compare/v6.13.3...v6.14.0) (2023-10-19)
+
+
+### Bug Fixes
+
+* stable conection ([1b75e00](https://gitlab.com/carcheky/raspiserver/commit/1b75e009f91c8791a3ea22e4f6dd715b177de8fa))
+
+
+### Features
+
+* **mediacheky:** admin script ([45a2afc](https://gitlab.com/carcheky/raspiserver/commit/45a2afc3f32698e07e789d34346d370caf9d9d95))
+
 ## [6.13.3](https://gitlab.com/carcheky/raspiserver/compare/v6.13.2...v6.13.3) (2023-10-11)
 
 
