@@ -143,3 +143,18 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 6767:6767
+
+# lidarr http://localhost:8686
+  lidarr:
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/lidarr/config:/config
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    ports:
+      - 8686:8686
