@@ -158,3 +158,18 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 8686:8686
+    
+# readarr http://localhost:8787
+  readarr:
+    image: linuxserver/readarr:latest
+    container_name: readarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${RASPICONFIG}/readarr/config:/config
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    ports:
+      - 8787:8787
