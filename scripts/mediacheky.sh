@@ -4,12 +4,14 @@ RASPISERVER="${HOME}/mediacheky/raspiserver"
 RASPICONFIG="${HOME}/mediacheky/RASPICONFIG"
 RASPIMEDIA="${HOME}/mediacheky/RASPIMEDIA/BibliotecaMultimedia"
 [ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
+### MEDIACHEKY SERVER
 
 function backup() {
 
     ####################################
     #
-    # Backup to NFS mount script.
+    ## backup:
+    ## Backup to NFS mount script.
     #
     ####################################
 
@@ -17,7 +19,7 @@ function backup() {
     backup_files="$RASPISERVER $RASPICONFIG"
 
     # Where to backup to.
-    dest="$RASPIMEDIA"
+    dest="$RASPIMEDIA/../Backups"
 
     # Create archive filename.
     day=$(date +%A)
@@ -40,3 +42,11 @@ function backup() {
     # Long listing of files in $dest to check file sizes.
     ls -lh $dest
 }
+
+help() {
+    this_script="${BASH_SOURCE[0]}"
+    echo "Usage: ${this_script} <command>"
+    cat /usr/local/bin/mediacheky | grep '##'
+}
+
+${@:-help}
