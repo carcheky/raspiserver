@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [6.15.0](https://gitlab.com/carcheky/raspiserver/compare/v6.14.0...v6.15.0) (2023-10-21)
+
+
+### Bug Fixes
+
+* **swag:** pihole virtual host ([df1406b](https://gitlab.com/carcheky/raspiserver/commit/df1406b6ad0218e8c9d458321ddd458e4fee5374))
+
+
+### Features
+
+* **mediacheky:** added lidarr ([4adc85c](https://gitlab.com/carcheky/raspiserver/commit/4adc85c6334c0d6bb6a5dfb33b644b43169bd22b))
+* **mediacheky:** added readarr host ([63c1419](https://gitlab.com/carcheky/raspiserver/commit/63c141913689ec827935bcb5f2477e0ed9d4cb70))
+* **mediacheky:** added readarr host ([e4d2337](https://gitlab.com/carcheky/raspiserver/commit/e4d2337bebf21c146e3cd041d12408fcb683b1ff))
+* **mediacheky:** set backup path ([01d849a](https://gitlab.com/carcheky/raspiserver/commit/01d849ab534b274709291bf1a39b9a7a486dec7d))
+* **swag:** added lidarr host ([64b6a23](https://gitlab.com/carcheky/raspiserver/commit/64b6a233f3270c296168d6fb2775e8f56e10e295))
+* **swag:** added readarr host ([44bc08f](https://gitlab.com/carcheky/raspiserver/commit/44bc08f2986207ec0313b80566470a600a3e9d5c))
+
 # [6.14.0](https://gitlab.com/carcheky/raspiserver/compare/v6.13.3...v6.14.0) (2023-10-19)
 
 
