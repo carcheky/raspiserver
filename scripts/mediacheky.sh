@@ -35,7 +35,7 @@ function backup() {
     echo
 
     # Backup the files using tar, excluding specified subfolders.
-    # tar -zcf $dest/$archive_file --exclude={"*/MediaCover/*","*/cache/*","*/keyframes/*","*/metadata/*","*/logs/*","*/collections/*","*/database/sessions/*"} $backup_files
+    tar -zcf $dest/$archive_file --exclude={"*/MediaCover/*","*/cache/*","*/keyframes/*","*/metadata/*","*/logs/*","*/collections/*","*/database/sessions/*"} $backup_files
 
     # Print end status message.
     echo
