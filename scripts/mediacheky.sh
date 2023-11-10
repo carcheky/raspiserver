@@ -24,8 +24,8 @@ function backup() {
     # Where to backup to.
     dest="$RASPIMEDIA/../Backups"
 
-    # Create archive filename 'hostname-YYYY-MM-DD-day.tar.gz'
-    day=$(date  +%Y%m%d-%A)
+    # Create archive filename 'hostname-YYYY-MM-DD-weekday-hhmm.tar.gz'
+    day=$(date  +%Y%m%d-%H%M%S-%A.tar.gz)
     hostname=$(hostname -s)
     archive_file="$hostname-$day.tgz"
 
@@ -35,7 +35,7 @@ function backup() {
     echo
 
     # Backup the files using tar, excluding specified subfolders.
-    tar -zcvf $dest/$archive_file --exclude={"*/MediaCover/*","*/cache/*","*/keyframes/*","*/metadata/*","*/logs/*"} $backup_files
+    # tar -zcf $dest/$archive_file --exclude={"*/MediaCover/*","*/cache/*","*/keyframes/*","*/metadata/*","*/logs/*","*/collections/*","*/database/sessions/*"} $backup_files
 
     # Print end status message.
     echo
@@ -44,20 +44,27 @@ function backup() {
 
     # Long listing of files in $dest to check file sizes.
     ls -lh $dest
+    df -h $dest
 }
 
 install() {
-    sudo rm -fr /usr/local/bin/mediacheky
+    sudo rm -fr /usr/local/bin/mediacheky*
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
-    sudo chmod +x /usr/local/bin/mediacheky
+    sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
+    sudo chmod +x /usr/local/bin/mediacheky*
     ls -la /usr/local/bin/mediacheky*
 }
 
-install_dev() {
-    sudo rm -fr /usr/local/bin/mediacheky-dev
-    sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
-    sudo chmod +x /usr/local/bin/mediacheky-dev
-    ls -la /usr/local/bin/mediacheky*
+cron() {
+    echo "/usr/local/bin/mediacheky backup" > mediacheky-backup
+    echo >> mediacheky-backup
+    sudo chown root:root mediacheky-backup
+    sudo chmod 644 mediacheky-backup
+    sudo chmod +x mediacheky-backup
+    sudo mv -f mediacheky-backup /etc/cron.hourly
+    sudo service cron restart
+    sudo service cron status
+    ls -la /etc/cron.*
 }
 
 help() {
