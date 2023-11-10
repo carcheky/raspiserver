@@ -18,11 +18,14 @@ function backup() {
     # What to backup.
     backup_files="$RASPISERVER $RASPICONFIG"
 
+    # Subfolders to exclude.
+    # exclude_subfolders=
+
     # Where to backup to.
     dest="$RASPIMEDIA/../Backups"
 
-    # Create archive filename.
-    day=$(date +%A)
+    # Create archive filename 'hostname-YYYY-MM-DD-day.tar.gz'
+    day=$(date  +%Y%m%d-%A)
     hostname=$(hostname -s)
     archive_file="$hostname-$day.tgz"
 
@@ -31,8 +34,8 @@ function backup() {
     date
     echo
 
-    # Backup the files using tar.
-    tar czf $dest/$archive_file $backup_files
+    # Backup the files using tar, excluding specified subfolders.
+    tar -zcvf $dest/$archive_file --exclude={"*/MediaCover/*","*/cache/*","*/keyframes/*","*/metadata/*","*/logs/*"} $backup_files
 
     # Print end status message.
     echo
@@ -42,6 +45,7 @@ function backup() {
     # Long listing of files in $dest to check file sizes.
     ls -lh $dest
 }
+
 
 help() {
     this_script="${BASH_SOURCE[0]}"
