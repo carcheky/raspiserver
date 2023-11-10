@@ -46,6 +46,19 @@ function backup() {
     ls -lh $dest
 }
 
+install() {
+    sudo rm -fr /usr/local/bin/mediacheky
+    sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
+    sudo chmod +x /usr/local/bin/mediacheky
+    ls -la /usr/local/bin/mediacheky*
+}
+
+install_dev() {
+    sudo rm -fr /usr/local/bin/mediacheky-dev
+    sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
+    sudo chmod +x /usr/local/bin/mediacheky-dev
+    ls -la /usr/local/bin/mediacheky*
+}
 
 help() {
     this_script="${BASH_SOURCE[0]}"
