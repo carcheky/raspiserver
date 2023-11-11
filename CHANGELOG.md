@@ -1,5 +1,18 @@
 # CHANGELOG
 
+# [6.16.0](https://gitlab.com/carcheky/raspiserver/compare/v6.15.0...v6.16.0) (2023-11-11)
+
+
+### Bug Fixes
+
+* enable backup ([42ad88c](https://gitlab.com/carcheky/raspiserver/commit/42ad88c07ca8925700fa8b220cb4bc8da121d709))
+* **mediacheky:** backup ([51b2263](https://gitlab.com/carcheky/raspiserver/commit/51b22637525abe994d3e93e6aeb284d778c6c579))
+
+
+### Features
+
+* **mediacheky:** install script ([776ed6e](https://gitlab.com/carcheky/raspiserver/commit/776ed6e9f6a72b8a53d427b58d4d6d031e53cf8f))
+
 # [6.15.0](https://gitlab.com/carcheky/raspiserver/compare/v6.14.0...v6.15.0) (2023-10-21)
 
 
