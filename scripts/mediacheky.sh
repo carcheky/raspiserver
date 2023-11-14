@@ -47,7 +47,7 @@ function backup() {
     df -h $dest
 }
 
-install() {
+function install() {
     sudo rm -fr /usr/local/bin/mediacheky*
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
@@ -55,7 +55,7 @@ install() {
     ls -la /usr/local/bin/mediacheky*
 }
 
-cron() {
+function cron() {
     echo "/usr/local/bin/mediacheky backup" > mediacheky-backup
     echo >> mediacheky-backup
     sudo chown root:root mediacheky-backup
@@ -67,7 +67,7 @@ cron() {
     ls -la /etc/cron.*
 }
 
-help() {
+function help() {
     this_script="${BASH_SOURCE[0]}"
     echo "Usage: ${this_script} <command>"
     cat /usr/local/bin/mediacheky | grep '##'
