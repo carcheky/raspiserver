@@ -67,6 +67,15 @@ function cron() {
     ls -la /etc/cron.*
 }
 
+function update(){
+    sudo apt update -y ;
+    sudo apt upgrade -y ;
+    sudo apt autoremove -y ;
+    cd "${RASPISERVER}" ;
+    docker compose up -d --pull always ;
+    docker system prune -af ;
+}
+
 function help() {
     this_script="${BASH_SOURCE[0]}"
     echo "Usage: ${this_script} <command>"
