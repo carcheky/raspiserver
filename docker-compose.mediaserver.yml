@@ -13,6 +13,7 @@ services:
       - BASE_URL=homarr.${DOMAIN}
     volumes:
       - ${RASPICONFIG}/homarr/config:/app/data/configs
+      - ${RASPICONFIG}/homarr/data:/data
     ports:
       - '7575:7575'
 
