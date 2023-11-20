@@ -1,5 +1,18 @@
 # CHANGELOG
 
+# [6.17.0](https://gitlab.com/carcheky/raspiserver/compare/v6.16.0...v6.17.0) (2023-11-15)
+
+
+### Bug Fixes
+
+* function ([0993278](https://gitlab.com/carcheky/raspiserver/commit/0993278f6f1f31ce2a4f31517b58e508b362c299))
+* **homarr:** updated last version ([d7e70dd](https://gitlab.com/carcheky/raspiserver/commit/d7e70dd2755646e53cc62414851ce3c525aaeea5))
+
+
+### Features
+
+* **mediacheky:** mediacheky update command ([ed3a180](https://gitlab.com/carcheky/raspiserver/commit/ed3a18062fc7cbd9ba1dbb8c44c63109bf5be414))
+
 # [6.16.0](https://gitlab.com/carcheky/raspiserver/compare/v6.15.0...v6.16.0) (2023-11-11)
 
 
