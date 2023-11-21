@@ -52,7 +52,6 @@ function install() {
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
     sudo chmod +x /usr/local/bin/mediacheky*
-    sudo cp configs/raspbian/sudoers-mediacheky /etc/sudoers.d 
     ls -la /usr/local/bin/mediacheky*
 }
 
@@ -69,9 +68,9 @@ function cron() {
 }
 
 function update(){
-    sudo apt update -y ;
-    sudo apt upgrade -y ;
-    sudo apt autoremove -y ;
+    apt update -y ;
+    apt upgrade -y ;
+    apt autoremove -y ;
     cd "${RASPISERVER}" ;
     git pull
     docker compose up -d --pull always --remove-orphans ;
