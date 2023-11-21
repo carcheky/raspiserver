@@ -68,9 +68,9 @@ function cron() {
 }
 
 function update(){
-    apt update -y ;
-    apt upgrade -y ;
-    apt autoremove -y ;
+    sudo apt update -y ;
+    sudo apt upgrade -y ;
+    sudo apt autoremove -y ;
     cd "${RASPISERVER}" ;
     git pull
     docker compose up -d --pull always --remove-orphans ;
