@@ -72,8 +72,10 @@ function update(){
     sudo apt upgrade -y ;
     sudo apt autoremove -y ;
     cd "${RASPISERVER}" ;
+    git pull
     docker compose up -d --pull always ;
     docker system prune -af ;
+    docker volume prune -af ;
 }
 
 function help() {
