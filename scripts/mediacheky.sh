@@ -76,6 +76,7 @@ function update(){
     docker compose up -d --pull always ;
     docker system prune -af ;
     docker volume prune -af ;
+    mediacheky install
 }
 
 function help() {
