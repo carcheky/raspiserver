@@ -73,7 +73,7 @@ function update(){
     sudo apt autoremove -y ;
     cd "${RASPISERVER}" ;
     git pull
-    docker compose up -d --pull always ;
+    docker compose up -d --pull always --remove-orphans ;
     docker system prune -af ;
     docker volume prune -af ;
     mediacheky install
