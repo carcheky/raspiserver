@@ -1,0 +1,1 @@
+carcheky ALL=(ALL) NOPASSWD: /usr/local/bin/mediacheky

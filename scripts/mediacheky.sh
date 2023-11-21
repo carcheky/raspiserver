@@ -52,6 +52,7 @@ function install() {
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
     sudo chmod +x /usr/local/bin/mediacheky*
+    sudo cp configs/raspbian/sudoers-mediacheky /etc/sudoers.d 
     ls -la /usr/local/bin/mediacheky*
 }
 
