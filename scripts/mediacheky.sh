@@ -1,8 +1,8 @@
 #!/bin/bash
 
-RASPISERVER="${HOME}/mediacheky/raspiserver"
-RASPICONFIG="${HOME}/mediacheky/RASPICONFIG"
-RASPIMEDIA="${HOME}/mediacheky/RASPIMEDIA/BibliotecaMultimedia"
+RASPISERVER="/home/carcheky/mediacheky/raspiserver"
+RASPICONFIG="/home/carcheky/mediacheky/RASPICONFIG"
+RASPIMEDIA="/home/carcheky/mediacheky/RASPIMEDIA/BibliotecaMultimedia"
 [ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
 ### MEDIACHEKY SERVER
 
@@ -68,11 +68,10 @@ function cron() {
 }
 
 function update(){
-    sudo apt update -y ;
-    sudo apt upgrade -y ;
+    sudo apt update && sudo apt upgrade -y ;
     sudo apt autoremove -y ;
     cd "${RASPISERVER}" ;
-    git pull
+    git pull --rebase --autostash
     docker compose up -d --pull always --remove-orphans ;
     docker system prune -af ;
     docker volume prune -af ;
