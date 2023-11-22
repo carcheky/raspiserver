@@ -72,6 +72,7 @@ function update(){
     sudo apt autoremove -y ;
     cd "${RASPISERVER}" ;
     git pull --rebase --autostash
+     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \;
     docker compose up -d --pull always --remove-orphans ;
     docker system prune -af ;
     docker volume prune -af ;
