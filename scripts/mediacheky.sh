@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+
 RASPISERVER="/home/carcheky/mediacheky/raspiserver"
 RASPICONFIG="/home/carcheky/mediacheky/RASPICONFIG"
 RASPIMEDIA="/home/carcheky/mediacheky/RASPIMEDIA/BibliotecaMultimedia"
