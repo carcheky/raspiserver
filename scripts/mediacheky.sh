@@ -59,7 +59,7 @@ function install() {
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
     sudo chmod +x /usr/local/bin/mediacheky*
-    sudo chown -R carcheky:carcheky ${raspiserver} ${RASPICONFIG}
+    sudo chown -R carcheky:carcheky ${RASPISERVER} ${RASPICONFIG}
     ls -la /usr/local/bin/mediacheky*
 }
 
