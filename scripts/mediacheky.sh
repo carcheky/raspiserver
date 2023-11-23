@@ -4,6 +4,8 @@ RASPISERVER="/home/carcheky/mediacheky/raspiserver"
 RASPICONFIG="/home/carcheky/mediacheky/RASPICONFIG"
 RASPIMEDIA="/home/carcheky/mediacheky/RASPIMEDIA/BibliotecaMultimedia"
 [ -f ${RASPISERVER}/.env ] && . ${RASPISERVER}/.env
+cd "${RASPISERVER}"
+
 ### MEDIACHEKY SERVER
 
 function backup() {
@@ -53,7 +55,6 @@ function install() {
     fi
     sudo cp configs/raspbian/sudoers-mediacheky /etc/sudoers.d/sudoers-mediacheky
     sudo chmod 440 /etc/sudoers.d/sudoers-mediacheky
-    sudo visudo -c
     sudo rm -fr /usr/local/bin/mediacheky*
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev

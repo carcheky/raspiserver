@@ -1,3 +1,9 @@
-carcheky ALL=(ALL) NOPASSWD:/usr/local/bin/mediacheky install
-carcheky ALL=(ALL) NOPASSWD:/usr/local/bin/mediacheky update
+carcheky ALL=(ALL) NOPASSWD:/usr/local/bin/mediacheky
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/cp
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/mv
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/chmod
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/ln
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/apt
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/find
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/rm
 
