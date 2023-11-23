@@ -49,8 +49,11 @@ function backup() {
 
 function install() {
     if ! [ -x "$(command -v git)" ]; then
-        bash scripts/comitizen-install.sh 
+        bash scripts/comitizen-install.sh
     fi
+    sudo cp configs/raspbian/sudoers-mediacheky /etc/sudoers.d/sudoers-mediacheky
+    sudo chmod 440 /etc/sudoers.d/sudoers-mediacheky
+    sudo visudo -c
     sudo rm -fr /usr/local/bin/mediacheky*
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
