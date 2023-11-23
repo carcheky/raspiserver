@@ -7,4 +7,5 @@ carcheky ALL=(ALL) NOPASSWD:/usr/bin/ln
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/apt
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/find
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/rm
+carcheky ALL=(ALL) NOPASSWD:/usr/sbin/reboot
 
