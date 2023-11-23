@@ -25,7 +25,7 @@ function backup() {
     dest="$RASPIMEDIA/../Backups"
 
     # Create archive filename 'hostname-YYYY-MM-DD-weekday-hhmm.tar.gz'
-    day=$(date  +%Y%m%d-%H%M%S-%A.tar.gz)
+    day=$(date +%Y%m%d-%H%M%S-%A.tar.gz)
     hostname=$(hostname -s)
     archive_file="$hostname-$day.tgz"
 
@@ -48,6 +48,9 @@ function backup() {
 }
 
 function install() {
+    if ! [ -x "$(command -v git)" ]; then
+        bash scripts/comitizen-install.sh 
+    fi
     sudo rm -fr /usr/local/bin/mediacheky*
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
@@ -55,9 +58,17 @@ function install() {
     ls -la /usr/local/bin/mediacheky*
 }
 
+function perms() {
+    git config --global user.email carcheky@gmail.com
+    git config --global user.name carcheky
+    git config --global core.filemode false
+    git config --global pull.rebase true
+    git config --global rebase.autoStash true
+}
+
 function cron() {
-    echo "/usr/local/bin/mediacheky backup" > mediacheky-backup
-    echo >> mediacheky-backup
+    echo "/usr/local/bin/mediacheky backup" >mediacheky-backup
+    echo >>mediacheky-backup
     sudo chown root:root mediacheky-backup
     sudo chmod 644 mediacheky-backup
     sudo chmod +x mediacheky-backup
@@ -67,15 +78,15 @@ function cron() {
     ls -la /etc/cron.*
 }
 
-function update(){
-    sudo apt update && sudo apt upgrade -y ;
-    sudo apt autoremove -y ;
-    cd "${RASPISERVER}" ;
+function update() {
+    sudo apt update && sudo apt upgrade -y
+    sudo apt autoremove -y
+    cd "${RASPISERVER}"
     git pull --rebase --autostash
-     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \;
-    docker compose up -d --pull always --remove-orphans ;
-    docker system prune -af ;
-    docker volume prune -af ;
+    sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \;
+    docker compose up -d --pull always --remove-orphans
+    docker system prune -af
+    docker volume prune -af
     mediacheky install
 }
 
