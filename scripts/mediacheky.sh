@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -eux
 RASPISERVER="/home/carcheky/mediacheky/raspiserver"
 RASPICONFIG="/home/carcheky/mediacheky/RASPICONFIG"
 RASPIMEDIA="/home/carcheky/mediacheky/RASPIMEDIA/BibliotecaMultimedia"
@@ -59,6 +59,7 @@ function install() {
     sudo cp -f ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky
     sudo ln -fs ${RASPISERVER}/scripts/mediacheky.sh /usr/local/bin/mediacheky-dev
     sudo chmod +x /usr/local/bin/mediacheky*
+    sudo chown -R carcheky:carcheky ${raspiserver} ${RASPICONFIG}
     ls -la /usr/local/bin/mediacheky*
 }
 

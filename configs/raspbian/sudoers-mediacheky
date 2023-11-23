@@ -2,6 +2,7 @@ carcheky ALL=(ALL) NOPASSWD:/usr/local/bin/mediacheky
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/cp
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/mv
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/chmod
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/chown
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/ln
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/apt
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/find

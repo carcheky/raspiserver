@@ -1,7 +1,6 @@
 include:
-  - docker-compose.pihole.yml
   # - docker-compose.swag.yml
   # - docker-compose.homeassistant.yml
   # - docker-compose.mediaserver.yml
-  # - docker-compose.pwndrop.yml
+  - docker-compose.pihole.yml
 
