@@ -1,5 +1,41 @@
 # CHANGELOG
 
+# [6.18.0](https://gitlab.com/carcheky/raspiserver/compare/v6.17.0...v6.18.0) (2023-11-24)
+
+
+### Bug Fixes
+
+* comitizen install ([78a5fdc](https://gitlab.com/carcheky/raspiserver/commit/78a5fdc36cd06ed27108be7ba921dd2199a4d014))
+* install sudoers ([aa89566](https://gitlab.com/carcheky/raspiserver/commit/aa895663c68bade4b60b72f1e775fd40071b8c8a))
+* mediacheky ([8b22930](https://gitlab.com/carcheky/raspiserver/commit/8b2293048768aa198838fa0ac64c30b288403a40))
+* mediacheky ([d8ceecf](https://gitlab.com/carcheky/raspiserver/commit/d8ceecf54793de0a840210aed84bb09d254764b2))
+* mediacheky ([d63e0af](https://gitlab.com/carcheky/raspiserver/commit/d63e0afafb4d494e72c3a232712f387ee80669db))
+* mediacheky install ([1227d45](https://gitlab.com/carcheky/raspiserver/commit/1227d45aa4d9987efce74de23350210e058de3eb))
+* mediacheky install after update ([9f879f7](https://gitlab.com/carcheky/raspiserver/commit/9f879f7b249e6eab936db3f2244442dcd0637afd))
+* multiple fixes ([e8c12cc](https://gitlab.com/carcheky/raspiserver/commit/e8c12cc99e7ce41dd89d6c8959daf312fb652028))
+* no dev options ([5ae40d3](https://gitlab.com/carcheky/raspiserver/commit/5ae40d30763c3d4152625906d668ca3b49e967d9))
+* pihole ([52c4de7](https://gitlab.com/carcheky/raspiserver/commit/52c4de729e432bdd3035a46e7295b74fc598bcb6))
+* **pihole:** fix paths ([54c48a8](https://gitlab.com/carcheky/raspiserver/commit/54c48a8ef07dfc7610fa0d8b3784bd6a6585c55f))
+* reboot without password ([2c122c3](https://gitlab.com/carcheky/raspiserver/commit/2c122c3b6c9fe7d1f81032e9e1abcea79733abe4))
+* remove iot ([1e5624f](https://gitlab.com/carcheky/raspiserver/commit/1e5624f65f93cdeaaa60902608c82b8e8a6504f0))
+* remove orphans on update ([256d449](https://gitlab.com/carcheky/raspiserver/commit/256d4494f255e712c0a94b19c139b94358691bfa))
+* sudoeres mediacheky ([3949431](https://gitlab.com/carcheky/raspiserver/commit/394943196b15d8acd225817bb77dad5f3ff10d90))
+* sudoers ([c0ac48c](https://gitlab.com/carcheky/raspiserver/commit/c0ac48c3c0760e06ca8a73dbe2b6116b5d8c0686))
+* sudoers ([913b936](https://gitlab.com/carcheky/raspiserver/commit/913b93674dfe1ad67ab1320dd727473c77ab99e4))
+* thingsboards ([4932ecc](https://gitlab.com/carcheky/raspiserver/commit/4932eccc6829a63df9418a7458e35ada44ece8d5))
+* unnatended upgrades ([123bc4f](https://gitlab.com/carcheky/raspiserver/commit/123bc4f574f548b1bbc729bdd24bfc9a4be4f2e0))
+* update raspiserver on mediacheky update ([1f2f68d](https://gitlab.com/carcheky/raspiserver/commit/1f2f68d391e938d617ca8dfce7b9cd88a663dbdb))
+* var in mediacheky ([d7c2784](https://gitlab.com/carcheky/raspiserver/commit/d7c27840242ecd0590a309cd167f83fc553bedde))
+* **vscode:** remove extensions ([b062191](https://gitlab.com/carcheky/raspiserver/commit/b062191619a4cd2cf2c0662d6ce9e7a22149ccfc))
+
+
+### Features
+
+* added mqtt ([b48f3a2](https://gitlab.com/carcheky/raspiserver/commit/b48f3a27e228d6c9fdb91b4123c22815be5a42e3))
+* new script to install zsh ([c1c6619](https://gitlab.com/carcheky/raspiserver/commit/c1c6619e30df248babfb1f591798e07b03d12980))
+* pihole ([9afc03e](https://gitlab.com/carcheky/raspiserver/commit/9afc03e98b387270a6862e548a491a0b0e3c0f0e))
+* thingsboard ([c0bfd9c](https://gitlab.com/carcheky/raspiserver/commit/c0bfd9ca3b0439f18e0480fc005f1b3e1f52c71a))
+
 # [6.17.0](https://gitlab.com/carcheky/raspiserver/compare/v6.16.0...v6.17.0) (2023-11-15)
 
 
