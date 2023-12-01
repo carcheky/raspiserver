@@ -15,31 +15,35 @@
 ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝
 ````
 
-## Download and run
+## hide components
 
-### Stable
+The function that registers a component does have an “admin only” flag: github link 84
 
-````
-bash <(curl -Ls https://gitlab.com/carcheky/raspiserver/-/raw/stable/scripts/raspi.sh) run
-````
+By copying a component and making some minor modifications, I was able to do this. For instance, copy the component to you’re custom components folder:
 
-### Beta
+cp -a /usr/src/homeassistant/homeassistant/components/history /config/custom_components/history
 
-````
-bash <(curl -Ls https://gitlab.com/carcheky/raspiserver/-/raw/beta/scripts/raspi.sh) run
-````
+Open up manifest.json and add a version string:
 
-### Alpha
+{
+  "version": "2022.07.23",
+  "domain": "history",
+  ... etc
 
-````
-bash <(curl -Ls https://gitlab.com/carcheky/raspiserver/-/raw/alpha/scripts/raspi.sh) run
-````
+Then open __init__.py and change:
 
-## know problems
+frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box")
 
-### fix date
+to
 
-````
-sudo date -s "$(wget -qSO- --max-redirect=0 google.com 2>&1 | grep Date: | cut -d' ' -f5-8)Z"
+frontend.async_register_built_in_panel(hass, "history", "history", "hass:chart-box", None, None, True)
 
-````
+And restart. This will keep the History panel in for admins, but remove it for users. If a user tries to access the /history URL, it redirects them to their main panel. I do not know if it blocks the API, however.
+
+I have tested this with:
+
+    History
+    Map
+    Media (media_source)
+
+This will hold through upgrades, but if you want updates to the components, you may need to update them from source every now and again. I’ll probably write a script to automate this on upgrades.
