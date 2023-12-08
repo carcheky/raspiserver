@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [6.18.1](https://gitlab.com/carcheky/raspiserver/compare/v6.18.0...v6.18.1) (2023-11-27)
+
+
+### Bug Fixes
+
+* pihole nginx ([23dbf7f](https://gitlab.com/carcheky/raspiserver/commit/23dbf7f39c0238fe03c2ac049cf6465f1a71bec8))
+* **pihole:** port 81 ([9091f8e](https://gitlab.com/carcheky/raspiserver/commit/9091f8eb5c74933bb46cb3baf2f2a53bf70c73cc))
+* zsh configs ([d641b11](https://gitlab.com/carcheky/raspiserver/commit/d641b119adda129f495b6fe58098652130d2320d))
+
 # [6.18.0](https://gitlab.com/carcheky/raspiserver/compare/v6.17.0...v6.18.0) (2023-11-24)
 
 
