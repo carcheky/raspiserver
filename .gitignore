@@ -9,3 +9,4 @@ token_extractor_docker.zip
 docker-compose.yml
 jellyfin-telegram-notifier
 reboot-log.txt
+log.txt
