@@ -93,6 +93,8 @@ function update() {
     docker system prune -af
     docker volume prune -af
     mediacheky install
+    sudo mount -av
+    sudo df -h  /dev/sd*1 /home/carcheky/mediacheky/RASPIMEDIA
 }
 
 function help() {

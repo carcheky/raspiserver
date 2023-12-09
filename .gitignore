@@ -8,3 +8,4 @@ token_extractor_docker.zip
 *.sample
 docker-compose.yml
 jellyfin-telegram-notifier
+reboot-log.txt

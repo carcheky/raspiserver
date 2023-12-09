@@ -40,6 +40,7 @@ services:
 # wizarr http://localhost:5690
   wizarr:
     image: ghcr.io/wizarrrr/wizarr:latest
+    # image: ghcr.io/wizarrrr/wizarr:v2
     container_name: wizarr
     restart: always
     ports:
