@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [6.19.0](https://gitlab.com/carcheky/raspiserver/compare/v6.18.1...v6.19.0) (2023-12-09)
+
+
+### Bug Fixes
+
+* adguard working ([08f989c](https://gitlab.com/carcheky/raspiserver/commit/08f989c3d1194377f33af312e09df6e5d46d2ef6))
+* pilhole ([b25b008](https://gitlab.com/carcheky/raspiserver/commit/b25b0083a5a61d1142698da060683ead22b36b0e))
+* swag mods ([9c4c04e](https://gitlab.com/carcheky/raspiserver/commit/9c4c04ed80a943a52e9ca988257d6e7092d762df))
+* **zigbee2mqtt:** first try ([7a15e6f](https://gitlab.com/carcheky/raspiserver/commit/7a15e6f86c57082e79be2ecc4601018120b622ed))
+
+
+### Features
+
+* adguad ([a930df1](https://gitlab.com/carcheky/raspiserver/commit/a930df10c792c8e4f33759590ebfe3c1a5638de0))
+* adguad subdomain ([5599831](https://gitlab.com/carcheky/raspiserver/commit/5599831dde75b42e74b0743d9a2b60928c467130))
+
 ## [6.18.1](https://gitlab.com/carcheky/raspiserver/compare/v6.18.0...v6.18.1) (2023-11-27)
 
 
