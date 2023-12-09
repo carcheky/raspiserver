@@ -9,4 +9,5 @@ carcheky ALL=(ALL) NOPASSWD:/usr/bin/find
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/rm
 carcheky ALL=(ALL) NOPASSWD:/usr/sbin/reboot
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/mount
+carcheky ALL=(ALL) NOPASSWD:/usr/bin/df
 
