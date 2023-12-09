@@ -85,7 +85,7 @@ function cron() {
 
 function update() {
     sudo apt update 1>/dev/null
-    sudo apt upgrade -y
+    sudo apt upgrade -y 1>/dev/null
     sudo apt autoremove -y &>/dev/null
     cd "${RASPISERVER}"
     git pull --rebase --autostash  1>/dev/null
