@@ -84,8 +84,8 @@ function cron() {
 }
 
 function update() {
-    sudo apt update && sudo apt upgrade -y
-    sudo apt autoremove -y
+    sudo apt update && sudo apt upgrade -y 1>/dev/null
+    sudo apt autoremove -y 1>/dev/null
     cd "${RASPISERVER}"
     git pull --rebase --autostash
     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \;
