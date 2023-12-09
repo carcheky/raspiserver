@@ -98,6 +98,12 @@ function update() {
     sudo df -h  /media/backup /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA
 }
 
+function update_all() {
+    ssh $ip1 mediacheky update
+    ssh $ip2 mediacheky update
+    ssh $ip3 mediacheky update
+}
+
 function help() {
     this_script="${BASH_SOURCE[0]}"
     echo "Usage: ${this_script} <command>"
