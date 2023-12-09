@@ -95,7 +95,7 @@ function update() {
     docker volume prune -af 1>/dev/null
     mediacheky install 1>/dev/null
     sudo mount -a
-    sudo df -h  /media/backup /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA
+    [ -d /media/backup ] && sudo df -h  /media/backup /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA
 }
 
 function update_all() {
