@@ -30,6 +30,7 @@ services:
       - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
     volumes:
       - ${RASPICONFIG}/jellyfin/config:/config
+      - ${RASPICONFIG}/jellyfin/intros:/media/intros
       # - ${RASPICONFIG}/jellyfin/plugins:/var/lib/jellyfin/plugins/
       - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
     ports:
