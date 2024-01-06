@@ -84,16 +84,16 @@ function cron() {
 }
 
 function update() {
-    sudo apt update 1>/dev/null
-    sudo apt upgrade -y 1>/dev/null
-    sudo apt autoremove -y &>/dev/null
+    sudo apt update 
+    sudo apt upgrade -y 
+    sudo apt autoremove -y 
     cd "${RASPISERVER}"
-    git pull --rebase --autostash  1>/dev/null
+    git pull --rebase --autostash  
     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \; 
-    docker compose up -d --quiet-pull --remove-orphans 1>/dev/null
-    docker system prune -af 1>/dev/null
-    docker volume prune -af 1>/dev/null
-    mediacheky install 1>/dev/null
+    docker compose up -d --quiet-pull --remove-orphans 
+    docker system prune -af 
+    docker volume prune -af 
+    mediacheky install 
     sudo mount -a
     [ -d /media/backup ] && sudo df -h  /media/backup /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA
 }
