@@ -1,5 +1,26 @@
 # CHANGELOG
 
+# [6.20.0](https://gitlab.com/carcheky/raspiserver/compare/v6.19.0...v6.20.0) (2024-01-07)
+
+
+### Bug Fixes
+
+* better log ([60ac1f4](https://gitlab.com/carcheky/raspiserver/commit/60ac1f483d0b9c899c20bde4877932344b64cbd7))
+* better log ([e76627e](https://gitlab.com/carcheky/raspiserver/commit/e76627e26688544c47f7d37be0b52fbc98b81a6f))
+* clear log on mediacheky update ([d4ba60b](https://gitlab.com/carcheky/raspiserver/commit/d4ba60bb77d926775e9baca671e7927a76989b21))
+* df ([c2c8d5e](https://gitlab.com/carcheky/raspiserver/commit/c2c8d5e168d7564ee9671ea9123bb9072ddfb978))
+* ignore log ([8fb0b37](https://gitlab.com/carcheky/raspiserver/commit/8fb0b37db38f3decefd136f4395e8803b5e82429))
+* mediacheky update_all ([16ae757](https://gitlab.com/carcheky/raspiserver/commit/16ae7571d3fc129465319caee372214d9eb16523))
+* more logs ([d81b239](https://gitlab.com/carcheky/raspiserver/commit/d81b2394a177b0178158e1c40ef51652dd8bfac3))
+* mount command on update ([a34e400](https://gitlab.com/carcheky/raspiserver/commit/a34e40013b0f2a7dd1c1e70629679ca0d28eab3c))
+* sudoers ([d5cdb6c](https://gitlab.com/carcheky/raspiserver/commit/d5cdb6cf5a12a4578d86bffac689d7e4abed1655))
+* sudoers ([4528b16](https://gitlab.com/carcheky/raspiserver/commit/4528b163c3e7d519ca9f56ec20de5b1bd18b6286))
+
+
+### Features
+
+* intros ([ec07084](https://gitlab.com/carcheky/raspiserver/commit/ec070841d353d3dbd68538f6ed6671f799a770c0))
+
 # [6.19.0](https://gitlab.com/carcheky/raspiserver/compare/v6.18.1...v6.19.0) (2023-12-09)
 
 
