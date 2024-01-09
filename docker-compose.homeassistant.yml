@@ -35,6 +35,26 @@ services:
       - ${RASPICONFIG}/mqtt/data:/mosquitto/data
       - ${RASPICONFIG}/mqtt/log:/mosquitto/log
 
+
+# # room
+#   room:
+#     image: mkerix/room-assistant
+#     container_name: room
+#     network_mode: host
+#     cap_add:
+#       - NET_ADMIN
+#     volumes:
+#       - /var/run/dbus:/var/run/dbus
+#       - ${RASPICONFIG}/room-assistant:/room-assistant/config
+    # environment:
+    #   RA_GLOBAL_INSTANCE_NAME: living-room
+    #   NODE_CONFIG: >
+    #     {
+    #       "global": {
+    #         "integrations": ["homeAssistant", "bluetoothClassic"]
+    #       }
+    #     }
+
 # # zigbee2mqtt
 #   zigbee2mqtt:
 #     container_name: zigbee2mqtt
