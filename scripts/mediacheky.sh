@@ -90,7 +90,7 @@ function update() {
     cd "${RASPISERVER}"
     git pull --rebase --autostash  
     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \; 
-    docker compose up -d --pull always --remove-orphans 
+    docker compose up -d --pull always --quiet-pull --remove-orphans 
     docker system prune -af 
     docker volume prune -af 
     mediacheky install 
