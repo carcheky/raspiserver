@@ -100,7 +100,10 @@ function update() {
 
 function update_all() {
     ssh $ip1 mediacheky update
+    ssh $ip1 mediacheky update
     ssh $ip2 mediacheky update
+    ssh $ip2 mediacheky update
+    ssh $ip3 mediacheky update
     ssh $ip3 mediacheky update
 }
 
