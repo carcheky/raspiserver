@@ -24,7 +24,7 @@ function backup() {
     # exclude_subfolders=
 
     # Where to backup to.
-    dest="$RASPIMEDIA/../Backups"
+    dest="$RASPIMEDIA/../../Backups"
 
     # Create archive filename 'hostname-YYYY-MM-DD-weekday-hhmm.tar.gz'
     day=$(date +%Y%m%d-%H%M%S-%A.tar.gz)
@@ -93,7 +93,12 @@ function update() {
     docker compose up -d --pull always --quiet-pull --remove-orphans 
     docker system prune -af 
     docker volume prune -af 
-    mediacheky install 
+    mediacheky install
+    
+    [ -f ${RASPICONFIG}/homeassistant/config/automations.yaml ] && cp ${RASPICONFIG}/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/ 
+    [ -f ${RASPICONFIG}/homeassistant/config/configuration.yaml ] && cp ${RASPICONFIG}/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ 
+    [ -f ${RASPICONFIG}/homeassistant/config/scenes.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ 
+    [ -f ${RASPICONFIG}/homeassistant/config/scripts.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
     [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/mediacheky/BACKUP-mediacheky /home/carcheky/mediacheky/RAID-mediacheky 
 }
 

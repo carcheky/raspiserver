@@ -1,8 +1,9 @@
 
 # Loads default set of integrations. Do not remove.
 default_config:
-
+device_sun_light_trigger:
 my:
+bluetooth:
 
 # Load frontend themes from the themes folder
 frontend:
@@ -21,9 +22,8 @@ http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
-    - 0.0.0.0
-    - 192.168.68.201
-    - 192.168.68.202
+    - 0.0.0.0/0
+    - ::1
 
 # google_assistant integration
 google_assistant:
@@ -36,8 +36,8 @@ google_assistant:
     - switch
     - vacuum
     - group
-    - scene
-    - climate
+    # - scene
+    # - climate
   # entity_config:
   #   input_boolean.default_dashboard:
   #     expose: false
@@ -59,74 +59,31 @@ google_assistant:
 # wake on lan integration
 switch:
   - platform: wake_on_lan
-    mac: !secret wake_on_lan_mac
-    name: PCCK
+    mac: !secret wake_on_lan_mac_pcck
+    name: Wake PCCK 
 
-# pc online
-binary_sensor:  
-  - platform: ping
-    host: 192.168.68.200
-    name: PCCK
-  - platform: template
-    sensors:
-      desktop_online:
-        friendly_name: "PCCK Desktop Online"
-        delay_off:
-          minutes: 5
-        value_template: >-
-          {{ states('binary_sensor.pcck')}}
-  - platform: ping
-    host: 192.168.68.124
-    name: cmartinezv-lpt
-  - platform: template
-    sensors:
-      desktop_online2:
-        friendly_name: "cmartinezv-lpt Desktop Online"
-        delay_off:
-          minutes: 5
-        value_template: >-
-          {{ states('binary_sensor.cmartinezv-lpt')}}
-
-# sdistant integration
+# homeassistant integration
 homeassistant:
   name: Drona
   unit_system: metric
   currency: EUR
   country: ES
   time_zone: "Europe/Madrid"
-  external_url: "https://ha.mediacheky.com"
-  internal_url: "http://192.168.68.201:8123"
-
-# zigbee integration
-zha:
-  zigpy_config:
-    ezsp_config:
-      CONFIG_APS_UNICAST_MESSAGE_COUNT: 12
-      CONFIG_SOURCE_ROUTE_TABLE_SIZE: 16
-      CONFIG_ADDRESS_TABLE_SIZE: 8
-
-# zha_toolkit:
-
-logger:
-  default: warn
-  # logs:
-  #   custom_components.zha_toolkit: error
-  #   zigpy: error
-  #   zigpy_zcl: error
-  #   homeassistant.loader: error
+  external_url: !secret external_url
+  internal_url: !secret internal_url
 
 # xiaomi_cloud_map_extractor
-camera:  
+camera:
   - platform: xiaomi_cloud_map_extractor
     host: !secret xiaomi_vacuum_host
     token: !secret xiaomi_vacuum_token
     username: !secret xiaomi_cloud_username
     password: !secret xiaomi_cloud_password
     draw: ['all']
-    scan_interval: 30
+    scan_interval: 300
     map_transformation:
       scale: 1
-      trim: 
+      trim:
         top: 20
         left: 10
         bottom: 15
@@ -160,15 +117,38 @@ camera:
       - vacuum_room_name
       - walls
       - zones
-    # auto_update: false
-    # store_map_raw: true
-    # store_map_image: true
-    
+    # auto_update: true
+    store_map_raw: true
+    store_map_image: true
 # xiaomi_cloud_map_extractor END
 
-# xiaomi_aqara:
-#   discovery_retry: 20
-#   gateways:
-#     - key: !secret xiaomi_key_gateway
-#       host: 192.168.68.104
-#       mac: !secret xiaomi_mac_gateway
+zha:
+  custom_quirks_path: /config/custom_zha_quirks
+  database_path: /config/zigbee.db 
+  enable_quirks: true
+
+logger:
+  default: info
+  # logs:
+  #   bellows.ezsp: debug
+  #   bellows.zigbee.application: debug
+  #   custom_components.zha_toolkit: debug
+  #   homeassistant.components.zha: debug
+  #   homeassistant.core: debug
+  #   homeassistant.loader: debug
+  #   zhaquirks: debug
+  #   zigpy_deconz.api: debug
+  #   zigpy_deconz.zigbee.application: debug
+  #   zigpy_xbee.api: debug
+  #   zigpy_xbee.zigbee.application: debug
+  #   zigpy_zcl: debug
+  #   zigpy_zigate: debug
+  #   zigpy_znp: debug
+  #   zigpy: debug
+
+
+# # Example configuration.yaml entry
+# sensor:
+#   - platform: mqtt_room
+#     device_id: 123testid
+#     state_topic: "espresense/devices/123testid"
