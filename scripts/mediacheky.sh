@@ -98,6 +98,7 @@ function update() {
 }
 
 function update_all() {
+    mediacheky update
     ssh $ip1 mediacheky update
     ssh $ip1 mediacheky update
     ssh $ip2 mediacheky update
