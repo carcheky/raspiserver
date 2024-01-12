@@ -84,7 +84,7 @@ function cron() {
 }
 
 function update() {
-    sudo apt update 
+    sudo apt update &>/dev/null
     sudo apt upgrade -y 
     sudo apt autoremove -y 
     cd "${RASPISERVER}"
