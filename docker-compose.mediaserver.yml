@@ -147,6 +147,19 @@ services:
     ports:
       - 6767:6767
 
+  # recyclarr:
+  #   image: ghcr.io/recyclarr/recyclarr
+  #   container_name: recyclarr
+  #   restart: always
+  #   user: 1000:1000
+  #   volumes:
+  #     - ${RASPICONFIG}/recyclarr/config:/config
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+
+
 # # lidarr http://localhost:8686
 #   lidarr:
 #     image: linuxserver/lidarr:latest
