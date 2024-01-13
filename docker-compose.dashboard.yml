@@ -1,0 +1,35 @@
+services:
+
+# homarr http://localhost:7575
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    restart: always
+    environment:
+      - PASSWORD=${HOMARR_PASSWORD}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - BASE_URL=homarr.${DOMAIN}
+    volumes:
+      - ${RASPICONFIG}/homarr/config:/app/data/configs
+      - ${RASPICONFIG}/homarr/data:/data
+    ports:
+      - '7575:7575'
+  
+# organizr http://localhost:8085
+  organizr:
+    image: organizr/organizr
+    container_name: organizr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - fpm=false
+      - branch=v2-master
+    volumes:
+      - ${RASPICONFIG}/organizr/config:/config
+      - ${RASPICONFIG}/organizr/data:/data
+    ports:
+      - 9983:80

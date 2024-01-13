@@ -1,22 +1,5 @@
 services:
 
-# homarr http://localhost:7575
-  homarr:
-    image: ghcr.io/ajnart/homarr:latest
-    container_name: homarr
-    restart: always
-    environment:
-      - PASSWORD=${HOMARR_PASSWORD}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-      - BASE_URL=homarr.${DOMAIN}
-    volumes:
-      - ${RASPICONFIG}/homarr/config:/app/data/configs
-      - ${RASPICONFIG}/homarr/data:/data
-    ports:
-      - '7575:7575'
-
 # jellyfin http://localhost:8096
   jellyfin:
     image: linuxserver/jellyfin:latest
