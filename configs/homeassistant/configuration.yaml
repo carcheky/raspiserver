@@ -80,7 +80,7 @@ camera:
     username: !secret xiaomi_cloud_username
     password: !secret xiaomi_cloud_password
     draw: ['all']
-    scan_interval: 300
+    scan_interval: 900
     map_transformation:
       scale: 1
       trim:
@@ -117,7 +117,7 @@ camera:
       - vacuum_room_name
       - walls
       - zones
-    # auto_update: true
+    auto_update: true
     store_map_raw: true
     store_map_image: true
 # xiaomi_cloud_map_extractor END

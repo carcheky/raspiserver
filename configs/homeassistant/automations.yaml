@@ -70,6 +70,7 @@
   trigger:
   - platform: time_pattern
     minutes: /30
+    enabled: false
   - platform: state
     entity_id:
     - sensor.tabcheky_battery_level
@@ -856,4 +857,32 @@
       target:
         entity_id: switch.ladron_usb_1
       data: {}
+  mode: single
+- id: '1705070087247'
+  alias: Llegando a casa marco
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id: person.marco
+    zone: zone.home
+    event: enter
+  condition: []
+  action:
+  - service: notify.mobile_app_chekyphone
+    data:
+      message: Marco está llegando a casa
+  mode: single
+- id: '1705070113841'
+  alias: 'Llegando a casa chespin '
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id: person.chespin
+    zone: zone.home
+    event: enter
+  condition: []
+  action:
+  - service: notify.mobile_app_chekyphone
+    data:
+      message: Chespin está llegando a casa
   mode: single
