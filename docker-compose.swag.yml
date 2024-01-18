@@ -16,6 +16,7 @@ services:
       PUID: ${PUID}
       PGID: ${PGID}
       TZ: ${TIMEZONE}
+      EXTRA_DOMAINS: ${DOMAINS}
       EMAIL: ${EMAIL}
       URL: ${DOMAIN}
       VALIDATION: dns
@@ -24,6 +25,5 @@ services:
       PROPAGATION: 60
       # DOCKER_MODS: linuxserver/mods:swag-auto-reload|linuxserver/mods:swag-dashboard|linuxserver/mods:universal-cloudflared|linuxserver/mods:swag-cloudflare-real-ip
       DOCKER_MODS: linuxserver/mods:swag-auto-reload|linuxserver/mods:universal-cloudflared|linuxserver/mods:swag-cloudflare-real-ip
-      # EXTRA_DOMAINS: vamonosdefiesta.es
     extra_hosts:
       - ${DOMAIN}:127.0.0.1
