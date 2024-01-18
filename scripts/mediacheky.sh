@@ -84,13 +84,14 @@ function cron() {
 }
 
 function update() {
-    sudo apt update &>/dev/null
-    sudo apt upgrade -y 
-    sudo apt autoremove -y 
+#     sudo apt update &>/dev/null
+#     sudo apt upgrade -y 
+#     sudo apt autoremove -y 
     cd "${RASPISERVER}"
     git pull --rebase --autostash  
     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \; 
-    docker compose up -d --pull always --quiet-pull --remove-orphans 
+    # docker compose up -d --pull always --quiet-pull --remove-orphans 
+    docker compose up -d
     docker system prune -af 
     docker volume prune -af 
     mediacheky install
@@ -103,13 +104,9 @@ function update() {
 }
 
 function update_all() {
-    mediacheky update
     ssh $ip1 mediacheky update
-    ssh $ip1 mediacheky update
-    ssh $ip2 mediacheky update
-    ssh $ip2 mediacheky update
     ssh $ip3 mediacheky update
-    ssh $ip3 mediacheky update
+    ssh $ip2 mediacheky update
 }
 
 function help() {
