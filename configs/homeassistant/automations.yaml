@@ -48,22 +48,6 @@
     target:
       entity_id: camera.roborock_s6_pure
   mode: single
-- id: '1687988559797'
-  alias: 'Roborock: mapa on'
-  description: enciende la "cámara" cuando está limpiando-ón
-  trigger:
-  - platform: device
-    device_id: f90f267269373f33820eada09da4a0b0
-    domain: vacuum
-    entity_id: vacuum.roborock_s6_pure
-    type: cleaning
-  condition: []
-  action:
-  - service: camera.turn_on
-    data: {}
-    target:
-      entity_id: camera.roborock_s6_pure
-  mode: single
 - id: '1691147866863'
   alias: 'TabCheky: carga inteligente '
   description: ''
@@ -548,7 +532,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 2
+      seconds: 0
     to: 'on'
   - platform: state
     entity_id:
@@ -589,9 +573,11 @@
           seconds: 5
           milliseconds: 0
     - service: light.turn_off
-      target:
-        area_id: salon
+      metadata: {}
       data: {}
+      target:
+        entity_id: light.salon
+        area_id: salon
     else:
     - if:
       - condition: and
@@ -643,6 +629,7 @@
     - condition: state
       entity_id: binary_sensor.192_168_68_212
       state: 'off'
+      enabled: false
     - condition: state
       entity_id: button.pcck_suspender
       state: unavailable
@@ -885,4 +872,17 @@
   - service: notify.mobile_app_chekyphone
     data:
       message: Chespin está llegando a casa
+  mode: single
+- id: '1705565177009'
+  alias: 'Roborock: Limpieza programada'
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.hora_limpieza
+  condition: []
+  action:
+  - device_id: f90f267269373f33820eada09da4a0b0
+    domain: vacuum
+    entity_id: 8be8688f6195fef0a72213fee4608906
+    type: clean
   mode: single
