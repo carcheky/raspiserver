@@ -101,6 +101,8 @@ function update() {
     [ -f ${RASPICONFIG}/homeassistant/config/scripts.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
     [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/RAID-mediacheky
     ## print log message with date in format: [2022-03-17 15:12:20] log message
+    [ ! -d ${RASPISERVER}/logs ] && mkdir -p ${RASPISERVER}/logs
+    [ ! -f ${RASPISERVER}/logs/mediacheky-update.log ] && touch ${RASPISERVER}/logs/mediacheky-update.log
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] mediacheky update END" >> ${RASPISERVER}/logs/mediacheky-update.log
 }  
 
