@@ -54,6 +54,7 @@ function install() {
         bash scripts/comitizen-install.sh
     fi
     cp ${RASPISERVER}/configs/.kopiaignore ..
+    mediacheky cron
     sudo cp configs/raspbian/sudoers-mediacheky /etc/sudoers.d/sudoers-mediacheky
     sudo chmod 440 /etc/sudoers.d/sudoers-mediacheky
     sudo rm -fr /usr/local/bin/mediacheky*
@@ -73,18 +74,15 @@ function perms() {
 }
 
 function cron() {
-    echo "/usr/local/bin/mediacheky backup" >mediacheky-backup
-    echo >>mediacheky-backup
-    sudo chown root:root mediacheky-backup
-    sudo chmod 644 mediacheky-backup
-    sudo chmod +x mediacheky-backup
-    sudo mv -f mediacheky-backup /etc/cron.hourly
+    sudo cp -f ${RASPISERVER}/configs/raspbian/cron.d/* /etc/cron.d/
+    sudo chown root:root /etc/cron.d/*
+    sudo chmod 644 /etc/cron.d/*
+    sudo chmod +x /etc/cron.d/*
     sudo service cron restart
-    sudo service cron status
-    ls -la /etc/cron.*
 }
 
 function update() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] mediacheky update START" >> ${RASPISERVER}/logs/mediacheky-update.log
 #     sudo apt update &>/dev/null
 #     sudo apt upgrade -y 
 #     sudo apt autoremove -y 
@@ -101,8 +99,10 @@ function update() {
     [ -f ${RASPICONFIG}/homeassistant/config/configuration.yaml ] && cp ${RASPICONFIG}/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPICONFIG}/homeassistant/config/scenes.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPICONFIG}/homeassistant/config/scripts.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
-    [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/RAID-mediacheky 
-}
+    [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/RAID-mediacheky
+    ## print log message with date in format: [2022-03-17 15:12:20] log message
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] mediacheky update END" >> ${RASPISERVER}/logs/mediacheky-update.log
+}  
 
 function update_all() {
     ssh $ip1 mediacheky update

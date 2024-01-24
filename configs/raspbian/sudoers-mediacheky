@@ -11,3 +11,4 @@ carcheky ALL=(ALL) NOPASSWD:/usr/sbin/reboot
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/mount
 carcheky ALL=(ALL) NOPASSWD:/usr/bin/df
 carcheky ALL=(ALL) NOPASSWD:/usr/sbin/mdadm
+carcheky ALL=(ALL) NOPASSWD:/usr/sbin/service
