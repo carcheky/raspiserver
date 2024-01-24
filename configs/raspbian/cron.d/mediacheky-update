@@ -1,3 +1,2 @@
 @reboot carcheky /usr/local/bin/mediacheky update
 @daily carcheky /usr/local/bin/mediacheky update
-* * * * * carcheky /usr/local/bin/mediacheky update
