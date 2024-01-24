@@ -101,6 +101,7 @@ function update() {
     [ -f ${RASPICONFIG}/homeassistant/config/scenes.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPICONFIG}/homeassistant/config/scripts.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
     [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/RAID-mediacheky 
+    cp .kopiaignore ..
 }
 
 function update_all() {
