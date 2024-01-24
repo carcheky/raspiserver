@@ -84,24 +84,18 @@ function cron() {
 function update() {
     echo "----------------------------------------------------------"
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] mediacheky update START" >> ${RASPISERVER}/logs/mediacheky-update.log
-#     sudo apt update &>/dev/null
-#     sudo apt upgrade -y 
-#     sudo apt autoremove -y 
     cd "${RASPISERVER}"
     git pull --rebase --autostash  
     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \; 
-    # docker compose up -d --pull always --quiet-pull --remove-orphans 
     docker compose up -d
     docker system prune -af 
     docker volume prune -af 
     mediacheky install
-    
     [ -f ${RASPICONFIG}/homeassistant/config/automations.yaml ] && cp ${RASPICONFIG}/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPICONFIG}/homeassistant/config/configuration.yaml ] && cp ${RASPICONFIG}/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPICONFIG}/homeassistant/config/scenes.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPICONFIG}/homeassistant/config/scripts.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
     [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/RAID-mediacheky
-    ## print log message with date in format: [2022-03-17 15:12:20] log message
     [ ! -d ${RASPISERVER}/logs ] && mkdir -p ${RASPISERVER}/logs
     [ ! -f ${RASPISERVER}/logs/mediacheky-update.log ] && touch ${RASPISERVER}/logs/mediacheky-update.log
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] mediacheky update END" >> ${RASPISERVER}/logs/mediacheky-update.log
