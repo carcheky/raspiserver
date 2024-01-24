@@ -453,7 +453,7 @@
     to: 'on'
   - platform: sun
     event: sunset
-    offset: -0:30:00
+    offset: -0:05:00
   - platform: sun
     event: sunrise
     offset: '1:00:00'
@@ -611,7 +611,7 @@
   - platform: state
     entity_id:
     - binary_sensor.192_168_68_212
-    to: 'off'
+    to:
   - platform: state
     entity_id:
     - light.despacho
@@ -623,20 +623,22 @@
   condition: []
   action:
   - if:
-    - condition: state
-      entity_id: binary_sensor.movimiento_despacho
-      state: 'off'
-    - condition: state
-      entity_id: binary_sensor.192_168_68_212
-      state: 'off'
-      enabled: false
-    - condition: state
-      entity_id: button.pcck_suspender
-      state: unavailable
-      for:
-        hours: 0
-        minutes: 0
-        seconds: 0
+    - condition: and
+      conditions:
+      - condition: state
+        entity_id: binary_sensor.movimiento_despacho
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.192_168_68_212
+        state: 'off'
+        enabled: true
+      - condition: state
+        entity_id: button.pcck_suspender
+        state: unavailable
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 0
     then:
     - service: light.turn_off
       target:
