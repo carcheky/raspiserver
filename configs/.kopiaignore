@@ -4,6 +4,7 @@
 **/cache
 **/log
 **/.storage/auth
+**/.storage/tmp*
 **/.git/
 /RASPIMEDIA
 /raspiserver
