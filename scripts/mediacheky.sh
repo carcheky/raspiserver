@@ -82,6 +82,7 @@ function cron() {
 }
 
 function update() {
+    echo "----------------------------------------------------------"
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] mediacheky update START" >> ${RASPISERVER}/logs/mediacheky-update.log
 #     sudo apt update &>/dev/null
 #     sudo apt upgrade -y 
