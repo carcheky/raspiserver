@@ -10,3 +10,4 @@ docker-compose.yml
 jellyfin-telegram-notifier
 reboot-log.txt
 log.txt
+logs/mediacheky-update.log
