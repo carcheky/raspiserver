@@ -9,3 +9,11 @@
 /RASPIMEDIA
 /raspiserver
 /Backups
+**/config/backup
+**/config/Backups
+**/config/data/transcodes
+**/config/data/data/collections
+**/config/data/data/keyframes
+**/config/log*
+**/config/stats.json.tmp.*
+logs.log
