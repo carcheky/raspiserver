@@ -10,6 +10,7 @@
 /raspiserver
 /Backups
 **/config/backup
+**/config/backups
 **/config/Backups
 **/config/data/transcodes
 **/config/data/data/collections
@@ -18,3 +19,4 @@
 **/config/stats.json.tmp.*
 logs.log
 **/adguard/work/data/querylog.json
+**/*.log
