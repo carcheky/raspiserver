@@ -17,3 +17,4 @@
 **/config/log*
 **/config/stats.json.tmp.*
 logs.log
+**/adguard/work/data/querylog.json
