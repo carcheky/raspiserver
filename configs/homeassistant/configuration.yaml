@@ -4,6 +4,7 @@ default_config:
 device_sun_light_trigger:
 my:
 bluetooth:
+api:
 
 # Load frontend themes from the themes folder
 frontend:
@@ -117,7 +118,7 @@ camera:
       - vacuum_room_name
       - walls
       - zones
-    auto_update: true
+    # auto_update: true
     store_map_raw: true
     store_map_image: true
 # xiaomi_cloud_map_extractor END
@@ -128,23 +129,24 @@ zha:
   enable_quirks: true
 
 logger:
-  default: info
-  # logs:
-  #   bellows.ezsp: debug
-  #   bellows.zigbee.application: debug
-  #   custom_components.zha_toolkit: debug
-  #   homeassistant.components.zha: debug
-  #   homeassistant.core: debug
-  #   homeassistant.loader: debug
-  #   zhaquirks: debug
-  #   zigpy_deconz.api: debug
-  #   zigpy_deconz.zigbee.application: debug
-  #   zigpy_xbee.api: debug
-  #   zigpy_xbee.zigbee.application: debug
-  #   zigpy_zcl: debug
-  #   zigpy_zigate: debug
-  #   zigpy_znp: debug
-  #   zigpy: debug
+  default: warn
+  logs:
+    homeassistant.components.zha.core.cluster_handlers: info
+    # bellows.ezsp: info
+    # bellows.zigbee.application: info
+    # custom_components.zha_toolkit: info
+    # zigpy_deconz.api: info
+    # zigpy_deconz.zigbee.application: info
+    # zigpy_xbee.api: info
+    # zigpy_xbee.zigbee.application: info
+    # zigpy_zcl: info
+    # zigpy_zigate: info
+    # zigpy_znp: info
+    # zigpy: info
+    # zhaquirks: info
+    # homeassistant.components.zha: info
+    # homeassistant.core: info
+    # homeassistant.loader: info
 
 
 # # Example configuration.yaml entry
