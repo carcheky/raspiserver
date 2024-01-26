@@ -129,7 +129,7 @@ zha:
   enable_quirks: true
 
 logger:
-  default: info
+  default: error
   # logs:
   #   homeassistant.components.zha.core.cluster_handlers: debug
   #   bellows.ezsp: info
