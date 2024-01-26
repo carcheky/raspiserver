@@ -129,24 +129,24 @@ zha:
   enable_quirks: true
 
 logger:
-  default: warn
-  logs:
-    homeassistant.components.zha.core.cluster_handlers: info
-    # bellows.ezsp: info
-    # bellows.zigbee.application: info
-    # custom_components.zha_toolkit: info
-    # zigpy_deconz.api: info
-    # zigpy_deconz.zigbee.application: info
-    # zigpy_xbee.api: info
-    # zigpy_xbee.zigbee.application: info
-    # zigpy_zcl: info
-    # zigpy_zigate: info
-    # zigpy_znp: info
-    # zigpy: info
-    # zhaquirks: info
-    # homeassistant.components.zha: info
-    # homeassistant.core: info
-    # homeassistant.loader: info
+  default: info
+  # logs:
+  #   homeassistant.components.zha.core.cluster_handlers: debug
+  #   bellows.ezsp: info
+  #   bellows.zigbee.application: info
+  #   custom_components.zha_toolkit: info
+  #   zigpy_deconz.api: info
+  #   zigpy_deconz.zigbee.application: info
+  #   zigpy_xbee.api: info
+  #   zigpy_xbee.zigbee.application: info
+  #   zigpy_zcl: info
+  #   zigpy_zigate: info
+  #   zigpy_znp: info
+  #   zigpy: info
+  #   zhaquirks: info
+  #   homeassistant.components.zha: info
+  #   homeassistant.core: info
+  #   homeassistant.loader: info
 
 
 # # Example configuration.yaml entry
