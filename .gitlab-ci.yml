@@ -10,7 +10,7 @@ stages:
   - release
 
 release:
-  image: node:18
+  image: node:20
   stage: release
   only:
     - stable
@@ -22,7 +22,7 @@ release:
     - npx semantic-release
 
 pre-release:
-  image: node:18
+  image: node:20
   stage: release
   only:
     - beta
