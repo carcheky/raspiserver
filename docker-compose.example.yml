@@ -2,5 +2,5 @@ include:
   # - docker-compose.swag.yml
   # - docker-compose.homeassistant.yml
   # - docker-compose.mediaserver.yml
-  - docker-compose.pihole.yml
+  - docker-compose.portainer.yml
 
