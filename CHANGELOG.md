@@ -1,5 +1,38 @@
 # CHANGELOG
 
+## [6.20.1](https://gitlab.com/carcheky/raspiserver/compare/v6.20.0...v6.20.1) (2024-01-29)
+
+
+### Bug Fixes
+
+* added .kopiaignore ([1c637a6](https://gitlab.com/carcheky/raspiserver/commit/1c637a68b69d2ce98949b4a4181f979aac821463))
+* backups ([3a6dec2](https://gitlab.com/carcheky/raspiserver/commit/3a6dec2584f0813b53fec86b7c9f82a302c9a052))
+* configs ([4fce5af](https://gitlab.com/carcheky/raspiserver/commit/4fce5af594106f84f825caee177fef479e9572ef))
+* cron ([85ec068](https://gitlab.com/carcheky/raspiserver/commit/85ec0688d49843ccba3cce3599d6d861fd46d4c3))
+* **cron:** daily update ([267b973](https://gitlab.com/carcheky/raspiserver/commit/267b973cfbca5314f2922a3a903670dd5a5cc8a1))
+* **docker:** split dashboard ([130f60b](https://gitlab.com/carcheky/raspiserver/commit/130f60bd8522212f7fb51ab5df164474c57f055d))
+* edited .kopiaignore ([5576e27](https://gitlab.com/carcheky/raspiserver/commit/5576e271a2266e95dfee620016971a5cfe03b049))
+* edited .kopiaignore ([19c25a2](https://gitlab.com/carcheky/raspiserver/commit/19c25a2a73f65ae1b034beb139f4639eb33a6000))
+* hourly mediacheky update ([d1bd1e1](https://gitlab.com/carcheky/raspiserver/commit/d1bd1e1e3ffa90c35e55c5860d2b4dd53dce0fba))
+* info ([6a1dfdb](https://gitlab.com/carcheky/raspiserver/commit/6a1dfdbd2108133045c41772c4cda125fbab45e1))
+* list hard disks ([992ddaa](https://gitlab.com/carcheky/raspiserver/commit/992ddaa2b357242831308900b34fd525de4964a8))
+* logs folder ([7e6327f](https://gitlab.com/carcheky/raspiserver/commit/7e6327fc0a5fc0b864e7ed85cf72b71b4af02d4a))
+* mediacheky update ([33c9823](https://gitlab.com/carcheky/raspiserver/commit/33c98233ce6b8a18a22ce2f30b640fc475046592))
+* **mediacheky update_all:** now run 2 times/server ([e35fd5b](https://gitlab.com/carcheky/raspiserver/commit/e35fd5bd870209165a2378c119c87ef88f41e574))
+* **mediacheky update:** now apt update log is hidden ([d12fd15](https://gitlab.com/carcheky/raspiserver/commit/d12fd150a24804b7025d54235d3bc309df9f304f))
+* **mediacheky update:** quiet pull ([9af83d5](https://gitlab.com/carcheky/raspiserver/commit/9af83d5a39419416f0939c0376e179cfb89ecc2a))
+* **mediacheky update:** sudo mount -a only in larkcheky ([241df0a](https://gitlab.com/carcheky/raspiserver/commit/241df0ab53c9ea8edb33cc77f483dbd5f7aad13f))
+* **mediacheky update:** update shelf first ([7e57962](https://gitlab.com/carcheky/raspiserver/commit/7e57962dd3beb9fdab5a7fc950bf55a720d2359c))
+* pull always ([56d219e](https://gitlab.com/carcheky/raspiserver/commit/56d219ea687d7f89bee4947cae10cade503f20c4))
+* script separator ([a2ee747](https://gitlab.com/carcheky/raspiserver/commit/a2ee7477e38e23cbd2bfb56f678b7c0c740b7ce1))
+* secure updates ([7a67b3a](https://gitlab.com/carcheky/raspiserver/commit/7a67b3a7d9873aea31d8b7620fe99c9d55343e75))
+* show raid info on update ([48424fe](https://gitlab.com/carcheky/raspiserver/commit/48424fee66d3bfb485e825f574b958a2ec84ac2f))
+* **swag:** larkmox ([23d3df9](https://gitlab.com/carcheky/raspiserver/commit/23d3df95ef990a5b968c80df1ed3529cb5f2f9fb))
+* **swag:** renames ([e6eb01b](https://gitlab.com/carcheky/raspiserver/commit/e6eb01b7512b5f2552e8542a75342960be8524d1))
+* **swag:** udpated configs ([192fa88](https://gitlab.com/carcheky/raspiserver/commit/192fa8883cc283484dfca9789948cbfaa0700e4d))
+* updated automations ([a4402d3](https://gitlab.com/carcheky/raspiserver/commit/a4402d3d313f453bc3d967bc5b72904f336f00dd))
+* updated automations ([c6815a3](https://gitlab.com/carcheky/raspiserver/commit/c6815a3e5e9a9c5e56557e937e7e75b3e6212e52))
+
 # [6.20.0](https://gitlab.com/carcheky/raspiserver/compare/v6.19.0...v6.20.0) (2024-01-07)
 
 
