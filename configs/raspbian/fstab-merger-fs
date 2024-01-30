@@ -1,0 +1,16 @@
+# MERGEFS
+# sudo apt install ntfs-3g mergerfs -y
+# sudo mkdir -p /home/carcheky/mediacheky/RASPIMEDIA /media/raspimedia8 /media/raspimedia10
+# sudo touch  /media/raspimedia8/raspimedia8-not-mounted
+# sudo touch  /media/raspimedia10/raspimedia10-not-mounted
+# sudo chown -R carcheky:carcheky /home/carcheky/mediacheky/RASPIMEDIA /media/raspimedia8 /media/raspimedia10
+# lsa /media/raspimedia* /home/carcheky/mediacheky/RASPIMEDIA 
+#
+# raspimedia8
+UUID=86A4A59AA4A58CED /media/raspimedia8 ntfs defaults,auto,users,rw,nofail,exec,umask=000,fmask=000,uid=1000,gid=1000,x-systemd.device-timeout=30 0 0
+# raspimedia10
+UUID=23221EEE6A9FC4B0 /media/raspimedia10 ntfs defaults,auto,users,rw,nofail,exec,umask=000,fmask=000,uid=1000,gid=1000,x-systemd.device-timeout=30 0 0
+#
+# MERGEFS 
+/media/raspimedia* /home/carcheky/mediacheky/RASPIMEDIA fuse.mergerfs defaults,nonempty,cache.files=off,ignorepponrename=true,allow_other,use_ino,minfreespace=100G,fsname=mergerfs,moveonenospc=true,category.create=mfs,dropcacheonclose=true,defaults 0 0
+
