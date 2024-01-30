@@ -87,9 +87,9 @@ function update() {
     cd "${RASPISERVER}"
     git pull --rebase --autostash  
     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \; 
-    docker compose up -d
-    docker system prune -af 
-    docker volume prune -af 
+    sudo docker compose up -d
+    sudo docker system prune -af 
+    sudo docker volume prune -af 
     mediacheky install
     [ -f ${RASPICONFIG}/homeassistant/config/automations.yaml ] && cp ${RASPICONFIG}/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPICONFIG}/homeassistant/config/configuration.yaml ] && cp ${RASPICONFIG}/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ 
