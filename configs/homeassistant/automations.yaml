@@ -64,8 +64,8 @@
     if:
     - type: is_battery_level
       condition: device
-      device_id: 736773a6b456df98196c168dd7b7eaa3
-      entity_id: sensor.tabcheky_battery_level
+      device_id: 819a0cd04755a087b62361e40241b5ec
+      entity_id: 72b38117b447ee77e4be90abecae90a7
       domain: sensor
       above: 80
     then:
@@ -78,8 +78,8 @@
     if:
     - type: is_battery_level
       condition: device
-      device_id: 736773a6b456df98196c168dd7b7eaa3
-      entity_id: sensor.tabcheky_battery_level
+      device_id: 819a0cd04755a087b62361e40241b5ec
+      entity_id: 72b38117b447ee77e4be90abecae90a7
       domain: sensor
       below: 70
     then:
