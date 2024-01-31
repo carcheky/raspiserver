@@ -101,14 +101,27 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 15
+      seconds: 5
   - platform: homeassistant
     event: start
+  - platform: device
+    type: turned_off
+    device_id: 5e8d19dcd2cb8faabfb561b154922f74
+    entity_id: 66b20acede38ba290ed0cc71d4c133cc
+    domain: switch
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
   condition: []
   action:
   - type: turn_on
     device_id: da6fed41428ccca872239decb6c90e28
     entity_id: 1540e7f2e75d995ece933bcc92af3951
+    domain: switch
+  - type: turn_on
+    device_id: 5e8d19dcd2cb8faabfb561b154922f74
+    entity_id: 66b20acede38ba290ed0cc71d4c133cc
     domain: switch
   mode: single
 - id: '1698489590281'
@@ -715,34 +728,6 @@
   - service: notify.mobile_app_chekyphone
     data:
       message: Ghj
-  mode: single
-- id: '1703581111076'
-  alias: 'Home assistant: daily reboot'
-  description: ''
-  trigger:
-  - platform: time
-    at: 07:00:00
-  condition: []
-  action:
-  - service: notify.mobile_app_chekyphone
-    data:
-      title: 'Home assistant '
-      message: 'Daily reboot '
-  - service: switch.turn_off
-    target:
-      entity_id:
-      - switch.enchufe_1_interruptor
-    data: {}
-  - delay:
-      hours: 0
-      minutes: 3
-      seconds: 0
-      milliseconds: 0
-  - service: switch.turn_off
-    target:
-      entity_id:
-      - switch.raspiserver
-    data: {}
   mode: single
 - id: '1703711375036'
   alias: 'Apagado general '
