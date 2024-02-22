@@ -82,6 +82,7 @@ function cron() {
 }
 
 function update() {
+    set -eux
     echo "----------------------------------------------------------"
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] mediacheky update START" >> ${RASPISERVER}/logs/mediacheky-update.log
     cd "${RASPISERVER}"

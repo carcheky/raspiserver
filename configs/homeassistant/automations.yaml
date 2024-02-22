@@ -64,8 +64,8 @@
     if:
     - type: is_battery_level
       condition: device
-      device_id: 819a0cd04755a087b62361e40241b5ec
-      entity_id: 72b38117b447ee77e4be90abecae90a7
+      device_id: e8ab5d9b84962cf8c1ac97992e3aec1a
+      entity_id: 63e97a3852bb62e9a06891dbb0369422
       domain: sensor
       above: 80
     then:
@@ -78,8 +78,8 @@
     if:
     - type: is_battery_level
       condition: device
-      device_id: 819a0cd04755a087b62361e40241b5ec
-      entity_id: 72b38117b447ee77e4be90abecae90a7
+      device_id: e8ab5d9b84962cf8c1ac97992e3aec1a
+      entity_id: 63e97a3852bb62e9a06891dbb0369422
       domain: sensor
       below: 70
     then:
@@ -664,6 +664,7 @@
   trigger:
   - platform: time_pattern
     minutes: /3
+    enabled: false
   - platform: time_pattern
     seconds: /9
     enabled: false
@@ -725,6 +726,18 @@
     target:
       entity_id: camera.roborock_s6_pure
     data: {}
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - service: homeassistant.update_entity
+    target:
+      entity_id: camera.roborock_s6_pure
+    data: {}
+  - service: notify.mobile_app_chekyphone
+    data:
+      message: 'Mapa Actualizado '
   - service: notify.mobile_app_chekyphone
     data:
       message: Ghj
@@ -861,15 +874,137 @@
       message: Chespin está llegando a casa
   mode: single
 - id: '1705565177009'
-  alias: 'Roborock: Limpieza programada'
+  alias: 'Roborock: limpiar L-V'
   description: ''
   trigger:
   - platform: time
     at: input_datetime.hora_limpieza
-  condition: []
+  condition:
+  - condition: state
+    entity_id: binary_sensor.workday_sensor
+    state: 'on'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
   action:
   - device_id: f90f267269373f33820eada09da4a0b0
     domain: vacuum
     entity_id: 8be8688f6195fef0a72213fee4608906
     type: clean
   mode: single
+- id: '1707215600969'
+  alias: 'Roborock: limpiar S-D'
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.hora_limpieza_s_d
+  condition:
+  - condition: state
+    entity_id: binary_sensor.workday_sensor
+    state: 'off'
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 0
+  action:
+  - device_id: f90f267269373f33820eada09da4a0b0
+    domain: vacuum
+    entity_id: 8be8688f6195fef0a72213fee4608906
+    type: clean
+  mode: single
+- id: '1707828819329'
+  alias: encencer cafetera con la alarma
+  description: ''
+  trigger:
+  - platform: time
+    at: 07:30:00
+  condition:
+  - condition: numeric_state
+    entity_id: zone.home
+    above: 0
+  action:
+  - type: toggle
+    device_id: 2aca32db1805394806ffe41b316d0691
+    entity_id: ccbca8278372bf6be5d33281b0fa59ab
+    domain: switch
+  mode: restart
+- id: '1708342051879'
+  alias: Apagar cafetera
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.cafetera_interruptor
+    to: 'on'
+    for:
+      hours: 1
+      minutes: 30
+      seconds: 0
+  condition: []
+  action:
+  - service: switch.turn_off
+    metadata: {}
+    data: {}
+    target:
+      entity_id: switch.cafetera_interruptor
+  mode: single
+- id: '1708410983373'
+  alias: 'Roborock map smart update '
+  description: ''
+  trigger:
+  - platform: device
+    device_id: f90f267269373f33820eada09da4a0b0
+    domain: vacuum
+    entity_id: 8be8688f6195fef0a72213fee4608906
+    type: cleaning
+  - platform: device
+    device_id: f90f267269373f33820eada09da4a0b0
+    domain: vacuum
+    entity_id: 8be8688f6195fef0a72213fee4608906
+    type: docked
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: device
+        device_id: f90f267269373f33820eada09da4a0b0
+        domain: vacuum
+        entity_id: 8be8688f6195fef0a72213fee4608906
+        type: is_docked
+      sequence:
+      - service: notify.mobile_app_chekyphone
+        metadata: {}
+        data:
+          message: 1h
+      - delay:
+          hours: 1
+          minutes: 0
+          seconds: 0
+          milliseconds: 0
+    - conditions:
+      - condition: device
+        device_id: f90f267269373f33820eada09da4a0b0
+        domain: vacuum
+        entity_id: 8be8688f6195fef0a72213fee4608906
+        type: is_cleaning
+      sequence:
+      - service: notify.mobile_app_chekyphone
+        metadata: {}
+        data:
+          message: 30s
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 30
+          milliseconds: 0
+  - service: homeassistant.update_entity
+    target:
+      entity_id: camera.roborock_s6_pure
+    data: {}
+  - service: automation.trigger
+    target:
+      entity_id: automation.roborock_map_smart_update
+    data:
+      skip_condition: true
+  mode: restart
