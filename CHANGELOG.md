@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [6.21.0](https://gitlab.com/carcheky/raspiserver/compare/v6.20.1...v6.21.0) (2024-02-01)
+
+
+### Bug Fixes
+
+* crontab ([1578c4d](https://gitlab.com/carcheky/raspiserver/commit/1578c4db1e5ead6c243454f6b0683c754bf98e6d))
+* fstab config ([3e5f098](https://gitlab.com/carcheky/raspiserver/commit/3e5f098a4e3b95f9ba7dba7fed9fdb4fb8474481))
+* mediacheky script ([0c1243d](https://gitlab.com/carcheky/raspiserver/commit/0c1243db4ab6b969deb81d18d7bce9e739e7bf32))
+* mediacheky script ([d4edb43](https://gitlab.com/carcheky/raspiserver/commit/d4edb43bcc879798792b30f0e2ddd45f3279bb43))
+* mediacheky script ([82bf9c8](https://gitlab.com/carcheky/raspiserver/commit/82bf9c86ddff03543706351f075ba87f3bed1086))
+* portainer ([173edd6](https://gitlab.com/carcheky/raspiserver/commit/173edd640b877507d4185d9c5e49b814daaa2fb2))
+
+
+### Features
+
+* portainer ([9afcfac](https://gitlab.com/carcheky/raspiserver/commit/9afcfac02fb7181b172d5e0a3fb0bf30c60623f4))
+
 ## [6.20.1](https://gitlab.com/carcheky/raspiserver/compare/v6.20.0...v6.20.1) (2024-01-29)
 
 
