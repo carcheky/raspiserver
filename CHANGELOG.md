@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.21.1](https://gitlab.com/carcheky/raspiserver/compare/v6.21.0...v6.21.1) (2024-02-23)
+
+
+### Bug Fixes
+
+* dashboard ([60b4e18](https://gitlab.com/carcheky/raspiserver/commit/60b4e18678e64ef0ae3917978d6aeef6e39e6d39))
+
 # [6.21.0](https://gitlab.com/carcheky/raspiserver/compare/v6.20.1...v6.21.0) (2024-02-01)
 
 
