@@ -241,11 +241,10 @@
     data: {}
     target:
       entity_id: input_boolean.caldera
-  - device_id: 65122e093172c7ed7dbecd2ab881f12b
-    domain: mobile_app
-    type: notify
-    title: Termostato
-    message: 'Apagado diario '
+  - service: notify.notify
+    metadata: {}
+    data:
+      message: Apagado diario de la caldera
   mode: queued
   max: 10
 - id: '1701364196838'
@@ -1008,3 +1007,28 @@
     data:
       skip_condition: true
   mode: restart
+- id: '1708559253093'
+  alias: Durmiendo
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.cckmazfit_trigger_2
+    attribute: last_updated
+  condition:
+  - condition: device
+    device_id: 65122e093172c7ed7dbecd2ab881f12b
+    domain: device_tracker
+    entity_id: 3cb76db02ad65e9e4e08270b078b7157
+    type: is_home
+  action:
+  - service: light.turn_off
+    metadata: {}
+    data: {}
+    target:
+      area_id: dormitorio
+  - service: notify.mobile_app_chekyphone
+    metadata: {}
+    data:
+      message: sensor.cckmazfit_trigger_2
+  mode: single
