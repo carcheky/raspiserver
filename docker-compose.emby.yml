@@ -10,7 +10,7 @@ services:
       - GID=100 # The GID to run emby as (default 2)
       - GIDLIST=100 # A comma-separated list of additional GIDs to run emby as (default: 2)
     volumes:
-      - ${RASPICONFIG}/plex/config:/config # Configuration directory
+      - ${RASPICONFIG}/emby/config:/config # Configuration directory
       - ${RASPICONFIG}/Series:/mnt/share1 # Media directory
       - ${RASPICONFIG}/Peliculas:/mnt/share2 # Media directory
     ports:
