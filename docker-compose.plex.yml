@@ -4,8 +4,8 @@ services:
     image: plexinc/pms-docker
     restart: unless-stopped
     environment:
-      - TZ=<timezone>
-      - PLEX_CLAIM=<claimToken>
+      - TZ=${TIMEZONE}
+      - PLEX_CLAIM=${PLEX_CLAIM}
     network_mode: host
     volumes:
       - ${RASPICONFIG}/plex/database:/config
