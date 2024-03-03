@@ -33,3 +33,7 @@ services:
       - ${RASPICONFIG}/activepieces/redis_data:/data
     networks:
       - activepieces
+
+networks:
+  activepieces:
+    
