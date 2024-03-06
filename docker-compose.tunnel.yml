@@ -1,0 +1,13 @@
+services:
+
+  cloudflared_cckdev:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared_cckdev
+    restart: always
+    command: tunnel --no-autoupdate run --token ${CCKDEV_TOKEN}
+
+  cloudflared_mediacheky:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared_mediacheky
+    restart: always
+    command: tunnel --no-autoupdate run --token ${MEDIA_CHEKY_TOKEN}
