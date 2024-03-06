@@ -10,4 +10,4 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared_mediacheky
     restart: always
-    command: tunnel --no-autoupdate run --token ${MEDIA_CHEKY_TOKEN}
+    command: tunnel --no-autoupdate run --token ${MEDIACHEKY_TOKEN}
