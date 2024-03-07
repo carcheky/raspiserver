@@ -1,5 +1,29 @@
 # CHANGELOG
 
+# [6.22.0](https://gitlab.com/carcheky/raspiserver/compare/v6.21.1...v6.22.0) (2024-03-07)
+
+
+### Bug Fixes
+
+* devices ([acce232](https://gitlab.com/carcheky/raspiserver/commit/acce2323b0a59e9f36ac222088c9301e21158df1))
+* **emby:** path ([f3c5a7c](https://gitlab.com/carcheky/raspiserver/commit/f3c5a7cf5c740c48507dcba3f60dd69399bc0ae9))
+* **emby:** remove runtime ([ddcc8e5](https://gitlab.com/carcheky/raspiserver/commit/ddcc8e561272d616f68f78d61c9b6da5164bc146))
+* host ([f083f5d](https://gitlab.com/carcheky/raspiserver/commit/f083f5d379a51d528c1cca6d260317338d2e46d4))
+* network ([630a1df](https://gitlab.com/carcheky/raspiserver/commit/630a1df88c0ab944c0d3ecadc9feb963d7de1fd6))
+* plex vars ([4696bdd](https://gitlab.com/carcheky/raspiserver/commit/4696bdd66f6723e93214b8312b45351f81f141f7))
+* **plex:** restart always ([36c7e82](https://gitlab.com/carcheky/raspiserver/commit/36c7e820137bf71da808fe67b7e4af7d121ae76d))
+* var ([e995cc5](https://gitlab.com/carcheky/raspiserver/commit/e995cc5022f101b9c22e9d34666a95e10a626960))
+
+
+### Features
+
+* activepieces ([237fd06](https://gitlab.com/carcheky/raspiserver/commit/237fd06eb40809fe1c8debede4e6ea3f394fba26))
+* added n8n ([f5b1d40](https://gitlab.com/carcheky/raspiserver/commit/f5b1d40f6795077ef16fe6cb8595bfb1ea47a671))
+* cloudflare tunnel ([1b49d03](https://gitlab.com/carcheky/raspiserver/commit/1b49d03a8f73270f373f7ba319a15f0ce7e235fa))
+* emby ([1444dbe](https://gitlab.com/carcheky/raspiserver/commit/1444dbefde1a11d6aa4c64702e754dd49fdd1144))
+* emby ([6580c7c](https://gitlab.com/carcheky/raspiserver/commit/6580c7c89dd5c815d68f8bf344c0f1ceb3b2dd63))
+* plex ([92257ab](https://gitlab.com/carcheky/raspiserver/commit/92257ab84c025f75b86aaafcee58ed406995e191))
+
 ## [6.21.1](https://gitlab.com/carcheky/raspiserver/compare/v6.21.0...v6.21.1) (2024-02-23)
 
 
