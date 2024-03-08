@@ -11,3 +11,4 @@ jellyfin-telegram-notifier
 reboot-log.txt
 log.txt
 logs/*
+global.env
