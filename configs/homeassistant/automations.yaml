@@ -1027,8 +1027,34 @@
     data: {}
     target:
       area_id: dormitorio
+  - service: media_player.media_pause
+    target:
+      entity_id: media_player.jellyfin_lenovo_yt_x705f
+    data: {}
   - service: notify.mobile_app_chekyphone
     metadata: {}
     data:
-      message: sensor.cckmazfit_trigger_2
+      message: "Parece que te dormiste \U0001F634\U0001F4A4\U0001F4A4"
+  mode: single
+- id: '1709275321042'
+  alias: Auto on automations
+  description: ''
+  trigger:
+  - platform: device
+    type: changed_states
+    device_id: b3966c17c5c785d6fcbe3d32b741b298
+    entity_id: 8fabd1a7883fa0fffa3d302d529681a3
+    domain: light
+  - platform: state
+    entity_id:
+    - light.despacho
+  condition: []
+  action:
+  - service: automation.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - automation.luz_despacho_auto
+      - automation.luz_despacho_auto_off
   mode: single
