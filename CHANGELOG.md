@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.22.2](https://gitlab.com/carcheky/raspiserver/compare/v6.22.1...v6.22.2) (2024-03-14)
+
+
+### Bug Fixes
+
+* mediacheky update ([b54d7b9](https://gitlab.com/carcheky/raspiserver/commit/b54d7b953c8ead8b65e6191c6c6e99c223df4241))
+
 ## [6.22.1](https://gitlab.com/carcheky/raspiserver/compare/v6.22.0...v6.22.1) (2024-03-09)
 
 
