@@ -8,6 +8,7 @@ services:
       TZ: 'Europe/Madrid'
       WEBPASSWORD: ${PIHOLE_WEBPASSWORD}
       DNSMASQ_LISTENING: all
+      CORS_HOSTS: pihole.cckdev.es
     volumes:
       - '${RASPICONFIG}/pihole/etc-pihole:/etc/pihole'
       - '${RASPICONFIG}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
