@@ -4,12 +4,16 @@ ifeq (feature,$(firstword $(MAKECMDGOALS)))
 endif
 
 
-default: start
+default: upp
 
 
 up: .env
 	@echo "Starting raspiserver..."
 	@docker compose up -d --remove-orphans
+
+upp: .env
+	@echo "Starting raspiserver..."
+	@docker compose up -d --remove-orphans --pull always
 
 stop: .env
 	@echo "Stopping raspiserver..."
