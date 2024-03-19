@@ -10,21 +10,6 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    [
-      "@semantic-release/changelog",
-      {
-        "changelogTitle": "# CHANGELOG",
-        "changelogFile": "CHANGELOG.md"
-      }
-    ],
-    "@semantic-release/gitlab",
-    [
-      "@semantic-release/git",
-      {
-        "assets": [
-          "CHANGELOG.md"
-        ]
-      }
-    ]
+    "@semantic-release/gitlab"
   ]
 }

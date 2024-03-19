@@ -14,9 +14,23 @@ release:
   stage: release
   only:
     - stable
+    - next
+    - next-major
   when: delayed
   start_in: 24 hours
   script:
     - cp .releaserc.changelog .releaserc
+    - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
+    - npx semantic-release
+
+pre-release:
+  image: node:20
+  stage: release
+  only:
+    - alpha
+    - beta
+  when: delayed
+  start_in: 30 seconds
+  script:
     - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
     - npx semantic-release
