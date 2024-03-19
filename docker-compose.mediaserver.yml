@@ -5,6 +5,8 @@ services:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
     restart: always
+    group_add:
+      - "105" 
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
