@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.23.0](https://gitlab.com/carcheky/raspiserver/compare/v6.22.2...v6.23.0) (2024-03-19)
+
+
+### Bug Fixes
+
+* pihole ([31b1705](https://gitlab.com/carcheky/raspiserver/commit/31b1705491afb2bb2aadb9233789d2ea1eeb8d5e))
+
+
+### Features
+
+* nextcloud ([0107885](https://gitlab.com/carcheky/raspiserver/commit/010788508c582a0fac915dc0b4dacd872d911644))
+
 ## [6.22.2](https://gitlab.com/carcheky/raspiserver/compare/v6.22.1...v6.22.2) (2024-03-14)
 
 
