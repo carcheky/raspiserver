@@ -628,12 +628,19 @@
     entity_id:
     - light.despacho
     to: 'on'
+    enabled: true
   - platform: state
     entity_id:
     - light.yeelight_color_0x458eb33
     to: 'on'
   condition: []
   action:
+  - service: homeassistant.update_entity
+    target:
+      entity_id:
+      - binary_sensor.movimiento_despacho_2_movimiento
+      - binary_sensor.movimiento_despacho_1_movimiento
+    data: {}
   - if:
     - condition: and
       conditions:
@@ -652,6 +659,11 @@
           minutes: 0
           seconds: 0
     then:
+    - delay:
+        hours: 0
+        minutes: 3
+        seconds: 0
+        milliseconds: 0
     - service: light.turn_off
       target:
         area_id: despacho
@@ -737,9 +749,6 @@
   - service: notify.mobile_app_chekyphone
     data:
       message: 'Mapa Actualizado '
-  - service: notify.mobile_app_chekyphone
-    data:
-      message: Ghj
   mode: single
 - id: '1703711375036'
   alias: 'Apagado general '
@@ -957,11 +966,13 @@
     domain: vacuum
     entity_id: 8be8688f6195fef0a72213fee4608906
     type: cleaning
+    enabled: false
   - platform: device
     device_id: f90f267269373f33820eada09da4a0b0
     domain: vacuum
     entity_id: 8be8688f6195fef0a72213fee4608906
     type: docked
+    enabled: false
   condition: []
   action:
   - choose:
@@ -975,7 +986,7 @@
       - service: notify.mobile_app_chekyphone
         metadata: {}
         data:
-          message: 1h
+          message: 1h map
       - delay:
           hours: 1
           minutes: 0
@@ -991,7 +1002,7 @@
       - service: notify.mobile_app_chekyphone
         metadata: {}
         data:
-          message: 30s
+          message: 30s map
       - delay:
           hours: 0
           minutes: 0
@@ -1006,6 +1017,10 @@
       entity_id: automation.roborock_map_smart_update
     data:
       skip_condition: true
+  - service: homeassistant.update_entity
+    target:
+      entity_id: camera.roborock_s6_pure
+    data: {}
   mode: restart
 - id: '1708559253093'
   alias: Durmiendo
