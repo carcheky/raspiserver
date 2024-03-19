@@ -5,6 +5,7 @@ services:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
     restart: always
+    network_mode: host
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -12,26 +13,23 @@ services:
       - JELLYFIN_PublishedServerUrl=${DOMAIN}
       - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
     volumes:
-      - ${RASPICONFIG}/jellyfin/config:/config
-      - ${RASPICONFIG}/jellyfin/intros:/media/intros
-      # - ${RASPICONFIG}/jellyfin/plugins:/var/lib/jellyfin/plugins/
+      - ./volumes/jellyfin-config:/config
+      - ./volumes/jellyfin-intros:/media/intros
       - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
-    # ports:
-    #   - 8096:8096
-    network_mode: host
     devices:
       - /dev/dri:/dev/dri
+    group_add:
+      - "105" 
 
 # wizarr http://localhost:5690
   wizarr:
     image: ghcr.io/wizarrrr/wizarr:latest
-    # image: ghcr.io/wizarrrr/wizarr:v2
     container_name: wizarr
     restart: always
     ports:
       - 5690:5690
     volumes:
-      - ${RASPICONFIG}/wizarr/database:/data/database
+      - ./volumes/wizarr-database:/data/database
     environment:
       - APP_URL=https://wizarr.${DOMAIN} #URL at which you will access and share 
       - DISABLE_BUILTIN_AUTH=false #Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
@@ -51,7 +49,7 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${RASPICONFIG}/jellyseerr/config:/app/config
+      - ./volumes/jellyseerr-config:/app/config
     ports:
       - 5055:5055
 
@@ -67,7 +65,7 @@ services:
       - USER=${USER}
       - PASS=${TRANSMISSION_PASSWORD}
     volumes:
-      - ${RASPICONFIG}/transmission/config:/config
+      - ./volumes/transmission-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 9091:9091
@@ -82,7 +80,7 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${RASPICONFIG}/prowlarr/config:/config
+      - ./volumes/prowlarr-config:/config
     ports:
       - 9696:9696
 
@@ -96,7 +94,7 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${RASPICONFIG}/radarr/config:/config
+      - ./volumes/radarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 7878:7878
@@ -111,7 +109,7 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${RASPICONFIG}/sonarr/config:/config
+      - ./volumes/sonarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 8989:8989
@@ -126,7 +124,7 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
     volumes:
-      - ${RASPICONFIG}/bazarr/config:/config
+      - ./volumes/bazarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 6767:6767
@@ -137,7 +135,7 @@ services:
   #   restart: always
   #   user: 1000:1000
   #   volumes:
-  #     - ${RASPICONFIG}/recyclarr/config:/config
+  #     - ./volumes/recyclarr-config:/config
   #   environment:
   #     - PUID=${PUID}
   #     - PGID=${PGID}
@@ -154,7 +152,7 @@ services:
 #       - PGID=${PGID}
 #       - TZ=${TIMEZONE}
 #     volumes:
-#       - ${RASPICONFIG}/lidarr/config:/config
+#       - ./volumes/lidarr-config:/config
 #       - ${RASPIMEDIA}:/BibliotecaMultimedia
 #     ports:
 #       - 8686:8686
@@ -169,7 +167,7 @@ services:
 #       - PGID=${PGID}
 #       - TZ=${TIMEZONE}
 #     volumes:
-#       - ${RASPICONFIG}/readarr/config:/config
+#       - ./volumes/readarr-config:/config
 #       - ${RASPIMEDIA}:/BibliotecaMultimedia
 #     ports:
 #       - 8787:8787
