@@ -14,7 +14,7 @@ services:
       - TZ=${TIMEZONE}
       - DOCKER_MODS=linuxserver/mods:homeassistant-hacs
     volumes:
-      - ./app-config/config-ha:/config
+      - ./volumes/ha-config:/config
       - /run/dbus:/run/dbus:ro # bluethooth
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
@@ -30,7 +30,7 @@ services:
       - 1883:1883
       - 9001:9001
     volumes:
-      - ./app-config/config-mqtt:/mosquitto
+      - ./volumes/mqtt-config:/mosquitto
       # - ${RASPICONFIG}/mqtt/config:/mosquitto/config
       # - ${RASPICONFIG}/mqtt/data:/mosquitto/data
       # - ${RASPICONFIG}/mqtt/log:/mosquitto/log

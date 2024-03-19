@@ -12,8 +12,8 @@ services:
       - TZ=${TIMEZONE}
       - BASE_URL=homarr.${DOMAIN}
     volumes:
-      - ${RASPICONFIG}/homarr/config:/app/data/configs
-      - ${RASPICONFIG}/homarr/data:/data
+      - ./volumes/homarr-config:/app/data/configs
+      - ./volumes/homarr-data:/data
     ports:
       - '7575:7575'
   
