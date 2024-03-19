@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [6.24.0](https://gitlab.com/carcheky/raspiserver/compare/v6.23.0...v6.24.0) (2024-03-19)
+
+
+### Bug Fixes
+
+* **homeassistant:** config dirs ([9c3947c](https://gitlab.com/carcheky/raspiserver/commit/9c3947c70f304008e2b1aed062e61be6ed1b2c94))
+* jellyfin group id ([8999bfb](https://gitlab.com/carcheky/raspiserver/commit/8999bfb7047908f8a99a2d1b18696c1cca73701d))
+* **test:** empty commit ([06eae95](https://gitlab.com/carcheky/raspiserver/commit/06eae954da4b84ff93772722df7f3c79ccbc7d2c))
+
+
+### Features
+
+* **mediaserver:** rework ([7314d52](https://gitlab.com/carcheky/raspiserver/commit/7314d5258b0ffd045a9eab373c8bf165f8f851e5))
+* rework ([8d61085](https://gitlab.com/carcheky/raspiserver/commit/8d61085fd0b8121bdce50bc9e6d3440f084a2b84))
+* **tunnel:** reworked ([6c002ec](https://gitlab.com/carcheky/raspiserver/commit/6c002ec1bd0f8c1fac6704d6c08558316687a781))
 
 # [6.23.0](https://gitlab.com/carcheky/raspiserver/compare/v6.22.2...v6.23.0) (2024-03-19)
 
