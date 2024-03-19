@@ -1,6 +1,18 @@
 include:
-  # - docker-compose.swag.yml
-  # - docker-compose.homeassistant.yml
-  # - docker-compose.mediaserver.yml
-  - docker-compose.portainer.yml
-
+- apps/homeassistant/docker-compose.homeassistant.yml
+# - apps/pending/docker-compose.activepieces.yml
+# - apps/pending/docker-compose.authelia.yml
+# - apps/pending/docker-compose.emby.yml
+# - apps/pending/docker-compose.n8n.yml
+# - apps/pending/docker-compose.nextcloud.yml
+# - apps/pending/docker-compose.plex.yml
+# - apps/pending/docker-compose.swag.yml
+# - apps/pending/docker-compose.thingsboard.yml
+# - apps/pending/docker-compose.adguardhome.yml
+# - apps/pending/docker-compose.dashboard.yml
+# - apps/pending/docker-compose.mediaserver.yml
+# - apps/pending/docker-compose.netdata.yml
+# - apps/pending/docker-compose.pihole.yml
+# - apps/pending/docker-compose.portainer.yml
+# - apps/pending/docker-compose.telegram.yml
+# - apps/pending/docker-compose.tunnel.yml
