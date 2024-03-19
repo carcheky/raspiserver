@@ -1,5 +1,12 @@
+# 1 copy this file to docker-compose.yml
+# 2 copy .env.dist to .env an edit 
+# 3 uncoment apps and run
+# 4 docker-compose up -d
+
 include:
-- apps/homeassistant/docker-compose.homeassistant.yml
+# - apps/homeassistant/docker-compose.homeassistant.yml
+# - apps/mediaserver/docker-compose.mediaserver.yml
+
 # - apps/pending/docker-compose.activepieces.yml
 # - apps/pending/docker-compose.authelia.yml
 # - apps/pending/docker-compose.emby.yml
@@ -10,7 +17,6 @@ include:
 # - apps/pending/docker-compose.thingsboard.yml
 # - apps/pending/docker-compose.adguardhome.yml
 # - apps/pending/docker-compose.dashboard.yml
-# - apps/pending/docker-compose.mediaserver.yml
 # - apps/pending/docker-compose.netdata.yml
 # - apps/pending/docker-compose.pihole.yml
 # - apps/pending/docker-compose.portainer.yml
