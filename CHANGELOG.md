@@ -1,5 +1,20 @@
 # CHANGELOG
 
+# [6.23.0](https://gitlab.com/carcheky/raspiserver/compare/v6.22.2...v6.23.0) (2024-03-19)
+
+
+### Bug Fixes
+
+* **homeassistant:** config dirs ([9c3947c](https://gitlab.com/carcheky/raspiserver/commit/9c3947c70f304008e2b1aed062e61be6ed1b2c94))
+* pihole ([31b1705](https://gitlab.com/carcheky/raspiserver/commit/31b1705491afb2bb2aadb9233789d2ea1eeb8d5e))
+
+
+### Features
+
+* **mediaserver:** rework ([7314d52](https://gitlab.com/carcheky/raspiserver/commit/7314d5258b0ffd045a9eab373c8bf165f8f851e5))
+* nextcloud ([0107885](https://gitlab.com/carcheky/raspiserver/commit/010788508c582a0fac915dc0b4dacd872d911644))
+* rework ([8d61085](https://gitlab.com/carcheky/raspiserver/commit/8d61085fd0b8121bdce50bc9e6d3440f084a2b84))
+
 ## [6.22.2](https://gitlab.com/carcheky/raspiserver/compare/v6.22.1...v6.22.2) (2024-03-14)
 
 
