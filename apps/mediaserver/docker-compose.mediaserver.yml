@@ -5,7 +5,11 @@ services:
     image: linuxserver/jellyfin:latest
     container_name: jellyfin
     restart: always
-    network_mode: host
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1900:1900/udp #optional
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -129,18 +133,20 @@ services:
     ports:
       - 6767:6767
 
-  # recyclarr:
-  #   image: ghcr.io/recyclarr/recyclarr
-  #   container_name: recyclarr
-  #   restart: always
-  #   user: 1000:1000
-  #   volumes:
-  #     - ./volumes/recyclarr-config:/config
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-
+# bazarr http://localhost:6767
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr
+    container_name: recyclarr
+    user: ${PUID}:${PGID}
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - CRON_SCHEDULE?"@daily"
+      - RECYCLARR_CREATE_CONFIG=true
+    volumes:
+      - ./volumes/recyclarr-config:/config
 
 # # lidarr http://localhost:8686
 #   lidarr:
