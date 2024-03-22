@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.24.1](https://gitlab.com/carcheky/raspiserver/compare/v6.24.0...v6.24.1) (2024-03-22)
+
+
+### Bug Fixes
+
+* **mediaserver:** use ports ([31864c3](https://gitlab.com/carcheky/raspiserver/commit/31864c37b9e60e6d64884cef4a1c7d3fc21950ea))
+
 # [6.24.0](https://gitlab.com/carcheky/raspiserver/compare/v6.23.0...v6.24.0) (2024-03-19)
 
 
