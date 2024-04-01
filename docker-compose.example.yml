@@ -8,6 +8,7 @@ include:
 # - apps/mediaserver/docker-compose.mediaserver.yml
 # - apps/tunnel/docker-compose.tunnel.yml
 # - apps/dashboard/docker-compose.dashboard.yml
+# - apps/adguard/docker-compose.adguardhome.yml
 
 # - apps/pending/docker-compose.activepieces.yml
 # - apps/pending/docker-compose.authelia.yml
@@ -17,7 +18,6 @@ include:
 # - apps/pending/docker-compose.plex.yml
 # - apps/pending/docker-compose.swag.yml
 # - apps/pending/docker-compose.thingsboard.yml
-# - apps/pending/docker-compose.adguardhome.yml
 # - apps/pending/docker-compose.netdata.yml
 # - apps/pending/docker-compose.pihole.yml
 # - apps/pending/docker-compose.portainer.yml

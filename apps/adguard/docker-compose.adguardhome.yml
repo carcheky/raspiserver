@@ -6,8 +6,8 @@ services:
     environment:
       TZ: 'Europe/Madrid'
     volumes:
-      - ${RASPICONFIG}/adguard/work:/opt/adguardhome/work
-      - ${RASPICONFIG}/adguard/conf:/opt/adguardhome/conf
+      - ./volumes/adguard-work:/opt/adguardhome/work
+      - ./volumes/adguard-conf:/opt/adguardhome/conf
     network_mode: host
     # ports:
     #   - "53:53/tcp"
