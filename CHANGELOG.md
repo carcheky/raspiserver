@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.24.2](https://gitlab.com/carcheky/raspiserver/compare/v6.24.1...v6.24.2) (2024-04-02)
+
+
+### Bug Fixes
+
+* adguard rework ([2585dab](https://gitlab.com/carcheky/raspiserver/commit/2585dab54001f51a6b5f405750af3e559c4257c3))
+
 ## [6.24.1](https://gitlab.com/carcheky/raspiserver/compare/v6.24.0...v6.24.1) (2024-03-22)
 
 
