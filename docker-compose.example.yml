@@ -9,6 +9,7 @@ include:
 # - apps/tunnel/docker-compose.tunnel.yml
 # - apps/dashboard/docker-compose.dashboard.yml
 # - apps/adguard/docker-compose.adguardhome.yml
+# - apps/nginx/docker-compose.nginx.yml
 
 # - apps/pending/docker-compose.activepieces.yml
 # - apps/pending/docker-compose.authelia.yml
