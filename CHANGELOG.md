@@ -1,5 +1,12 @@
 # CHANGELOG
 
+# [6.25.0](https://gitlab.com/carcheky/raspiserver/compare/v6.24.2...v6.25.0) (2024-04-19)
+
+
+### Features
+
+* added nginx-proxy-manager ([34d1d53](https://gitlab.com/carcheky/raspiserver/commit/34d1d53e6ec774132b72ee3ce142b99944918903))
+
 ## [6.24.2](https://gitlab.com/carcheky/raspiserver/compare/v6.24.1...v6.24.2) (2024-04-02)
 
 
