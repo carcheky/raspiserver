@@ -14,3 +14,4 @@ logs/
 global.env
 /apps/**/volumes
 tokens.txt
+*.log
