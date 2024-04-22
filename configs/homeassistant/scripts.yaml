@@ -1,1 +1,8 @@
-{}
+notificacion_casa_vacia:
+  alias: Notificación casa vacía
+  use_blueprint:
+    path: samuelthng/notifications.yaml
+    input:
+      notify_device: 65122e093172c7ed7dbecd2ab881f12b
+      message: Casa vacía
+  icon: mdi:home-remove

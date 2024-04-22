@@ -15,38 +15,6 @@
     type: notify
     title: Home assistant
     message: 'Iniciado '
-  - service: switch.turn_off
-    target:
-      entity_id: switch.transmission_interruptor
-    data: {}
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 30
-      milliseconds: 0
-  - service: switch.turn_on
-    target:
-      entity_id:
-      - switch.transmission_interruptor
-      device_id: []
-      area_id: []
-    data: {}
-  mode: single
-- id: '1687987871735'
-  alias: 'Roborock: mapa off'
-  description: apaga la "cámara" cuando está en la base
-  trigger:
-  - platform: device
-    device_id: f90f267269373f33820eada09da4a0b0
-    domain: vacuum
-    entity_id: vacuum.roborock_s6_pure
-    type: docked
-  condition: []
-  action:
-  - service: camera.turn_off
-    data: {}
-    target:
-      entity_id: camera.roborock_s6_pure
   mode: single
 - id: '1691147866863'
   alias: 'TabCheky: carga inteligente '
@@ -65,7 +33,7 @@
     - type: is_battery_level
       condition: device
       device_id: e8ab5d9b84962cf8c1ac97992e3aec1a
-      entity_id: 63e97a3852bb62e9a06891dbb0369422
+      entity_id: c19ed15a9e5bde59f00a04872e707bea
       domain: sensor
       above: 80
     then:
@@ -79,7 +47,7 @@
     - type: is_battery_level
       condition: device
       device_id: e8ab5d9b84962cf8c1ac97992e3aec1a
-      entity_id: 63e97a3852bb62e9a06891dbb0369422
+      entity_id: c19ed15a9e5bde59f00a04872e707bea
       domain: sensor
       below: 70
     then:
@@ -89,41 +57,6 @@
         entity_id:
         - switch.ladron_socket_2
   mode: restart
-- id: '1695899000007'
-  alias: LarkCheky Always On
-  description: ''
-  trigger:
-  - platform: device
-    type: turned_off
-    device_id: da6fed41428ccca872239decb6c90e28
-    entity_id: 1540e7f2e75d995ece933bcc92af3951
-    domain: switch
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 5
-  - platform: homeassistant
-    event: start
-  - platform: device
-    type: turned_off
-    device_id: 5e8d19dcd2cb8faabfb561b154922f74
-    entity_id: 66b20acede38ba290ed0cc71d4c133cc
-    domain: switch
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 5
-  condition: []
-  action:
-  - type: turn_on
-    device_id: da6fed41428ccca872239decb6c90e28
-    entity_id: 1540e7f2e75d995ece933bcc92af3951
-    domain: switch
-  - type: turn_on
-    device_id: 5e8d19dcd2cb8faabfb561b154922f74
-    entity_id: 66b20acede38ba290ed0cc71d4c133cc
-    domain: switch
-  mode: single
 - id: '1698489590281'
   alias: Casa vacía
   description: ''
@@ -181,44 +114,24 @@
       - cocina
       - dormitorio
     data: {}
-  - device_id: f90f267269373f33820eada09da4a0b0
-    domain: vacuum
-    entity_id: 8be8688f6195fef0a72213fee4608906
-    type: clean
-  mode: single
-- id: '1701110449652'
-  alias: Luz dormitorio toggle
-  description: '
-
-    '
-  trigger:
-  - type: turned_on
-    platform: device
-    device_id: a7d977c7678c671a77dbc66e88edf3b5
-    entity_id: 27576fc5181f3d5141f35984490826c9
-    domain: binary_sensor
-  condition: []
-  action:
-  - if:
-    - condition: or
-      conditions:
-      - condition: state
-        entity_id: light.yeelight_color_0x330dc29
-        state: 'on'
-      - condition: state
-        state: 'on'
-        entity_id: light.dormitorio
-    then:
-    - service: light.turn_off
-      data: {}
-      target:
-        area_id: dormitorio
-    else:
-    - service: light.turn_on
-      data:
-        kelvin: 6500
-      target:
-        area_id: dormitorio
+  - service: script.notificacion_casa_vacia
+    data:
+      field_notify_device: 65122e093172c7ed7dbecd2ab881f12b
+      field_title: ''
+      field_message: Casa vacía
+      field_subtitle: ''
+      field_attachment_type: none
+      field_attachment_camera_entity: ''
+      field_timeout:
+        hours: 0
+        minutes: 15
+        seconds: 0
+      field_notification_link: ''
+  - service: notify.notify
+    metadata: {}
+    data:
+      title: 'Home Assistant '
+      message: 'Parece que no hay nadie en la casa: lo apago todo'
   mode: single
 - id: '1701362213795'
   alias: termostato daily off
@@ -318,7 +231,7 @@
       hvac_mode: 'off'
   mode: single
 - id: '1701965983999'
-  alias: 'Luz despacho toggle '
+  alias: Luz despacho botón
   description: '
 
     '
@@ -383,124 +296,6 @@
         area_id: pasillo
       data: {}
   mode: restart
-- id: '1701967702141'
-  alias: 'Luz dormitorio auto '
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - binary_sensor.presencia_dormitorio
-  - platform: state
-    entity_id:
-    - light.dormitorio
-    to: 'on'
-    enabled: false
-  - platform: state
-    entity_id:
-    - light.yeelight_color_0x330dc29
-    to: 'on'
-    enabled: false
-  condition: []
-  action:
-  - service: light.turn_off
-    target:
-      area_id: dormitorio
-    data: {}
-    enabled: false
-  - if:
-    - condition: and
-      conditions:
-      - condition: state
-        state: 'on'
-        entity_id: binary_sensor.presencia_dormitorio
-      - condition: time
-        after: sensor.sun_next_dawn
-        before: sensor.sun_next_midnight
-        enabled: false
-    then:
-    - if:
-      - condition: time
-        after: sensor.sun_next_dawn
-        before: 00:00:00
-        weekday:
-        - mon
-        - tue
-        - wed
-        - thu
-        - sun
-      then:
-      - service: light.turn_on
-        target:
-          area_id: dormitorio
-        data:
-          kelvin: 6500
-          brightness_pct: 100
-      else:
-      - service: light.turn_on
-        target:
-          entity_id: light.yeelight_color_0x330dc29
-        data:
-          kelvin: 2000
-          brightness_pct: 100
-    else:
-    - delay:
-        hours: 0
-        minutes: 3
-        seconds: 0
-        milliseconds: 0
-    - service: light.turn_off
-      target:
-        area_id:
-        - dormitorio
-      data: {}
-    enabled: true
-  mode: restart
-- id: '1701968174075'
-  alias: Luz salón auto ON
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - binary_sensor.presencia_salon
-    to: 'on'
-  - platform: sun
-    event: sunset
-    offset: -0:05:00
-  - platform: sun
-    event: sunrise
-    offset: '1:00:00'
-  condition:
-  - condition: and
-    conditions:
-    - condition: numeric_state
-      entity_id: zone.home
-      above: 0
-    - condition: state
-      entity_id: binary_sensor.presencia_salon
-      state: 'on'
-    - condition: or
-      conditions:
-      - condition: numeric_state
-        entity_id: sensor.presencia_salon_iluminancia
-        below: 20
-      - condition: sun
-        before: sunrise
-        after: sunset
-        before_offset: '1:00:00'
-        after_offset: '-1:00:00'
-  action:
-  - if:
-    - condition: sun
-      before: sunrise
-      after: sunset
-      before_offset: '1:00:00'
-      after_offset: -0:30:00
-    then:
-    - service: light.turn_on
-      data: {}
-      target:
-        entity_id: light.salon
-  mode: restart
 - id: '1701992925702'
   alias: Luz despacho auto ON
   description: ''
@@ -517,6 +312,7 @@
       after: sunset
       before_offset: '1:00:00'
       after_offset: -0:30:00
+      enabled: false
     - condition: numeric_state
       entity_id: zone.home
       above: 0
@@ -524,89 +320,22 @@
       entity_id: light.despacho
       state: 'off'
     - condition: state
-      entity_id: light.yeelight_color_0x458eb33
+      entity_id: light.yeelink_color1_ad66_light
       state: 'off'
-  action:
-  - service: light.turn_on
-    target:
-      entity_id: light.despacho
-    data:
-      kelvin: 6500
-      brightness_step_pct: 100
-  mode: restart
-- id: '1702054714830'
-  alias: luz salón auto OFF
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - binary_sensor.presencia_salon
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
-    to: 'on'
-  - platform: state
-    entity_id:
-    - binary_sensor.presencia_salon
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 10
-    to: 'off'
-  - platform: state
-    entity_id:
-    - light.salon
-  condition: []
-  action:
-  - if:
     - condition: state
-      entity_id: binary_sensor.presencia_salon
-      state: 'off'
-    then:
-    - if:
-      - condition: state
-        entity_id: media_player.tv_del_salon
-        state: playing
-      then:
-      - service: media_player.media_pause
-        target:
-          area_id: salon
-        data: {}
-      - delay:
-          hours: 0
-          minutes: 5
-          seconds: 0
-          milliseconds: 0
-      else:
-      - delay:
-          hours: 0
-          minutes: 1
-          seconds: 5
-          milliseconds: 0
-    - service: light.turn_off
-      metadata: {}
-      data: {}
-      target:
-        entity_id: light.salon
-        area_id: salon
-    else:
-    - if:
-      - condition: and
-        conditions:
-        - condition: state
-          entity_id: binary_sensor.presencia_salon
-          state: 'on'
-        - condition: not
-          conditions:
-          - condition: state
-            entity_id: media_player.tv_del_salon
-            state: playing
-      then:
-      - service: media_player.media_play
-        target:
-          entity_id: media_player.tv_del_salon
-        data: {}
+      entity_id: binary_sensor.movimiento_despacho
+      state: 'on'
+  action:
+  - service: homeassistant.update_entity
+    target:
+      entity_id:
+      - binary_sensor.movimiento_despacho_2_movimiento
+      - binary_sensor.movimiento_despacho_1_movimiento
+    data: {}
+  - service: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.despacho_trabajo
   mode: restart
 - id: '1702059143983'
   alias: Luz despacho auto OFF
@@ -619,11 +348,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 5
-  - platform: state
-    entity_id:
-    - binary_sensor.192_168_68_212
-    to:
+      seconds: 30
   - platform: state
     entity_id:
     - light.despacho
@@ -635,224 +360,19 @@
     to: 'on'
   condition: []
   action:
-  - service: homeassistant.update_entity
-    target:
-      entity_id:
-      - binary_sensor.movimiento_despacho_2_movimiento
-      - binary_sensor.movimiento_despacho_1_movimiento
-    data: {}
   - if:
     - condition: and
       conditions:
       - condition: state
         entity_id: binary_sensor.movimiento_despacho
         state: 'off'
-      - condition: state
-        entity_id: binary_sensor.192_168_68_212
-        state: 'off'
-        enabled: true
-      - condition: state
-        entity_id: button.pcck_suspender
-        state: unavailable
-        for:
-          hours: 0
-          minutes: 0
-          seconds: 0
     then:
-    - delay:
-        hours: 0
-        minutes: 3
-        seconds: 0
-        milliseconds: 0
     - service: light.turn_off
+      metadata: {}
+      data: {}
       target:
         area_id: despacho
-      data: {}
   mode: restart
-- id: '1702063814054'
-  alias: update sensors
-  description: ''
-  trigger:
-  - platform: time_pattern
-    minutes: /3
-    enabled: false
-  - platform: time_pattern
-    seconds: /9
-    enabled: false
-  condition: []
-  action:
-  - service: homeassistant.update_entity
-    data: {}
-    target:
-      entity_id:
-      - binary_sensor.192_168_68_212
-      - binary_sensor.192_168_68_200
-      - sensor.temperatura_termostato_temperatura
-      - binary_sensor.movimiento_pasillo_movimiento
-  mode: single
-- id: '1702574744141'
-  alias: Navidad
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - light.enchufe_2_interruptor
-    to: 'on'
-    for:
-      hours: 0
-      minutes: 3
-      seconds: 50
-  condition: []
-  action:
-  - service: light.toggle
-    target:
-      entity_id:
-      - light.enchufe_2_interruptor
-      device_id: []
-      area_id: []
-    data: {}
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 0
-      milliseconds: 50
-  - service: light.toggle
-    target:
-      entity_id:
-      - light.enchufe_2_interruptor
-      device_id: []
-      area_id: []
-    data: {}
-  mode: single
-- id: '1702925270265'
-  alias: Roborock update map
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - input_button.actualizar_mapa
-  condition: []
-  action:
-  - service: homeassistant.update_entity
-    target:
-      entity_id: camera.roborock_s6_pure
-    data: {}
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 30
-      milliseconds: 0
-  - service: homeassistant.update_entity
-    target:
-      entity_id: camera.roborock_s6_pure
-    data: {}
-  - service: notify.mobile_app_chekyphone
-    data:
-      message: 'Mapa Actualizado '
-  mode: single
-- id: '1703711375036'
-  alias: 'Apagado general '
-  description: ''
-  trigger:
-  - platform: device
-    type: changed_states
-    device_id: b3966c17c5c785d6fcbe3d32b741b298
-    entity_id: 8fabd1a7883fa0fffa3d302d529681a3
-    domain: light
-  - platform: device
-    type: changed_states
-    device_id: 2359fb0bbae57df7d4c78fa5b1a8e86c
-    entity_id: 85f79200ed639ba2d5afd39d96214da9
-    domain: light
-  - platform: state
-    entity_id:
-    - light.despacho
-  - platform: state
-    entity_id:
-    - light.yeelight_color_0x458eb33
-  - platform: state
-    entity_id:
-    - light.dormitorio
-  - platform: state
-    entity_id:
-    - light.yeelight_color_0x330dc29
-  - platform: state
-    entity_id:
-    - light.gateway_light_7811dcfab2fc
-  - platform: state
-    entity_id:
-    - light.salon
-  - platform: state
-    entity_id:
-    - input_boolean.caldera
-  - platform: state
-    entity_id:
-    - climate.caldera_termostato
-  - platform: state
-    entity_id:
-    - light.enchufe_2_interruptor
-  - platform: state
-    entity_id:
-    - input_boolean.caldera
-  condition:
-  - condition: numeric_state
-    entity_id: zone.home
-    below: 1
-  action:
-  - delay:
-      hours: 0
-      minutes: 0
-      seconds: 3
-      milliseconds: 0
-  - service: homeassistant.turn_off
-    target:
-      area_id:
-      - dormitorio
-      - salon
-      - cocina
-      - despacho
-      entity_id:
-      - light.centralita_light
-      - light.gateway_light_7811dcfab2fc
-    data: {}
-  - service: climate.turn_off
-    target:
-      entity_id: climate.caldera_termostato
-    data: {}
-  - service: input_boolean.turn_off
-    target:
-      entity_id: input_boolean.caldera
-    data: {}
-  mode: restart
-- id: '1704871966321'
-  alias: Pcck ON
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - binary_sensor.192_168_68_200
-    to: 'on'
-  - platform: state
-    entity_id:
-    - binary_sensor.192_168_68_200
-    to: 'off'
-  condition: []
-  action:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.192_168_68_200
-      state: 'on'
-    then:
-    - service: homeassistant.turn_on
-      target:
-        entity_id: switch.ladron_usb_1
-      data: {}
-    else:
-    - service: homeassistant.turn_off
-      target:
-        entity_id: switch.ladron_usb_1
-      data: {}
-  mode: single
 - id: '1705070087247'
   alias: Llegando a casa marco
   description: ''
@@ -881,149 +401,8 @@
     data:
       message: Chespin está llegando a casa
   mode: single
-- id: '1705565177009'
-  alias: 'Roborock: limpiar L-V'
-  description: ''
-  trigger:
-  - platform: time
-    at: input_datetime.hora_limpieza
-  condition:
-  - condition: state
-    entity_id: binary_sensor.workday_sensor
-    state: 'on'
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
-  action:
-  - device_id: f90f267269373f33820eada09da4a0b0
-    domain: vacuum
-    entity_id: 8be8688f6195fef0a72213fee4608906
-    type: clean
-  mode: single
-- id: '1707215600969'
-  alias: 'Roborock: limpiar S-D'
-  description: ''
-  trigger:
-  - platform: time
-    at: input_datetime.hora_limpieza_s_d
-  condition:
-  - condition: state
-    entity_id: binary_sensor.workday_sensor
-    state: 'off'
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 0
-  action:
-  - device_id: f90f267269373f33820eada09da4a0b0
-    domain: vacuum
-    entity_id: 8be8688f6195fef0a72213fee4608906
-    type: clean
-  mode: single
-- id: '1707828819329'
-  alias: encencer cafetera con la alarma
-  description: ''
-  trigger:
-  - platform: time
-    at: 07:30:00
-  condition:
-  - condition: numeric_state
-    entity_id: zone.home
-    above: 0
-  action:
-  - type: toggle
-    device_id: 2aca32db1805394806ffe41b316d0691
-    entity_id: ccbca8278372bf6be5d33281b0fa59ab
-    domain: switch
-  mode: restart
-- id: '1708342051879'
-  alias: Apagar cafetera
-  description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - switch.cafetera_interruptor
-    to: 'on'
-    for:
-      hours: 1
-      minutes: 30
-      seconds: 0
-  condition: []
-  action:
-  - service: switch.turn_off
-    metadata: {}
-    data: {}
-    target:
-      entity_id: switch.cafetera_interruptor
-  mode: single
-- id: '1708410983373'
-  alias: 'Roborock map smart update '
-  description: ''
-  trigger:
-  - platform: device
-    device_id: f90f267269373f33820eada09da4a0b0
-    domain: vacuum
-    entity_id: 8be8688f6195fef0a72213fee4608906
-    type: cleaning
-    enabled: false
-  - platform: device
-    device_id: f90f267269373f33820eada09da4a0b0
-    domain: vacuum
-    entity_id: 8be8688f6195fef0a72213fee4608906
-    type: docked
-    enabled: false
-  condition: []
-  action:
-  - choose:
-    - conditions:
-      - condition: device
-        device_id: f90f267269373f33820eada09da4a0b0
-        domain: vacuum
-        entity_id: 8be8688f6195fef0a72213fee4608906
-        type: is_docked
-      sequence:
-      - service: notify.mobile_app_chekyphone
-        metadata: {}
-        data:
-          message: 1h map
-      - delay:
-          hours: 1
-          minutes: 0
-          seconds: 0
-          milliseconds: 0
-    - conditions:
-      - condition: device
-        device_id: f90f267269373f33820eada09da4a0b0
-        domain: vacuum
-        entity_id: 8be8688f6195fef0a72213fee4608906
-        type: is_cleaning
-      sequence:
-      - service: notify.mobile_app_chekyphone
-        metadata: {}
-        data:
-          message: 30s map
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: 30
-          milliseconds: 0
-  - service: homeassistant.update_entity
-    target:
-      entity_id: camera.roborock_s6_pure
-    data: {}
-  - service: automation.trigger
-    target:
-      entity_id: automation.roborock_map_smart_update
-    data:
-      skip_condition: true
-  - service: homeassistant.update_entity
-    target:
-      entity_id: camera.roborock_s6_pure
-    data: {}
-  mode: restart
 - id: '1708559253093'
-  alias: Durmiendo
+  alias: luz dormitorio durmiendo
   description: ''
   trigger:
   - platform: state
@@ -1037,6 +416,9 @@
     entity_id: 3cb76db02ad65e9e4e08270b078b7157
     type: is_home
   action:
+  - service: notify.mobile_app_tabcheky
+    data:
+      message: "Parece que te dormiste \U0001F634\U0001F4A4\U0001F4A4"
   - service: light.turn_off
     metadata: {}
     data: {}
@@ -1046,30 +428,333 @@
     target:
       entity_id: media_player.jellyfin_lenovo_yt_x705f
     data: {}
+  mode: single
+- id: '1713360723075'
+  alias: smart salón
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.movimiento_extra_movimiento
+    - binary_sensor.presencia_salon_ocupacion
+  - platform: sun
+    event: sunset
+    offset: 0
+  condition: []
+  action:
+  - alias: apaga si no hay movimiento
+    if:
+    - condition: and
+      conditions:
+      - condition: state
+        entity_id: binary_sensor.presencia_salon_ocupacion
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.movimiento_extra_movimiento
+        state: 'off'
+    then:
+    - service: light.turn_off
+      target:
+        area_id:
+        - salon
+        entity_id:
+        - light.enchufe_2_interruptor
+        - light.salon
+      data: {}
+  - alias: por la tarde/noche, enciende si hay movimiento
+    if:
+    - condition: and
+      conditions:
+      - condition: sun
+        before: sunrise
+        after: sunset
+        enabled: true
+        before_offset: '1:00:00'
+        after_offset: -0:45:00
+      - condition: or
+        conditions:
+        - condition: state
+          entity_id: binary_sensor.presencia_salon_ocupacion
+          state: 'on'
+        - condition: state
+          entity_id: binary_sensor.movimiento_extra_movimiento
+          state: 'on'
+      - condition: numeric_state
+        entity_id: zone.home
+        above: 0
+    then:
+    - service: light.turn_on
+      metadata: {}
+      data: {}
+      target:
+        area_id: salon
+        entity_id:
+        - light.salon
+  mode: single
+- id: '1713363099665'
+  alias: Amanecer anochecer
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: 0
+  - platform: sun
+    event: sunset
+    offset: 0
+  condition: []
+  action:
   - service: notify.mobile_app_chekyphone
     metadata: {}
     data:
-      message: "Parece que te dormiste \U0001F634\U0001F4A4\U0001F4A4"
+      message: El sol ha atravesado el horizonte
   mode: single
-- id: '1709275321042'
-  alias: Auto on automations
-  description: ''
+- id: '1713364815825'
+  alias: Luz dormitorio botón
+  description: '
+
+    '
   trigger:
-  - platform: device
-    type: changed_states
-    device_id: b3966c17c5c785d6fcbe3d32b741b298
-    entity_id: 8fabd1a7883fa0fffa3d302d529681a3
-    domain: light
-  - platform: state
-    entity_id:
-    - light.despacho
+  - type: turned_on
+    platform: device
+    device_id: a7d977c7678c671a77dbc66e88edf3b5
+    entity_id: 27576fc5181f3d5141f35984490826c9
+    domain: binary_sensor
   condition: []
   action:
-  - service: automation.turn_on
+  - if:
+    - condition: or
+      conditions:
+      - condition: state
+        state: 'on'
+        entity_id: light.dormitorio
+      - condition: state
+        state: 'on'
+        entity_id: light.yeelight_color_0x330dc29
+    then:
+    - service: light.turn_off
+      data: {}
+      target:
+        area_id:
+        - dormitorio
+    else:
+    - service: light.turn_on
+      data:
+        brightness_step_pct: 100
+        kelvin: 6500
+      target:
+        area_id: dormitorio
+  mode: single
+- id: '1713365585382'
+  alias: Luz despacho bypass
+  description: '
+
+    '
+  trigger:
+  - type: turned_on
+    platform: device
+    device_id: cac8eaf37904039a66158f6e5efb4d69
+    entity_id: 835711241331f82a1a83e78e67dd19f1
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 4
+  condition: []
+  action:
+  - if:
+    - condition: or
+      conditions:
+      - condition: state
+        state: 'on'
+        entity_id: light.despacho
+      - condition: state
+        state: 'on'
+        entity_id: light.yeelight_color_0x458eb33
+    then:
+    - service: light.turn_off
+      data: {}
+      target:
+        area_id:
+        - despacho
+    else:
+    - service: scene.turn_on
+      metadata: {}
+      target:
+        entity_id: scene.despacho_trabajo
+    enabled: false
+  - service: automation.turn_off
     metadata: {}
-    data: {}
+    data:
+      stop_actions: true
     target:
       entity_id:
-      - automation.luz_despacho_auto
       - automation.luz_despacho_auto_off
+      - automation.luz_despacho_auto
+  - service: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.despacho_gamming
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - service: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.despacho_trabajo
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - service: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.despacho_trabajo
   mode: single
+- id: '1713391309080'
+  alias: luz apagar si estoy fuera
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 26188fad9e08f8810d6bbb0e6c536128
+    entity_id: 059aee9b6060f3f93cff1c350aa90284
+    domain: binary_sensor
+  - type: not_opened
+    platform: device
+    device_id: 26188fad9e08f8810d6bbb0e6c536128
+    entity_id: 059aee9b6060f3f93cff1c350aa90284
+    domain: binary_sensor
+  - platform: state
+    entity_id:
+    - binary_sensor.sensor_puerta_apertura
+    - binary_sensor.sensor_puerta_apertura_2
+  - platform: state
+    entity_id:
+    - light.dormitorio
+    - light.yeelight_color_0x330dc29
+  condition: []
+  action:
+  - if:
+    - condition: state
+      entity_id: person.carcheky
+      state: not_home
+    then:
+    - service: light.turn_off
+      metadata: {}
+      data: {}
+      target:
+        area_id: dormitorio
+  mode: single
+- id: '1713479413152'
+  alias: Smart dormitorio
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.movimiento_dormitorio_movimiento
+  - platform: state
+    entity_id:
+    - binary_sensor.sensor_puerta_apertura
+  condition:
+  - condition: state
+    entity_id: person.carcheky
+    state: home
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.sensor_puerta_apertura
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.movimiento_dormitorio_movimiento
+        state: 'on'
+      sequence:
+      - service: light.turn_on
+        metadata: {}
+        data: {}
+        target:
+          area_id: dormitorio
+      alias: Abierto abierto
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.sensor_puerta_apertura
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.movimiento_dormitorio_movimiento
+        state: 'on'
+      sequence:
+      - service: light.turn_on
+        metadata: {}
+        data: {}
+        target:
+          entity_id: light.yeelight_color_0x330dc29
+      - if:
+        - condition: time
+          after: '23:00:00'
+        then:
+        - delay:
+            hours: 0
+            minutes: 2
+            seconds: 0
+            milliseconds: 0
+        - service: light.turn_off
+          metadata: {}
+          data: {}
+          target:
+            entity_id:
+            - light.dormitorio
+      alias: Cerrado abierto
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.sensor_puerta_apertura
+        state: 'on'
+      - condition: state
+        entity_id: binary_sensor.movimiento_dormitorio_movimiento
+        state: 'off'
+      sequence:
+      - delay:
+          hours: 0
+          minutes: 5
+          seconds: 0
+          milliseconds: 0
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.yeelight_color_0x330dc29
+        data: {}
+      - service: light.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - light.dormitorio
+      alias: Abierto cerrado
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.sensor_puerta_apertura
+        state: 'off'
+      - condition: state
+        entity_id: binary_sensor.movimiento_dormitorio_movimiento
+        state: 'off'
+      sequence:
+      - service: light.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - light.dormitorio
+      - delay:
+          hours: 0
+          minutes: 5
+          seconds: 0
+          milliseconds: 0
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.yeelight_color_0x330dc29
+        data: {}
+      alias: Cerrado cerrado
+  mode: restart

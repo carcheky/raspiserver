@@ -1,32 +1,54 @@
-
 # Loads default set of integrations. Do not remove.
+# This integration
+# is a meta-component and configures a default set of integrations for Home Assistant to load. The 
+# integrations that will be loaded are:
+# https://www.home-assistant.io/integrations/default_config/
 default_config:
-device_sun_light_trigger:
-my:
-bluetooth:
-api:
-
-# Load frontend themes from the themes folder
-frontend:
-  themes: !include_dir_merge_named themes
-
-# Text to speech
-tts:
-  - platform: google_translate
-
-automation: !include automations.yaml
-script: !include scripts.yaml
-scene: !include scenes.yaml
 
 # http integration
+# The http integration serves all files and data required for the Home Assistant frontend.
+# You only need to add this to your configuration file if you want to change any of the default settings.
+# https://www.home-assistant.io/integrations/http/
 http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
     - 0.0.0.0/0
     - ::1
+# The api integration exposes a RESTful API and allows one to interact with a Home Assistant instance that 
+# is running headless. This integration depends on the HTTP integration.
+api:
 
-# google_assistant integration
+# The Home Assistant integration provides generic implementations like the generic homeassistant.turn_on.
+homeassistant:
+  name: Redgraciados
+  unit_system: metric
+  currency: EUR
+  country: ES
+  time_zone: "Europe/Madrid"
+  external_url: !secret external_url
+  internal_url: !secret internal_url
+
+# While this integration is part of default_config: to enable automatic discovery of the Bluetooth Adapter, it will only be enabled by setting up the configuration flow, or manually adding it to your configuration.yaml.
+bluetooth:
+
+# INCLUDES
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+# This offers the official frontend to control Home Assistant. This integration is enabled by default 
+# unless you’ve disabled or removed the default_config: line from your configuration. If that is the 
+# case, the following example shows you how to enable this integration manually:
+frontend:
+  themes: !include_dir_merge_named themes
+
+# Text-to-speech (TTS) enables Home Assistant to speak to you.
+tts:
+  - platform: google_translate
+
+# The google_assistant integration allows you to control your Home Assistant devices via Google Assistant 
+# on your mobile, tablet, or Google Home device.
 google_assistant:
   project_id: home-assistant-raspiserver
   service_account: !include SERVICE_ACCOUNT.JSON
@@ -38,24 +60,13 @@ google_assistant:
     - vacuum
     - group
     # - scene
-    # - climate
-  # entity_config:
-  #   input_boolean.default_dashboard:
-  #     expose: false
-  #   input_select.default_dashboard:
-  #     expose: false
-  #   sensor.temperature_humidity_sensor_fb23_temperature:
-  #     expose: false
-  #   sensor.temperature_humidity_sensor_f85c_temperature:
-  #     expose: false
-  #   sensor.temperature_humidity_sensor_2d7c_temperature:
-  #     expose: false
-  #   sensor.temperature_humidity_sensor_fb23_humidity:
-  #     expose: false
-  #   sensor.temperature_humidity_sensor_f85c_humidity:
-  #     expose: false
-  #   sensor.temperature_humidity_sensor_2d7c_humidity:
-  #     expose: false
+
+# The ZHA (Zigbee Home Automation) integration allows you to wirelessly connect many off-the-shelf 
+# Zigbee-based devices directly to Home Assistant, using one of the many available Zigbee coordinators.
+zha:
+  custom_quirks_path: /config/custom_zha_quirks
+  database_path: /config/zigbee.db 
+  enable_quirks: true
 
 # wake on lan integration
 switch:
@@ -63,94 +74,34 @@ switch:
     mac: !secret wake_on_lan_mac_pcck
     name: Wake PCCK 
 
-# homeassistant integration
-homeassistant:
-  name: Drona
-  unit_system: metric
-  currency: EUR
-  country: ES
-  time_zone: "Europe/Madrid"
-  external_url: !secret external_url
-  internal_url: !secret internal_url
 
-# xiaomi_cloud_map_extractor
-camera:
-  - platform: xiaomi_cloud_map_extractor
-    host: !secret xiaomi_vacuum_host
-    token: !secret xiaomi_vacuum_token
-    username: !secret xiaomi_cloud_username
-    password: !secret xiaomi_cloud_password
-    draw: ['all']
-    scan_interval: 900
-    map_transformation:
-      scale: 1
-      trim:
-        top: 20
-        left: 10
-        bottom: 15
-        right: 30
-    # attributes:
-    #   - calibration_points
-    country: "sg"
-    name: "Roborock S6 Pure"
-    attributes:
-      - calibration_points
-      - charger
-      - cleaned_rooms
-      - country
-      - goto
-      - goto_path
-      - goto_predicted_path
-      - image
-      - is_empty
-      - map_name
-      - no_go_areas
-      - no_mopping_areas
-      - obstacles
-      - ignored_obstacles
-      - obstacles_with_photo
-      - ignored_obstacles_with_photo
-      - path
-      - room_numbers
-      - rooms
-      - vacuum_position
-      - vacuum_room
-      - vacuum_room_name
-      - walls
-      - zones
-    # auto_update: true
-    store_map_raw: true
-    store_map_image: true
-# xiaomi_cloud_map_extractor END
 
-zha:
-  custom_quirks_path: /config/custom_zha_quirks
-  database_path: /config/zigbee.db 
-  enable_quirks: true
-
+# order debug logger
+#     critical
+#     fatal
+#     error
+#     warning
+#     warn
+#     info
+#     debug
+#     notset
 logger:
-  default: error
-  # logs:
-  #   homeassistant.components.zha.core.cluster_handlers: debug
-  #   bellows.ezsp: info
-  #   bellows.zigbee.application: info
-  #   custom_components.zha_toolkit: info
-  #   zigpy_deconz.api: info
-  #   zigpy_deconz.zigbee.application: info
-  #   zigpy_xbee.api: info
-  #   zigpy_xbee.zigbee.application: info
-  #   zigpy_zcl: info
-  #   zigpy_zigate: info
-  #   zigpy_znp: info
-  #   zigpy: info
-  #   zhaquirks: info
-  #   homeassistant.components.zha: info
-  #   homeassistant.core: info
-  #   homeassistant.loader: info
-
-
-# # Example configuration.yaml entry
-# sensor:
-#   - platform: mqtt_room
-#     device_id: 123testid
-#     state_topic: "espresense/devices/123testid"
+  default: warn
+  logs:
+    homeassistant.components.automation: debug
+  #   aemet_opendata.interface: debug
+  #   homeassistant.components.google_assistant: info
+  #   Jellyfin: error
+  #   async_upnp_client: error
+  #   custom_components: critical
+  #   homeassistant.core: critical
+  #   homeassistant.loader: critical
+  #   aemet_opendata: critical
+  #   homeassistant.components.websocket_api: critical
+  #   bellows: critical
+  #   bleak: critical
+  #   homeassistant.components.recorder: critical
+  #   homeassistant.components.http: critical
+  #   homeassistant.components.bluetooth: critical
+  #   async_upnp_client: critical
+  #   custom_components.cloudflare_tunnel_monitor: critical
