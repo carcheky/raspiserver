@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.25.1](https://gitlab.com/carcheky/raspiserver/compare/v6.25.0...v6.25.1) (2024-04-23)
+
+
+### Bug Fixes
+
+* gitignore ([fc4e046](https://gitlab.com/carcheky/raspiserver/commit/fc4e04641da6ad5c1eff435f3df6fcd970acd462))
+
 # [6.25.0](https://gitlab.com/carcheky/raspiserver/compare/v6.24.2...v6.25.0) (2024-04-19)
 
 
