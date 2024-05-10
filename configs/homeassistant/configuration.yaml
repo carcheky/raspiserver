@@ -88,7 +88,7 @@ switch:
 logger:
   default: warn
   logs:
-    homeassistant.components.automation: debug
+    homeassistant.components.automation: warn
   #   aemet_opendata.interface: debug
   #   homeassistant.components.google_assistant: info
   #   Jellyfin: error
