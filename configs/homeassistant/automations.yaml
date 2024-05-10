@@ -577,7 +577,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 3
+      seconds: 4
   - platform: state
     entity_id:
     - automation.luz_despacho_auto_off
@@ -628,7 +628,7 @@
     target:
       entity_id: scene.despacho_trabajo
   - delay:
-      hours: 1
+      hours: 3
       minutes: 0
       seconds: 5
       milliseconds: 0
