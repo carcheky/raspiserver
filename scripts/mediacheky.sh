@@ -91,11 +91,11 @@ function update() {
     docker system prune -af 
     docker volume prune -af 
     mediacheky install
-    set -eux
     [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/automations.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/automations.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/configuration.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scenes.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ 
     [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scripts.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
+    git add configs && git commit -m "fix: configs"
     # [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/RAID-mediacheky
     [ ! -d ${RASPISERVER}/logs ] && mkdir -p ${RASPISERVER}/logs
     [ ! -f ${RASPISERVER}/logs/mediacheky-update.log ] && touch ${RASPISERVER}/logs/mediacheky-update.log
