@@ -91,10 +91,11 @@ function update() {
     docker system prune -af 
     docker volume prune -af 
     mediacheky install
-    [ -f ${RASPICONFIG}/homeassistant/config/automations.yaml ] && cp ${RASPICONFIG}/homeassistant/config/automations.yaml ${RASPISERVER}/configs/homeassistant/ 
-    [ -f ${RASPICONFIG}/homeassistant/config/configuration.yaml ] && cp ${RASPICONFIG}/homeassistant/config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ 
-    [ -f ${RASPICONFIG}/homeassistant/config/scenes.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ 
-    [ -f ${RASPICONFIG}/homeassistant/config/scripts.yaml ] && cp ${RASPICONFIG}/homeassistant/config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
+    set -eux
+    [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/automations.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/automations.yaml ${RASPISERVER}/configs/homeassistant/ 
+    [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/configuration.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/configuration.yaml ${RASPISERVER}/configs/homeassistant/ 
+    [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scenes.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scenes.yaml ${RASPISERVER}/configs/homeassistant/ 
+    [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scripts.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/scripts.yaml ${RASPISERVER}/configs/homeassistant/
     # [ -d /media/raspimedia10 ] && sudo mount -a && sudo mdadm -D /dev/md0 && sudo df -h  /media/raspi* /home/carcheky/mediacheky/RASPIMEDIA /home/carcheky/RAID-mediacheky
     [ ! -d ${RASPISERVER}/logs ] && mkdir -p ${RASPISERVER}/logs
     [ ! -f ${RASPISERVER}/logs/mediacheky-update.log ] && touch ${RASPISERVER}/logs/mediacheky-update.log

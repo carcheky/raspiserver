@@ -110,7 +110,34 @@
       friendly_name: Altavoz despacho
       supported_features: 152461
       state: 'off'
-    light.yeelight_color_0x458eb33:
+    light.despacho:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 7042
+      min_mireds: 142
+      max_mireds: 500
+      effect_list:
+      - colorloop
+      supported_color_modes:
+      - color_temp
+      - hs
+      - xy
+      effect:
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      entity_id:
+      - light.despacho_1_luz
+      - light.despacho_2_luz
+      - light.despacho_3
+      icon: mdi:lightbulb-group
+      friendly_name: Luz despacho
+      supported_features: 44
+      state: 'off'
+    light.luz_escritorio:
       min_color_temp_kelvin: 1700
       max_color_temp_kelvin: 6535
       min_mireds: 153
@@ -155,37 +182,9 @@
       hs_color:
       rgb_color:
       xy_color:
-      flowing: false
+      flowing: true
       music_mode: false
-      friendly_name: Luz despacho escritorio
-      supported_features: 44
-      state: 'off'
-    light.despacho:
-      min_color_temp_kelvin: 2000
-      max_color_temp_kelvin: 7042
-      min_mireds: 142
-      max_mireds: 500
-      effect_list:
-      - colorloop
-      supported_color_modes:
-      - brightness
-      - color_temp
-      - hs
-      - xy
-      effect:
-      color_mode:
-      brightness:
-      color_temp_kelvin:
-      color_temp:
-      hs_color:
-      rgb_color:
-      xy_color:
-      entity_id:
-      - light.despacho_1_luz
-      - light.despacho_2_luz
-      - light.despacho_3
-      icon: mdi:lightbulb-group
-      friendly_name: Luz despacho
+      friendly_name: Luz escritorio
       supported_features: 44
       state: 'off'
   icon: mdi:monitor-speaker-off
@@ -705,18 +704,18 @@
       effect:
       color_mode: color_temp
       brightness: 254
-      color_temp_kelvin: 6666
-      color_temp: 150
+      color_temp_kelvin: 7042
+      color_temp: 142
       hs_color:
-      - 300
-      - 2.084
+      - 239.562
+      - 5.378
       rgb_color:
-      - 255
-      - 249
+      - 241
+      - 241
       - 255
       xy_color:
-      - 0.325
-      - 0.322
+      - 0.313
+      - 0.314
       off_with_transition: false
       off_brightness:
       friendly_name: despacho 1 Luz
@@ -735,18 +734,18 @@
       effect:
       color_mode: color_temp
       brightness: 254
-      color_temp_kelvin: 6666
-      color_temp: 150
+      color_temp_kelvin: 7042
+      color_temp: 142
       hs_color:
-      - 300
-      - 2.084
+      - 239.562
+      - 5.378
       rgb_color:
-      - 255
-      - 249
+      - 241
+      - 241
       - 255
       xy_color:
-      - 0.325
-      - 0.322
+      - 0.313
+      - 0.314
       off_with_transition: false
       off_brightness:
       friendly_name: despacho 2 Luz
@@ -760,66 +759,79 @@
       supported_color_modes:
       - color_temp
       - hs
-      friendly_name: Luz despacho 3
-      supported_features: 0
       color_mode: color_temp
       brightness: 255
-      color_temp_kelvin: 6097
-      color_temp: 164
+      color_temp_kelvin: 6535
+      color_temp: 153
       hs_color:
-      - 31.908
-      - 6.078
-      rgb_color:
-      - 255
-      - 247
-      - 239
-      xy_color:
-      - 0.337
-      - 0.337
-      state: 'on'
-    light.yeelink_color1_ad66_light:
-      min_color_temp_kelvin: 1700
-      max_color_temp_kelvin: 6493
-      min_mireds: 154
-      max_mireds: 588
-      effect_list:
-      - Color
-      - Day
-      supported_color_modes:
-      - color_temp
-      - hs
-      effect: Day
-      color_mode: color_temp
-      brightness: 255
-      color_temp_kelvin: 6493
-      color_temp: 154
-      hs_color:
-      - 48.348
-      - 2.014
+      - 54.768
+      - 1.6
       rgb_color:
       - 255
       - 254
-      - 249
+      - 250
       xy_color:
-      - 0.327
-      - 0.334
-      model: yeelink.light.color1
-      lan_ip: 192.168.68.102
-      mac_address: 78:11:DC:6A:AD:66
-      entity_class: MiotLightEntity
-      miot_type: urn:miot-spec-v2:device:light:0000A001:yeelink-color1:1
-      light.on: true
-      light.brightness: 100
-      light.color: 16739923
-      light.color_temperature: 6494
-      light.mode: 2
-      light.nl_br: ''
-      light.off_delay_time: 0
-      state_updater: lan
-      sub_entities:
-      - light-2.off_delay_time-102
-      friendly_name: Luz escritorio Light
-      supported_features: 36
+      - 0.326
+      - 0.333
+      friendly_name: Luz despacho 3
+      supported_features: 0
+      state: 'on'
+    light.luz_escritorio:
+      min_color_temp_kelvin: 1700
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 588
+      effect_list:
+      - Strobe color
+      - Police
+      - Christmas
+      - RGB
+      - Random Loop
+      - Fast Random Loop
+      - LSD
+      - Slowdown
+      - Night Mode
+      - Date Night
+      - Movie
+      - Sunrise
+      - Sunset
+      - Romance
+      - Happy Birthday
+      - Disco
+      - Strobe epilepsy!
+      - Alarm
+      - Police2
+      - WhatsApp
+      - Facebook
+      - Twitter
+      - Home
+      - Candle Flicker
+      - Tea Time
+      - Slow Temp
+      - Stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      - rgb
+      effect: Home
+      color_mode: color_temp
+      brightness: 255
+      color_temp_kelvin: 6535
+      color_temp: 153
+      hs_color:
+      - 54.768
+      - 1.6
+      rgb_color:
+      - 255
+      - 254
+      - 250
+      xy_color:
+      - 0.326
+      - 0.333
+      flowing: true
+      music_mode: false
+      friendly_name: Luz escritorio
+      supported_features: 44
       state: 'on'
   icon: mdi:briefcase
   metadata:
@@ -1066,3 +1078,156 @@
     light.yeelink_color1_5d9f_light:
       entity_only: true
   icon: mdi:lightbulb-variant
+- id: '1713883982887'
+  name: despacho confirmación acción
+  entities:
+    light.luz_escritorio:
+      min_color_temp_kelvin: 1700
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 588
+      effect_list:
+      - Strobe color
+      - Police
+      - Christmas
+      - RGB
+      - Random Loop
+      - Fast Random Loop
+      - LSD
+      - Slowdown
+      - Night Mode
+      - Date Night
+      - Movie
+      - Sunrise
+      - Sunset
+      - Romance
+      - Happy Birthday
+      - Disco
+      - Strobe epilepsy!
+      - Alarm
+      - Police2
+      - WhatsApp
+      - Facebook
+      - Twitter
+      - Home
+      - Candle Flicker
+      - Tea Time
+      - Slow Temp
+      - Stop
+      supported_color_modes:
+      - color_temp
+      - hs
+      - rgb
+      effect: Random Loop
+      color_mode: color_temp
+      brightness: 255
+      color_temp_kelvin: 6535
+      color_temp: 153
+      hs_color:
+      - 54.768
+      - 1.6
+      rgb_color:
+      - 255
+      - 254
+      - 250
+      xy_color:
+      - 0.326
+      - 0.333
+      flowing: true
+      music_mode: false
+      friendly_name: Luz escritorio
+      supported_features: 44
+      state: 'on'
+    light.despacho_1_luz:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 7042
+      min_mireds: 142
+      max_mireds: 500
+      effect_list:
+      - colorloop
+      supported_color_modes:
+      - color_temp
+      - xy
+      effect:
+      color_mode: xy
+      brightness: 254
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      - 348.617
+      - 99.216
+      rgb_color:
+      - 255
+      - 2
+      - 50
+      xy_color:
+      - 0.682
+      - 0.291
+      off_with_transition: false
+      off_brightness:
+      friendly_name: despacho 1 Luz
+      supported_features: 44
+      state: 'on'
+    light.despacho_2_luz:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 7042
+      min_mireds: 142
+      max_mireds: 500
+      effect_list:
+      - colorloop
+      supported_color_modes:
+      - color_temp
+      - xy
+      effect:
+      color_mode: xy
+      brightness: 254
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      - 350.824
+      - 100
+      rgb_color:
+      - 255
+      - 0
+      - 39
+      xy_color:
+      - 0.689
+      - 0.294
+      off_with_transition: false
+      off_brightness:
+      friendly_name: despacho 2 Luz
+      supported_features: 44
+      state: 'on'
+    light.despacho_3:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 500
+      supported_color_modes:
+      - color_temp
+      - hs
+      color_mode: hs
+      brightness: 255
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      - 353
+      - 91.4
+      rgb_color:
+      - 255
+      - 21
+      - 49
+      xy_color:
+      - 0.676
+      - 0.293
+      friendly_name: Luz despacho 3
+      supported_features: 0
+      state: 'on'
+  icon: mdi:bulkhead-light
+  metadata:
+    light.despacho_1_luz:
+      entity_only: true
+    light.despacho_2_luz:
+      entity_only: true
+    light.despacho_3:
+      entity_only: true
