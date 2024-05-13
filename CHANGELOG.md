@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## [6.25.2](https://gitlab.com/carcheky/raspiserver/compare/v6.25.1...v6.25.2) (2024-05-11)
+
+
+### Bug Fixes
+
+* backup on update ([6ec5c24](https://gitlab.com/carcheky/raspiserver/commit/6ec5c2458f137919175abff5e46d5ca9e6bbcea6))
+* backup script ([b8f0638](https://gitlab.com/carcheky/raspiserver/commit/b8f0638962884fd93a97875dc98275f1bcafed14))
+* configs ([88dfa01](https://gitlab.com/carcheky/raspiserver/commit/88dfa0192b17ce75cf62e0709d4c9b9f38f66734))
+* configs ([423f738](https://gitlab.com/carcheky/raspiserver/commit/423f7384ef9c02c279fd8d7f642c4486b677bdf0))
+* **mediacheky:** fix user ([2559ef6](https://gitlab.com/carcheky/raspiserver/commit/2559ef60fff9976135aab289dfc22703ac708dab))
+
 ## [6.25.1](https://gitlab.com/carcheky/raspiserver/compare/v6.25.0...v6.25.1) (2024-04-23)
 
 
