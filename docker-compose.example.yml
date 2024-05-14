@@ -7,9 +7,10 @@ include:
 # - apps/homeassistant/docker-compose.homeassistant.yml
 # - apps/mediaserver/docker-compose.mediaserver.yml
 # - apps/tunnel/docker-compose.tunnel.yml
-# - apps/dashboard/docker-compose.dashboard.yml
+# - apps/dashboard/docker-compose.homarr.yml
 # - apps/adguard/docker-compose.adguardhome.yml
 # - apps/nginx/docker-compose.nginx.yml
+# - apps/nextcloud/docker-compose.nextcloud.yml
 
 # - apps/pending/docker-compose.activepieces.yml
 # - apps/pending/docker-compose.authelia.yml
