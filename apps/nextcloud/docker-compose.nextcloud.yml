@@ -12,11 +12,17 @@ services:
       - DOCKER_MODS=linuxserver/mods:nextcloud-mediadc|linuxserver/mods:nextcloud-memories
     volumes:
       - ./volumes/nextcloud-config:/config
+      - ./volumes/nextcloud-config:/config
+      - ./volumes/nextcloud-php/phpcustom.ini:/etc/php83/conf.d/phpcustom.ini
       - ${NEXTCLOUD_PATH_DATA}:/data
     ports:
       - 8034:80
       - 4434:443
       # - 443:443
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "105" 
 
   nextclouddb:
     image: mariadb
