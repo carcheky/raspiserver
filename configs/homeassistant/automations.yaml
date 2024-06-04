@@ -32,7 +32,7 @@
     - sensor.tabcheky_battery_level
     above: 80
     alias: '>80'
-    enabled: false
+    enabled: true
   - platform: numeric_state
     entity_id:
     - sensor.tabcheky_battery_level
