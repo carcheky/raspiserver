@@ -11,6 +11,7 @@ include:
 # - apps/adguard/docker-compose.adguardhome.yml
 # - apps/nginx/docker-compose.nginx.yml
 # - apps/nextcloud/docker-compose.nextcloud.yml
+# - apps/wireward/docker-compose.wireward.yml
 
 # - apps/pending/docker-compose.activepieces.yml
 # - apps/pending/docker-compose.authelia.yml
