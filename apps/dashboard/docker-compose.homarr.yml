@@ -1,6 +1,6 @@
 services:
 
-# homarr http://localhost:7575
+  # homarr http://localhost:7575
   homarr:
     image: ghcr.io/ajnart/homarr:latest
     container_name: homarr
@@ -14,25 +14,26 @@ services:
     volumes:
       - ./volumes/homarr-config:/app/data/configs
       - ./volumes/homarr-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - '7575:7575'
-  
-# # organizr http://localhost:8085
-#   organizr:
-#     image: organizr/organizr
-#     container_name: organizr
-#     restart: always
-#     environment:
-#       - PUID=${PUID}
-#       - PGID=${PGID}
-#       - TZ=${TIMEZONE}
-#       - fpm=false
-#       - branch=v2-master
-#     volumes:
-#       - ${RASPICONFIG}/organizr/config:/config
-#       - ${RASPICONFIG}/organizr/data:/data
-#     ports:
-#       - 9983:80
+      
+  # # organizr http://localhost:8085
+  #   organizr:
+  #     image: organizr/organizr
+  #     container_name: organizr
+  #     restart: always
+  #     environment:
+  #       - PUID=${PUID}
+  #       - PGID=${PGID}
+  #       - TZ=${TIMEZONE}
+  #       - fpm=false
+  #       - branch=v2-master
+  #     volumes:
+  #       - ${RASPICONFIG}/organizr/config:/config
+  #       - ${RASPICONFIG}/organizr/data:/data
+  #     ports:
+  #       - 9983:80
 
   # homepage:
   #   image: ghcr.io/gethomepage/homepage:latest
