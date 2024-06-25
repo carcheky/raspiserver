@@ -211,7 +211,7 @@ services:
   janitorr:
     container_name: janitorr
     # image: ghcr.io/schaka/janitorr:native
-    image: ghcr.io/schaka/janitorr:latest
+    image: ghcr.io/schaka/janitorr:v1.4.5
     volumes:
       - ./volumes/janitorr-config/:/config
       # - ./volumes/janitorr-config/application.yml:/workspace/application.yml #native
