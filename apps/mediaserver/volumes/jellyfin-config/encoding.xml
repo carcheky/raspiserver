@@ -5,7 +5,7 @@
   <FallbackFontPath />
   <EnableFallbackFont>false</EnableFallbackFont>
   <EnableAudioVbr>false</EnableAudioVbr>
-  <DownMixAudioBoost>2</DownMixAudioBoost>
+  <DownMixAudioBoost>3</DownMixAudioBoost>
   <DownMixStereoAlgorithm>NightmodeDialogue</DownMixStereoAlgorithm>
   <MaxMuxingQueueSize>2048</MaxMuxingQueueSize>
   <EnableThrottling>false</EnableThrottling>
@@ -28,7 +28,7 @@
   <VppTonemappingContrast>1</VppTonemappingContrast>
   <H264Crf>23</H264Crf>
   <H265Crf>28</H265Crf>
-  <EncoderPreset>veryslow</EncoderPreset>
+  <EncoderPreset />
   <DeinterlaceDoubleRate>true</DeinterlaceDoubleRate>
   <DeinterlaceMethod>yadif</DeinterlaceMethod>
   <EnableDecodingColorDepth10Hevc>true</EnableDecodingColorDepth10Hevc>
