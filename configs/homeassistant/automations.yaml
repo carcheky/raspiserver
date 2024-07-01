@@ -916,3 +916,45 @@
           - switch.ladron_usb_1
       alias: <70
   mode: restart
+- id: '1719839411973'
+  alias: Estado PCCK
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - button.pcck_reiniciar
+    - button.pcck_suspender
+    - binary_sensor.192_168_68_200
+    to:
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - type: is_connected
+        condition: device
+        device_id: 7de9bd5c5dbc041242bac95000c445d0
+        entity_id: d5b4f98683efd6e94bde6de367d6e39f
+        domain: binary_sensor
+      sequence:
+      - service: notify.mobile_app_chekyphone
+        metadata: {}
+        data:
+          title: 'PCCK '
+          message: 'Encendido '
+    - conditions:
+      - type: is_not_connected
+        condition: device
+        device_id: 7de9bd5c5dbc041242bac95000c445d0
+        entity_id: d5b4f98683efd6e94bde6de367d6e39f
+        domain: binary_sensor
+      sequence:
+      - service: notify.mobile_app_chekyphone
+        metadata: {}
+        data:
+          title: 'PCCK '
+          message: 'Apagado '
+  mode: single
