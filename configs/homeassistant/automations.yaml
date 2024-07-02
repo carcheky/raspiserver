@@ -566,7 +566,7 @@
         area_id: dormitorio
   mode: single
 - id: '1713365585382'
-  alias: Luz despacho bypass
+  alias: Luz despacho bypass on
   description: '
 
     '
@@ -634,17 +634,20 @@
       minutes: 0
       seconds: 5
       milliseconds: 0
+    enabled: false
   - service: automation.turn_on
     target:
       entity_id:
       - automation.luz_despacho_auto_off
       - automation.luz_despacho_auto
     data: {}
+    enabled: false
   - delay:
       hours: 0
       minutes: 0
       seconds: 5
       milliseconds: 0
+    enabled: false
   - service: automation.trigger
     target:
       entity_id:
@@ -652,6 +655,13 @@
       - automation.luz_despacho_auto
     data:
       skip_condition: true
+    enabled: false
+  - delay:
+      hours: 3
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+    enabled: false
   mode: single
 - id: '1713391309080'
   alias: luz dormitorio apagar si estoy fuera
@@ -929,7 +939,7 @@
     for:
       hours: 0
       minutes: 0
-      seconds: 5
+      seconds: 0
   condition: []
   action:
   - choose:
@@ -957,4 +967,117 @@
         data:
           title: 'PCCK '
           message: 'Apagado '
+  mode: single
+- id: '1719937859757'
+  alias: Despacho bypass off
+  description: '
+
+    '
+  trigger:
+  - type: turned_on
+    platform: device
+    device_id: cac8eaf37904039a66158f6e5efb4d69
+    entity_id: 835711241331f82a1a83e78e67dd19f1
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 4
+    enabled: false
+  - platform: state
+    entity_id:
+    - automation.luz_despacho_auto_off
+    - automation.luz_despacho_auto
+    to: 'off'
+    enabled: false
+  condition: []
+  action:
+  - if:
+    - condition: or
+      conditions:
+      - condition: state
+        state: 'on'
+        entity_id: light.despacho
+      - condition: state
+        state: 'on'
+        entity_id: light.yeelight_color_0x458eb33
+    then:
+    - service: light.turn_off
+      data: {}
+      target:
+        area_id:
+        - despacho
+    else:
+    - service: scene.turn_on
+      metadata: {}
+      target:
+        entity_id: scene.despacho_trabajo
+    enabled: false
+  - service: automation.turn_off
+    metadata: {}
+    data:
+      stop_actions: true
+    target:
+      entity_id:
+      - automation.luz_despacho_auto_off
+      - automation.luz_despacho_auto
+    enabled: false
+  - service: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.despacho_confirmacion_accion
+    enabled: false
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+    enabled: false
+  - service: scene.turn_on
+    metadata: {}
+    target:
+      entity_id: scene.despacho_trabajo
+    enabled: false
+  - delay:
+      hours: 3
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+    enabled: false
+  - service: automation.turn_on
+    target:
+      entity_id:
+      - automation.luz_despacho_auto_off
+      - automation.luz_despacho_auto
+    data: {}
+  mode: single
+- id: '1719942947227'
+  alias: 'PCCK on auto móvil '
+  description: ''
+  trigger:
+  - platform: webhook
+    allowed_methods:
+    - POST
+    - PUT
+    local_only: true
+    webhook_id: pcck-on-auto-movil-ugkK1-UsP2nHeqOXmAqqpxZs
+  condition: []
+  action:
+  - service: homeassistant.update_entity
+    target:
+      entity_id: binary_sensor.192_168_68_200
+    data: {}
+  - choose:
+    - conditions:
+      - type: is_not_connected
+        condition: device
+        device_id: 7de9bd5c5dbc041242bac95000c445d0
+        entity_id: d5b4f98683efd6e94bde6de367d6e39f
+        domain: binary_sensor
+      sequence:
+      - service: switch.toggle
+        metadata: {}
+        data: {}
+        target:
+          entity_id: switch.pcck_switch_interruptor
   mode: single
