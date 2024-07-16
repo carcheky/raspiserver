@@ -16,8 +16,8 @@ services:
       - TZ=${TIMEZONE}
       - JELLYFIN_PublishedServerUrl=${DOMAIN}
       - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
-      - JELLYFIN_FFmpeg__probesize=2G
-      - JELLYFIN_FFmpeg__analyzeduration=1G
+      - JELLYFIN_FFmpeg__probesize=1G
+      - JELLYFIN_FFmpeg__analyzeduration=500M
     volumes:
       - ./volumes/jellyfin-config:/config
       - ./volumes/jellyfin-intros:/media/intros
