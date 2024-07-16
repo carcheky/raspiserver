@@ -1081,3 +1081,20 @@
         target:
           entity_id: switch.pcck_switch_interruptor
   mode: single
+- id: '1721086427709'
+  alias: Ventilar
+  description: ''
+  trigger: []
+  condition: []
+  action:
+  - delay:
+      hours: 0
+      minutes: 30
+      seconds: 0
+      milliseconds: 0
+  - service: climate.turn_off
+    metadata: {}
+    data: {}
+    target:
+      device_id: dbd81c7825ebe1f333404794f40bab96
+  mode: single
