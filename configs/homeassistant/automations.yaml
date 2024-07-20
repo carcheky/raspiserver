@@ -537,8 +537,8 @@
   trigger:
   - type: turned_on
     platform: device
-    device_id: a7d977c7678c671a77dbc66e88edf3b5
-    entity_id: 27576fc5181f3d5141f35984490826c9
+    device_id: cac8eaf37904039a66158f6e5efb4d69
+    entity_id: 835711241331f82a1a83e78e67dd19f1
     domain: binary_sensor
   condition: []
   action:
