@@ -13,7 +13,9 @@ services:
     volumes:
       - ./volumes/nextcloud-config:/config
       - ./volumes/nextcloud-php/phpcustom.ini:/etc/php83/conf.d/phpcustom.ini
-      - ${NEXTCLOUD_PATH_DATA}:/data
+      # - ${NEXTCLOUD_PATH_DATA}:/data
+      # network mounted to /data
+      - nextcloud-data:/data
     ports:
       - 8034:80
       - 4434:443
@@ -22,6 +24,8 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - "105" 
+    depends_on:
+      - nextclouddb
 
   nextclouddb:
     image: mariadb
@@ -34,5 +38,13 @@ services:
       - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
     volumes:
       - ./volumes/nextclouddb-mysql:/var/lib/mysql
-    ports:
-      - 3306:3306
+    # ports:
+    #   - 3306:3306
+
+volumes:
+  nextcloud-data:
+    driver: local
+    driver_opts:
+      type: cifs
+      o: "username=${cifs_username},password=${cifs_password},uid=${cifs_uid},gid=${cifs_gid}"
+      device: "${cifs_path}"
