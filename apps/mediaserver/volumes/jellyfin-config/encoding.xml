@@ -6,6 +6,7 @@
   <EnableFallbackFont>false</EnableFallbackFont>
   <EnableAudioVbr>false</EnableAudioVbr>
   <DownMixAudioBoost>3</DownMixAudioBoost>
+  <DownMixAudioBoost>3</DownMixAudioBoost>
   <DownMixStereoAlgorithm>NightmodeDialogue</DownMixStereoAlgorithm>
   <MaxMuxingQueueSize>2048</MaxMuxingQueueSize>
   <EnableThrottling>false</EnableThrottling>

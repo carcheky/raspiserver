@@ -1,5 +1,31 @@
 # CHANGELOG
 
+# [6.26.0](https://gitlab.com/carcheky/raspiserver/compare/v6.25.2...v6.26.0) (2024-07-27)
+
+
+### Bug Fixes
+
+* configs ([d5ffbf5](https://gitlab.com/carcheky/raspiserver/commit/d5ffbf5cf628c7610fb51eddca4929005558493a))
+* configs ([0b6b16e](https://gitlab.com/carcheky/raspiserver/commit/0b6b16eefc1cb240dad32404cef40b1a58831021))
+* configs ([c4e18be](https://gitlab.com/carcheky/raspiserver/commit/c4e18be4b49779931bd4a377086df56437e271fd))
+* configs ([4616420](https://gitlab.com/carcheky/raspiserver/commit/461642042f401102c6f108e383a977f585f2ebb3))
+* configs ([13409fc](https://gitlab.com/carcheky/raspiserver/commit/13409fc158d64d7eb94a6a7cc0b41f300d74279b))
+* configs ([796922a](https://gitlab.com/carcheky/raspiserver/commit/796922a5bdbe89aa495f86b2f9ed2e407d66635e))
+* **janitorr:** fix version ([10991ab](https://gitlab.com/carcheky/raspiserver/commit/10991abbebe922d220c68d4e18ae39e533a64284))
+* **jellyfin:** encoding settings ([28378d0](https://gitlab.com/carcheky/raspiserver/commit/28378d080a784a64822856580612d9c6c3267b57))
+* **jellyfin:** fixed encoding ([a53e7fa](https://gitlab.com/carcheky/raspiserver/commit/a53e7fae095ca0670c4981bace7b20a90e4ad15d))
+* **nextcloud:** remove duplicate volume ([ae474de](https://gitlab.com/carcheky/raspiserver/commit/ae474ded3b14d2e9cecee18dd20891fbbada8ced))
+* **qbitorrent:** connected ([3db2623](https://gitlab.com/carcheky/raspiserver/commit/3db262378d1ac1719591e98a870ed31b5b3a6ac3))
+
+
+### Features
+
+* **homarr:** docker support ([26716a7](https://gitlab.com/carcheky/raspiserver/commit/26716a74909a1e555d532a775299cf47db676c16))
+* janitorr ([dc63be7](https://gitlab.com/carcheky/raspiserver/commit/dc63be78437f6d22ceff1ee2301e7d88fc7d3190))
+* jellystats ([1b41cc3](https://gitlab.com/carcheky/raspiserver/commit/1b41cc321203e3d34f3a63f33e25443343c1639a))
+* nextcloud ([30ff096](https://gitlab.com/carcheky/raspiserver/commit/30ff096a16f029d6b67982245542c8fbc211467c))
+* wireward ([49988eb](https://gitlab.com/carcheky/raspiserver/commit/49988eb1221b046764531666dd5873c7f6583110))
+
 ## [6.25.2](https://gitlab.com/carcheky/raspiserver/compare/v6.25.1...v6.25.2) (2024-05-11)
 
 
