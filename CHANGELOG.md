@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [6.26.1](https://gitlab.com/carcheky/raspiserver/compare/v6.26.0...v6.26.1) (2024-08-13)
+
+
+### Bug Fixes
+
+* configs ([f831ff6](https://gitlab.com/carcheky/raspiserver/commit/f831ff6440aaae2ce31095251e8daa6ee0f45620))
+* configs ([b90aa9c](https://gitlab.com/carcheky/raspiserver/commit/b90aa9ca5a389cdc60d6a8619b3dba8fb258ddfc))
+* configs ([8c4ed20](https://gitlab.com/carcheky/raspiserver/commit/8c4ed206d935aca573237b2578da61f4351011cd))
+* configs ([33c6828](https://gitlab.com/carcheky/raspiserver/commit/33c68286da52c4c12b768ad0bd50079811221dff))
+* configs ([416a8cf](https://gitlab.com/carcheky/raspiserver/commit/416a8cff78a9a6ac5e565e4592fcab497e1b5b4d))
+* configs ([d331361](https://gitlab.com/carcheky/raspiserver/commit/d3313614f7a085a76de16b8ab55b00967857b484))
+* lock transmission version ([76b610d](https://gitlab.com/carcheky/raspiserver/commit/76b610da23d3db6d3c2f867370702b8e76f3b402))
+* mediacheky ([461b065](https://gitlab.com/carcheky/raspiserver/commit/461b06537b555f9ae1dbaa3694a407b5268c440c))
+* **nextcloud:** network drive ([2a81187](https://gitlab.com/carcheky/raspiserver/commit/2a811874f1fc04b5de848583c7a08872fe654d1b))
+
 # [6.26.0](https://gitlab.com/carcheky/raspiserver/compare/v6.25.2...v6.26.0) (2024-07-27)
 
 
