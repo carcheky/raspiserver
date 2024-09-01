@@ -127,6 +127,7 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 9091:9091
+      - 9093:9091
 
   # transmission http://localhost:6880
   # qbittorrent:
@@ -175,8 +176,8 @@ services:
       - ./volumes/radarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
       # /custom-services.d and /custom-cont-init.d
-      - ./volumes/radarr-custom-services.d:/custom-services.d
-      - ./volumes/radarr-custom-cont-init.d:/custom-cont-init.d
+      # - ./volumes/radarr-custom-services.d:/custom-services.d
+      # - ./volumes/radarr-custom-cont-init.d:/custom-cont-init.d
     ports:
       - 7878:7878
 
