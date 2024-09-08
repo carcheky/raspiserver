@@ -88,7 +88,6 @@ function update() {
     git pull --rebase --autostash  
     sudo find /var/lib/docker/containers/ -name "*-json.log" -exec truncate -s 0 {} \; 
     docker compose up -d
-    docker system prune -af 
     docker volume prune -af 
     mediacheky install
     [ -f ${RASPISERVER}/apps/homeassistant/volumes/ha-config/automations.yaml ] && cp ${RASPISERVER}/apps/homeassistant/volumes/ha-config/automations.yaml ${RASPISERVER}/configs/homeassistant/ 
@@ -103,9 +102,12 @@ function update() {
 }  
 
 function update_all() {
-    ssh $ip1 mediacheky update
-    ssh $ip3 mediacheky update
-    ssh $ip2 mediacheky update
+    # ssh $ip1 mediacheky update
+    # ssh $ip3 mediacheky update
+    # ssh $ip2 mediacheky update
+    for ip in $ips; do
+        ssh $ip mediacheky update
+    done
 }
 
 function help() {
