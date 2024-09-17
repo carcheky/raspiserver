@@ -112,22 +112,41 @@ services:
       - 5055:5055
 
   # transmission http://localhost:9091
-  transmission:
-    image: linuxserver/transmission:4.0.5
-    container_name: transmission
-    restart: always
+  # transmission:
+  #   image: linuxserver/transmission:4.0.5
+  #   container_name: transmission
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - USER=${USER}
+  #     - PASS=${TRANSMISSION_PASSWORD}
+  #   volumes:
+  #     - ./volumes/transmission-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 9091:9091
+  #     - 9093:9091
+
+
+  qbitorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      - USER=${USER}
-      - PASS=${TRANSMISSION_PASSWORD}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
     volumes:
-      - ./volumes/transmission-config:/config
-      - ${RASPIMEDIA}:/BibliotecaMultimedia
+      - ./volumes/qbittorrent-config:/config:rw
+      - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
     ports:
-      - 9091:9091
-      - 9093:9091
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: always
 
   # transmission http://localhost:6880
   # qbittorrent:
