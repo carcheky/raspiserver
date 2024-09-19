@@ -9,7 +9,8 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE}
       # - DOCKER_MODS=linuxserver/mods:nextcloud-mediadc|linuxserver/mods:nextcloud-memories|linuxserver/mods:nextcloud-notify-push
-      - DOCKER_MODS=linuxserver/mods:nextcloud-mediadc|linuxserver/mods:nextcloud-memories
+      # - DOCKER_MODS=linuxserver/mods:nextcloud-mediadc|linuxserver/mods:nextcloud-memories
+      # - DOCKER_MODS=linuxserver/mods:nextcloud-memories
     volumes:
       - ./volumes/nextcloud-config:/config
       # - ./volumes/nextcloud-php/phpcustom.ini:/etc/php83/conf.d/phpcustom.ini
