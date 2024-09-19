@@ -13,8 +13,7 @@ services:
       # - DOCKER_MODS=linuxserver/mods:nextcloud-memories
     volumes:
       - ./volumes/nextcloud-config:/config
-      # - ./volumes/nextcloud-php/phpcustom.ini:/etc/php83/conf.d/phpcustom.ini
-      # - ${NEXTCLOUD_PATH_DATA}:/data
+      - ./volumes/nextcloud-upload-tmp-dir:/nextcloud-upload-tmp-dir
       # network mounted to /data
       - nextcloud-data:/data
     ports:
@@ -39,8 +38,6 @@ services:
       - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
     volumes:
       - ./volumes/nextclouddb-mysql:/var/lib/mysql
-    # ports:
-    #   - 3306:3306
 
 volumes:
   nextcloud-data:
