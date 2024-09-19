@@ -74,7 +74,7 @@ switch:
     mac: !secret wake_on_lan_mac_pcck
     name: Wake PCCK 
 
-
+# logbook:
 
 # order debug logger
 #     critical
@@ -87,8 +87,10 @@ switch:
 #     notset
 logger:
   default: warn
-  logs:
-    homeassistant.components.automation: warn
+  # logs:
+  #   homeassistant.setup: debug
+    # homeassistant.components.proximity: debug
+    # homeassistant.components.automation: warn
   #   aemet_opendata.interface: debug
   #   homeassistant.components.google_assistant: info
   #   Jellyfin: error
