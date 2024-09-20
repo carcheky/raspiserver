@@ -1,5 +1,23 @@
 # CHANGELOG
 
+# [6.27.0](https://gitlab.com/carcheky/raspiserver/compare/v6.26.1...v6.27.0) (2024-09-20)
+
+
+### Bug Fixes
+
+* configs ([78986ae](https://gitlab.com/carcheky/raspiserver/commit/78986aee604b592b649978c4531c70ac8e79f269))
+* configs ([5883ce4](https://gitlab.com/carcheky/raspiserver/commit/5883ce4ab76340ad1767e10fa772ba935fc40d37))
+* configs ([d3f2de5](https://gitlab.com/carcheky/raspiserver/commit/d3f2de578aaeb90db6fbecc20d83f2f142635f42))
+* disable memories ([581008a](https://gitlab.com/carcheky/raspiserver/commit/581008a67cc531bc7d38550d05cbd0098915ff9d))
+* **jellyfin:** encoding ([7262a38](https://gitlab.com/carcheky/raspiserver/commit/7262a3834510a8e528c4a57a6c4c76d914b4fbe4))
+* update all ([e611b60](https://gitlab.com/carcheky/raspiserver/commit/e611b6018dd06ebfca9ef338974a9a8bc0e7a111))
+
+
+### Features
+
+* **radarr:** disable custom scripts ([ca092c6](https://gitlab.com/carcheky/raspiserver/commit/ca092c64b9d57ed2aba3d337d7925b041f9a5feb))
+* replace transmission with qbittorrent ([def572c](https://gitlab.com/carcheky/raspiserver/commit/def572c91ccbb4ebc4279e7354d3cabfa2f38814))
+
 ## [6.26.1](https://gitlab.com/carcheky/raspiserver/compare/v6.26.0...v6.26.1) (2024-08-13)
 
 
