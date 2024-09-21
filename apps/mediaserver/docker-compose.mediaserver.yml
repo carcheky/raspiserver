@@ -1,5 +1,7 @@
 services:
 
+  # SERVIDOR DE MEDIOS
+
   # jellyfin http://localhost:8096
   jellyfin:
     image: linuxserver/jellyfin:latest
@@ -26,6 +28,9 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - "105"
+
+
+  # ESTADÍSTICAS
 
   jellystat-db:
     image: postgres:15.2
@@ -55,31 +60,8 @@ services:
     depends_on:
       - jellystat-db
 
-  # # jellyfin http://localhost:8096
-  # jellyfin2:
-  #   image: linuxserver/jellyfin:latest
-  #   container_name: jellyfin2
-  #   restart: always
-  #   ports:
-  #     - 8097:8096
-  #     - 8921:8920 #optional
-  #     - 7360:7359/udp #optional
-  #     - 1901:1900/udp #optional
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-  #     - JELLYFIN_PublishedServerUrl=${DOMAIN}
-  #     - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
-  #   volumes:
-  #     - ./volumes/jellyfin-config-backup:/config
-  #     - ./volumes/jellyfin-intros2:/media/intros
-  #     - ./volumes/jellyfin-transcode2:/media/transcode
-  #     - ${RASPIMEDIA}:/BibliotecaMultimedia:r
-  #   devices:
-  #     - /dev/dri:/dev/dri
-  #   group_add:
-  #     - "105"
+
+  # INVITACIONES
 
   # wizarr http://localhost:5690
   wizarr:
@@ -97,6 +79,9 @@ services:
       - PGID=${PGID}
       - TZ=${TIMEZONE} #Set your timezone here
 
+
+  # PETICIONES
+
   # jellyseerr http://localhost:5055
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
@@ -110,6 +95,27 @@ services:
       - ./volumes/jellyseerr-config:/app/config
     ports:
       - 5055:5055
+
+  # TORRENTS
+
+  qbitorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - ./volumes/qbittorrent-config:/config:rw
+      - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    restart: always
+
 
   # transmission http://localhost:9091
   # transmission:
@@ -130,43 +136,7 @@ services:
   #     - 9093:9091
 
 
-  qbitorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-      - WEBUI_PORT=8080
-      - TORRENTING_PORT=6881
-    volumes:
-      - ./volumes/qbittorrent-config:/config:rw
-      - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
-    ports:
-      - 8080:8080
-      - 6881:6881
-      - 6881:6881/udp
-    restart: always
-
-  # transmission http://localhost:6880
-  # qbittorrent:
-  #   image: linuxserver/qbittorrent:latest
-  #   container_name: qbittorrent
-  #   restart: always
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-  #     - WEBUI_PORT=8080
-  #     - TORRENTING_PORT=6881
-  #     - DOCKER_MODS=linuxserver/mods:universal-cloudflared
-  #   volumes:
-  #     - ./volumes/qbittorrent-config:/config
-  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
-  #   ports:
-  #     - 8080:8080
-  #     - 6881:6881
-  #     - 6881:6881/udp
+  # INDEXADOR TORRENTS
 
   # prowlarr http://localhost:9696
   prowlarr:
@@ -181,6 +151,9 @@ services:
       - ./volumes/prowlarr-config:/config
     ports:
       - 9696:9696
+
+
+  # BUSCADOR PELICULAS
 
   # radarr http://localhost:7878
   radarr:
@@ -200,6 +173,9 @@ services:
     ports:
       - 7878:7878
 
+  
+  # BUSCADOR SERIES
+  
   # sonarr http://localhost:8989
   sonarr:
     image: linuxserver/sonarr:latest
@@ -214,6 +190,9 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 8989:8989
+
+
+  # SUBTÍTULOS
 
   # bazarr http://localhost:6767
   bazarr:
@@ -230,36 +209,8 @@ services:
     ports:
       - 6767:6767
 
-  # janitorr:
-  #   container_name: janitorr
-  #   ports:
-  #     - 8978:8978
-  #   restart: always
-  #   user: ${PUID}:${PGID}
-  #   image: ghcr.io/schaka/janitorr:stable
-  #   volumes:
-  #     - ./volumes/janitorr-config/:/config
-  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
-    # image: ghcr.io/schaka/janitorr:native-stable
-    # volumes:
-    #   - ./volumes/janitorr-config/application.yml:/workspace/application.yml
-    #   - ${RASPIMEDIA}:/BibliotecaMultimedia
 
-
-  # bazarr http://localhost:6767
-  # recyclarr:
-  #   image: ghcr.io/recyclarr/recyclarr
-  #   container_name: recyclarr
-  #   user: ${PUID}:${PGID}
-  #   restart: always
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-  #     - CRON_SCHEDULE?"@daily"
-  #     - RECYCLARR_CREATE_CONFIG=true
-  #   volumes:
-  #     - ./volumes/recyclarr-config:/config
+  # BUSCADOR MÚSICA
 
   # # lidarr http://localhost:8686
   #   lidarr:
@@ -276,6 +227,9 @@ services:
   #     ports:
   #       - 8686:8686
 
+
+  # BUSCADOR LIBROS
+  
   # # readarr http://localhost:8787
   #   readarr:
   #     image: linuxserver/readarr:nightly
@@ -290,3 +244,36 @@ services:
   #       - ${RASPIMEDIA}:/BibliotecaMultimedia
   #     ports:
   #       - 8787:8787
+
+
+  # OTROS
+
+  # janitorr:
+  #   container_name: janitorr
+  #   ports:
+  #     - 8978:8978
+  #   restart: always
+  #   user: ${PUID}:${PGID}
+  #   image: ghcr.io/schaka/janitorr:stable
+  #   volumes:
+  #     - ./volumes/janitorr-config/:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+    # image: ghcr.io/schaka/janitorr:native-stable
+    # volumes:
+    #   - ./volumes/janitorr-config/application.yml:/workspace/application.yml
+    #   - ${RASPIMEDIA}:/BibliotecaMultimedia
+
+  # recyclarr:
+  #   image: ghcr.io/recyclarr/recyclarr
+  #   container_name: recyclarr
+  #   user: ${PUID}:${PGID}
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #     - CRON_SCHEDULE?"@daily"
+  #     - RECYCLARR_CREATE_CONFIG=true
+  #   volumes:
+  #     - ./volumes/recyclarr-config:/config
+
