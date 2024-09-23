@@ -1,0 +1,8 @@
+services:
+  roomassistant:
+    image: mkerix/room-assistant
+    network_mode: host
+    volumes:
+      - /var/run/dbus:/var/run/dbus
+      - ./volumes/romassistant:/room-assistant/config
+      
