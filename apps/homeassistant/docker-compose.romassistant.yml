@@ -6,4 +6,6 @@ services:
     volumes:
       - /var/run/dbus:/var/run/dbus
       - ./volumes/romassistant-config:/room-assistant/config
+    cap_add:
+      - NET_ADMIN
       
