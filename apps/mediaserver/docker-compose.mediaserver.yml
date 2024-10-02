@@ -212,38 +212,38 @@ services:
 
   # BUSCADOR MÚSICA
 
-  # # lidarr http://localhost:8686
-  #   lidarr:
-  #     image: linuxserver/lidarr:latest
-  #     container_name: lidarr
-  #     restart: always
-  #     environment:
-  #       - PUID=${PUID}
-  #       - PGID=${PGID}
-  #       - TZ=${TIMEZONE}
-  #     volumes:
-  #       - ./volumes/lidarr-config:/config
-  #       - ${RASPIMEDIA}:/BibliotecaMultimedia
-  #     ports:
-  #       - 8686:8686
+  # lidarr http://localhost:8686
+  lidarr:
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./volumes/lidarr-config:/config
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    ports:
+      - 8686:8686
 
 
   # BUSCADOR LIBROS
   
-  # # readarr http://localhost:8787
-  #   readarr:
-  #     image: linuxserver/readarr:nightly
-  #     container_name: readarr
-  #     restart: always
-  #     environment:
-  #       - PUID=${PUID}
-  #       - PGID=${PGID}
-  #       - TZ=${TIMEZONE}
-  #     volumes:
-  #       - ./volumes/readarr-config:/config
-  #       - ${RASPIMEDIA}:/BibliotecaMultimedia
-  #     ports:
-  #       - 8787:8787
+  # readarr http://localhost:8787
+  readarr:
+    image: linuxserver/readarr:nightly
+    container_name: readarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./volumes/readarr-config:/config
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    ports:
+      - 8787:8787
 
 
   # OTROS
