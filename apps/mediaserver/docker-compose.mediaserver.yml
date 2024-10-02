@@ -157,13 +157,15 @@ services:
 
   # radarr http://localhost:7878
   radarr:
-    image: linuxserver/radarr:latest
+    # image: linuxserver/radarr:latest
+    image: ghcr.io/hotio/radarr
     container_name: radarr
     restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
+      - UMASK=${UMASK}
     volumes:
       - ./volumes/radarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
@@ -178,13 +180,16 @@ services:
   
   # sonarr http://localhost:8989
   sonarr:
-    image: linuxserver/sonarr:latest
+    # image: linuxserver/sonarr:latest
+    image: ghcr.io/hotio/sonarr
     container_name: sonarr
     restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=${TIMEZONE}
+      - TZ=${TIMEZONE}    
+      - UMASK=${UMASK}
+
     volumes:
       - ./volumes/sonarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
