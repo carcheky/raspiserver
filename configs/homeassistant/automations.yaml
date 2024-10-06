@@ -473,14 +473,14 @@
             entity_id: media_player.tv_del_salon_2
             state: 'on'
       sequence:
-      - service: light.turn_off
-        target:
+      - target:
           area_id:
           - salon
           entity_id:
           - light.enchufe_2_interruptor
           - light.salon
         data: {}
+        action: light.turn_off
       alias: apaga si no hay movimiento y la tele no está encendida
     - conditions:
       - condition: and
@@ -502,14 +502,16 @@
         - condition: numeric_state
           entity_id: zone.home
           above: 0
+      - condition: or
+        conditions: []
       sequence:
-      - service: light.turn_on
-        metadata: {}
+      - metadata: {}
         data: {}
         target:
           area_id: salon
           entity_id:
           - light.salon
+        action: light.turn_on
       alias: enciende si es de noche y hay movimiento y gente en casa
   mode: single
 - id: '1713363099665'
@@ -1097,4 +1099,53 @@
     data: {}
     target:
       device_id: dbd81c7825ebe1f333404794f40bab96
+  mode: single
+- id: '1728235591188'
+  alias: Botón salón togle
+  description: ''
+  trigger:
+  - device_id: 6532d469307e7e44b5d54339c527e291
+    domain: zha
+    platform: device
+    type: remote_button_short_press
+    subtype: button_1
+  condition: []
+  action:
+  - action: light.toggle
+    metadata: {}
+    data: {}
+    target:
+      area_id: salon
+  mode: single
+- id: '1728235756900'
+  alias: 'Botón salón countdown '
+  description: ''
+  trigger:
+  - device_id: 6532d469307e7e44b5d54339c527e291
+    domain: zha
+    platform: device
+    type: remote_button_long_press
+    subtype: button_1
+  condition: []
+  action:
+  - action: light.turn_off
+    target:
+      area_id:
+      - salon
+    data: {}
+  - action: light.turn_on
+    target:
+      area_id:
+      - salon
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - action: light.turn_off
+    target:
+      area_id:
+      - salon
+    data: {}
   mode: single
