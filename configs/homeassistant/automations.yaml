@@ -442,21 +442,21 @@
 - id: '1713360723075'
   alias: smart salón
   description: ''
-  trigger:
-  - platform: state
-    entity_id:
+  triggers:
+  - entity_id:
     - binary_sensor.movimiento_extra_movimiento
     - binary_sensor.presencia_salon_ocupacion
-  - platform: sun
-    event: sunset
+    trigger: state
+  - event: sunset
     offset: 0
-  - platform: state
-    entity_id:
+    trigger: sun
+  - entity_id:
     - remote.tv_del_salon
     - media_player.tv_del_salon_2
     to:
-  condition: []
-  action:
+    trigger: state
+  conditions: []
+  actions:
   - choose:
     - conditions:
       - condition: and
@@ -464,6 +464,10 @@
         - condition: state
           entity_id: binary_sensor.presencia_salon_ocupacion
           state: 'off'
+          for:
+            hours: 0
+            minutes: 5
+            seconds: 0
         - condition: state
           entity_id: binary_sensor.movimiento_extra_movimiento
           state: 'off'
