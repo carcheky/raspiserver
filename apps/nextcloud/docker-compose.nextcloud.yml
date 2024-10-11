@@ -28,7 +28,7 @@ services:
       - nextclouddb
 
   nextclouddb:
-    image: mariadb
+    image: mariadb:11.4
     container_name: nextclouddb
     restart: always
     environment:
