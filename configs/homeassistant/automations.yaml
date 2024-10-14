@@ -935,9 +935,8 @@
 - id: '1719839411973'
   alias: Estado PCCK
   description: ''
-  trigger:
-  - platform: state
-    entity_id:
+  triggers:
+  - entity_id:
     - button.pcck_reiniciar
     - button.pcck_suspender
     - binary_sensor.192_168_68_200
@@ -946,8 +945,9 @@
       hours: 0
       minutes: 0
       seconds: 0
-  condition: []
-  action:
+    trigger: state
+  conditions: []
+  actions:
   - choose:
     - conditions:
       - type: is_connected
@@ -956,11 +956,11 @@
         entity_id: d5b4f98683efd6e94bde6de367d6e39f
         domain: binary_sensor
       sequence:
-      - service: notify.mobile_app_chekyphone
-        metadata: {}
+      - metadata: {}
         data:
-          title: 'PCCK '
+          title: 'Pcck '
           message: 'Encendido '
+        action: notify.mobile_app_chekyphone
     - conditions:
       - type: is_not_connected
         condition: device
@@ -968,11 +968,11 @@
         entity_id: d5b4f98683efd6e94bde6de367d6e39f
         domain: binary_sensor
       sequence:
-      - service: notify.mobile_app_chekyphone
-        metadata: {}
+      - metadata: {}
         data:
-          title: 'PCCK '
+          title: Pcck
           message: 'Apagado '
+        action: notify.mobile_app_chekyphone
   mode: single
 - id: '1719937859757'
   alias: Despacho bypass off
@@ -1060,19 +1060,33 @@
 - id: '1719942947227'
   alias: 'PCCK on auto móvil '
   description: ''
-  trigger:
-  - platform: webhook
-    allowed_methods:
+  triggers:
+  - allowed_methods:
     - POST
     - PUT
     local_only: true
     webhook_id: pcck-on-auto-movil-ugkK1-UsP2nHeqOXmAqqpxZs
-  condition: []
-  action:
-  - service: homeassistant.update_entity
-    target:
+    trigger: webhook
+  conditions: []
+  actions:
+  - action: notify.mobile_app_chekyphone
+    data:
+      title: Pcck
+      message: Comprobando...
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - target:
       entity_id: binary_sensor.192_168_68_200
     data: {}
+    action: homeassistant.update_entity
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
   - choose:
     - conditions:
       - type: is_not_connected
@@ -1081,11 +1095,26 @@
         entity_id: d5b4f98683efd6e94bde6de367d6e39f
         domain: binary_sensor
       sequence:
-      - service: switch.toggle
-        metadata: {}
+      - metadata: {}
         data: {}
         target:
           entity_id: switch.pcck_switch_interruptor
+        action: switch.toggle
+      - action: notify.mobile_app_chekyphone
+        data:
+          title: Pcck
+          message: Estaba apagado, lo enciendo
+    - conditions:
+      - type: is_connected
+        condition: device
+        device_id: 7de9bd5c5dbc041242bac95000c445d0
+        entity_id: d5b4f98683efd6e94bde6de367d6e39f
+        domain: binary_sensor
+      sequence:
+      - action: notify.mobile_app_chekyphone
+        data:
+          message: Ya estaba encendido
+          title: Pcck
   mode: single
 - id: '1721086427709'
   alias: Ventilar
