@@ -18,20 +18,26 @@ services:
       - /run/dbus:/run/dbus:ro # bluethooth
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
+    cap_add:
+      - NET_ADMIN
+      
 
 # mqtt
   mqtt:
     image: eclipse-mosquitto:latest
     container_name: mqtt
     restart: always
-    # network_mode: host
+    network_mode: host
     user: 1000:1000
-    ports:
-      - 1883:1883
-      - 9001:9001
+    # ports:
+    #   - 1883:1883
+    #   - 9001:9001
     volumes:
-      - ./volumes/mqtt-config:/mosquitto
-      # - ${RASPICONFIG}/mqtt/config:/mosquitto/config
-      # - ${RASPICONFIG}/mqtt/data:/mosquitto/data
-      # - ${RASPICONFIG}/mqtt/log:/mosquitto/log
+      # - ./volumes/mqtt-config:/mosquitto
+      - ./volumes/mqtt-config/config:/mosquitto/config
+      - ./volumes/mqtt-config/data:/mosquitto/data
+      - ./volumes/mqtt-config/log:/mosquitto/log
+    cap_add:
+      - NET_ADMIN
+      
 

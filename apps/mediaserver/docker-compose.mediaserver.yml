@@ -157,13 +157,15 @@ services:
 
   # radarr http://localhost:7878
   radarr:
-    image: linuxserver/radarr:latest
+    # image: linuxserver/radarr:latest
+    image: ghcr.io/hotio/radarr
     container_name: radarr
     restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
+      - UMASK=${UMASK}
     volumes:
       - ./volumes/radarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
@@ -178,13 +180,16 @@ services:
   
   # sonarr http://localhost:8989
   sonarr:
-    image: linuxserver/sonarr:latest
+    # image: linuxserver/sonarr:latest
+    image: ghcr.io/hotio/sonarr
     container_name: sonarr
     restart: always
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=${TIMEZONE}
+      - TZ=${TIMEZONE}    
+      - UMASK=${UMASK}
+
     volumes:
       - ./volumes/sonarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
@@ -212,38 +217,38 @@ services:
 
   # BUSCADOR MÚSICA
 
-  # # lidarr http://localhost:8686
-  #   lidarr:
-  #     image: linuxserver/lidarr:latest
-  #     container_name: lidarr
-  #     restart: always
-  #     environment:
-  #       - PUID=${PUID}
-  #       - PGID=${PGID}
-  #       - TZ=${TIMEZONE}
-  #     volumes:
-  #       - ./volumes/lidarr-config:/config
-  #       - ${RASPIMEDIA}:/BibliotecaMultimedia
-  #     ports:
-  #       - 8686:8686
+  # lidarr http://localhost:8686
+  lidarr:
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./volumes/lidarr-config:/config
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    ports:
+      - 8686:8686
 
 
   # BUSCADOR LIBROS
   
-  # # readarr http://localhost:8787
-  #   readarr:
-  #     image: linuxserver/readarr:nightly
-  #     container_name: readarr
-  #     restart: always
-  #     environment:
-  #       - PUID=${PUID}
-  #       - PGID=${PGID}
-  #       - TZ=${TIMEZONE}
-  #     volumes:
-  #       - ./volumes/readarr-config:/config
-  #       - ${RASPIMEDIA}:/BibliotecaMultimedia
-  #     ports:
-  #       - 8787:8787
+  # readarr http://localhost:8787
+  readarr:
+    image: linuxserver/readarr:nightly
+    container_name: readarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./volumes/readarr-config:/config
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    ports:
+      - 8787:8787
 
 
   # OTROS
@@ -277,3 +282,16 @@ services:
   #   volumes:
   #     - ./volumes/recyclarr-config:/config
 
+  # mylar3:
+  #   image: lscr.io/linuxserver/mylar3:latest
+  #   container_name: mylar3
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   volumes:
+  #     - ./volumes/mylar3-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 8090:8090
+  #   restart: always

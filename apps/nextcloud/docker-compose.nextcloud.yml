@@ -10,7 +10,7 @@ services:
       - TZ=${TIMEZONE}
       # - DOCKER_MODS=linuxserver/mods:nextcloud-mediadc|linuxserver/mods:nextcloud-memories|linuxserver/mods:nextcloud-notify-push
       # - DOCKER_MODS=linuxserver/mods:nextcloud-mediadc|linuxserver/mods:nextcloud-memories
-      # - DOCKER_MODS=linuxserver/mods:nextcloud-memories
+      - DOCKER_MODS=linuxserver/mods:nextcloud-memories
     volumes:
       - ./volumes/nextcloud-config:/config
       - ./volumes/nextcloud-upload-tmp-dir:/nextcloud-upload-tmp-dir
@@ -28,7 +28,7 @@ services:
       - nextclouddb
 
   nextclouddb:
-    image: mariadb
+    image: mariadb:11.4
     container_name: nextclouddb
     restart: always
     environment:

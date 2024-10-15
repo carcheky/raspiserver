@@ -13,6 +13,7 @@ http:
   use_x_forwarded_for: true
   trusted_proxies:
     - 127.0.0.1
+    - 192.168.68.201
     - 0.0.0.0/0
     - ::1
 # The api integration exposes a RESTful API and allows one to interact with a Home Assistant instance that 
