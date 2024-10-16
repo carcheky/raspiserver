@@ -455,6 +455,32 @@
     - media_player.tv_del_salon_2
     to:
     trigger: state
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+    enabled: false
+  - trigger: state
+    entity_id:
+    - binary_sensor.presencia_salon
+    to: 'off'
+  - trigger: state
+    entity_id:
+    - binary_sensor.presencia_salon
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 20
+  - trigger: numeric_state
+    entity_id:
+    - sensor.presencia_salon_iluminancia
+    above: 80
+    enabled: true
+  - trigger: numeric_state
+    entity_id:
+    - sensor.presencia_salon_iluminancia
+    below: 80
   conditions: []
   actions:
   - choose:
@@ -462,19 +488,41 @@
       - condition: and
         conditions:
         - condition: state
-          entity_id: binary_sensor.presencia_salon_ocupacion
-          state: 'off'
+          entity_id: binary_sensor.presencia_salon
+          state: 'on'
           for:
             hours: 0
-            minutes: 5
+            minutes: 0
             seconds: 0
-        - condition: state
-          entity_id: binary_sensor.movimiento_extra_movimiento
-          state: 'off'
-        - condition: not
+          enabled: true
+        - condition: numeric_state
+          entity_id: sensor.presencia_salon_iluminancia
+          below: 60
+      sequence:
+      - action: light.turn_on
+        target:
+          entity_id:
+          - light.enchufe_2_interruptor
+          - light.salon
+          area_id:
+          - salon
+        data: {}
+      alias: Enciende luces
+    - conditions:
+      - condition: or
+        conditions:
+        - alias: Probar ocupación off - tv on
+          condition: and
           conditions:
           - condition: state
-            entity_id: media_player.tv_del_salon_2
+            entity_id: binary_sensor.presencia_salon
+            state: 'off'
+            for:
+              hours: 0
+              minutes: 10
+              seconds: 10
+          - condition: state
+            entity_id: remote.tv_del_salon
             state: 'on'
       sequence:
       - target:
@@ -485,39 +533,67 @@
           - light.salon
         data: {}
         action: light.turn_off
-      alias: apaga si no hay movimiento y la tele no está encendida
-    - conditions:
-      - condition: and
-        conditions:
-        - condition: sun
-          before: sunrise
-          after: sunset
-          enabled: true
-          before_offset: '1:00:00'
-          after_offset: -0:45:00
-        - condition: or
-          conditions:
-          - condition: state
-            entity_id: binary_sensor.presencia_salon_ocupacion
-            state: 'on'
-          - condition: state
-            entity_id: binary_sensor.movimiento_extra_movimiento
-            state: 'on'
-        - condition: numeric_state
-          entity_id: zone.home
-          above: 0
-      - condition: or
-        conditions: []
-      sequence:
-      - metadata: {}
+      - action: remote.turn_off
+        metadata: {}
         data: {}
         target:
-          area_id: salon
           entity_id:
+          - remote.tv_del_salon
+          - remote.atv_101
+      alias: apaga luces y puede que tv
+    - conditions:
+      - condition: or
+        conditions:
+        - alias: Probar ocupación off - tv on
+          condition: and
+          conditions:
+          - condition: state
+            entity_id: binary_sensor.presencia_salon
+            state: 'off'
+            for:
+              hours: 0
+              minutes: 0
+              seconds: 10
+          - condition: state
+            entity_id: remote.tv_del_salon
+            state: 'on'
+          enabled: false
+        - alias: Probar ocupación off - tv off
+          condition: and
+          conditions:
+          - condition: state
+            entity_id: binary_sensor.presencia_salon
+            state: 'off'
+            for:
+              hours: 0
+              minutes: 0
+              seconds: 0
+          - condition: not
+            conditions:
+            - condition: state
+              entity_id: remote.tv_del_salon
+              state: 'on'
+            alias: y la tele está apagada
+            enabled: false
+      sequence:
+      - target:
+          area_id:
+          - salon
+          entity_id:
+          - light.enchufe_2_interruptor
           - light.salon
-        action: light.turn_on
-      alias: enciende si es de noche y hay movimiento y gente en casa
-  mode: single
+        data: {}
+        action: light.turn_off
+      - action: remote.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id:
+          - remote.tv_del_salon
+          - remote.atv_101
+        enabled: false
+      alias: apaga luces
+  mode: restart
 - id: '1713363099665'
   alias: Amanecer anochecer
   description: ''
@@ -1076,7 +1152,7 @@
   - delay:
       hours: 0
       minutes: 0
-      seconds: 3
+      seconds: 10
       milliseconds: 0
   - target:
       entity_id: binary_sensor.192_168_68_200
@@ -1153,14 +1229,14 @@
 - id: '1728235756900'
   alias: 'Botón salón countdown '
   description: ''
-  trigger:
+  triggers:
   - device_id: 6532d469307e7e44b5d54339c527e291
     domain: zha
-    platform: device
     type: remote_button_long_press
     subtype: button_1
-  condition: []
-  action:
+    trigger: device
+  conditions: []
+  actions:
   - action: light.turn_off
     target:
       area_id:
@@ -1173,7 +1249,7 @@
     data: {}
   - delay:
       hours: 0
-      minutes: 0
+      minutes: 5
       seconds: 5
       milliseconds: 0
   - action: light.turn_off
