@@ -4,3 +4,6 @@ services:
     container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 86400 --cleanup --remove-volumes --revive-stopped
+    environment:
+      - TZ=${TIMEZONE}
