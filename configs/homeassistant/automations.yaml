@@ -540,6 +540,11 @@
           entity_id:
           - remote.tv_del_salon
           - remote.atv_101
+      - action: switch.turn_off
+        metadata: {}
+        data: {}
+        target:
+          entity_id: switch.wake_tv
       alias: apaga luces y puede que tv
     - conditions:
       - condition: or

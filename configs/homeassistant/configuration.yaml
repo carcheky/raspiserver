@@ -74,7 +74,10 @@ switch:
   - platform: wake_on_lan
     mac: !secret wake_on_lan_mac_pcck
     name: Wake PCCK 
-
+  - platform: wake_on_lan
+    mac: !secret wake_on_lan_mac_tv
+    name: Wake TV
+    
 # logbook:
 
 # order debug logger
