@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [6.28.0](https://gitlab.com/carcheky/raspiserver/compare/v6.27.0...v6.28.0) (2024-10-16)
+
+
+### Bug Fixes
+
+* configs ([0b9c599](https://gitlab.com/carcheky/raspiserver/commit/0b9c599a1cb6e15da4cd6afaa034944b55ea953c))
+* configs ([53fb8ca](https://gitlab.com/carcheky/raspiserver/commit/53fb8ca11957101b1e87ed8e565ef7d29b944fa3))
+* **romassistant:** added container name ([eac0a16](https://gitlab.com/carcheky/raspiserver/commit/eac0a16fec3567d22cc451172219c4abc30ef3e4))
+
+
+### Features
+
+* enable memories ([5f213db](https://gitlab.com/carcheky/raspiserver/commit/5f213db6579069ab90978f001a973db0ab0581ba))
+* lidarr & readarr ([73f39b8](https://gitlab.com/carcheky/raspiserver/commit/73f39b8f4462bb68bfb849feb975ffcd1f6428b2))
+* room-assistant ([a30b108](https://gitlab.com/carcheky/raspiserver/commit/a30b1080e7e3f1b726011aec8855cf663a88b2d0))
+
 # [6.27.0](https://gitlab.com/carcheky/raspiserver/compare/v6.26.1...v6.27.0) (2024-09-20)
 
 
