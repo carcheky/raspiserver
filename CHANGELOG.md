@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [6.29.0](https://gitlab.com/carcheky/raspiserver/compare/v6.28.0...v6.29.0) (2024-10-18)
+
+
+### Bug Fixes
+
+* configs ([ff88a06](https://gitlab.com/carcheky/raspiserver/commit/ff88a06ab47db37826051cd1211a9feb4311360f))
+* configs ([e7ee3bf](https://gitlab.com/carcheky/raspiserver/commit/e7ee3bf3d8d6a07a190ce3831d6331fe723d94fb))
+* configs ([b697f69](https://gitlab.com/carcheky/raspiserver/commit/b697f6963931adf39cb9762ded6fccdaa628dd41))
+* configs ([abe05a5](https://gitlab.com/carcheky/raspiserver/commit/abe05a5e198e40f5b64468e002c97c9a26537b96))
+* configure watchtower ([0e496a7](https://gitlab.com/carcheky/raspiserver/commit/0e496a76bebfa23658658d6a3f512dcaca26a957))
+
+
+### Features
+
+* radar get extras ([29ac841](https://gitlab.com/carcheky/raspiserver/commit/29ac8418faa6df021be499bad5fe43037657ae06))
+* watchtower ([74fbb34](https://gitlab.com/carcheky/raspiserver/commit/74fbb34b9ec4b3abf878c0b44965e2120e7c1146))
+
 # [6.28.0](https://gitlab.com/carcheky/raspiserver/compare/v6.27.0...v6.28.0) (2024-10-16)
 
 
