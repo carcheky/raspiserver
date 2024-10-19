@@ -17,6 +17,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - '7575:7575'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+
       
   # # organizr http://localhost:8085
   #   organizr:

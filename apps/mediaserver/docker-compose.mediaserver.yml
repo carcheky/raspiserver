@@ -28,6 +28,11 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - "105"
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.50'
+          memory: 4G
 
 
   # ESTADÍSTICAS
@@ -41,6 +46,12 @@ services:
       POSTGRES_PASSWORD: mypassword
     volumes:
       - ./volumes/jellystat-db:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
   jellystat:
     image: cyfershepard/jellystat:latest
@@ -59,6 +70,12 @@ services:
       - "3000:3000"
     depends_on:
       - jellystat-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # INVITACIONES
@@ -78,6 +95,12 @@ services:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE} #Set your timezone here
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # PETICIONES
@@ -95,6 +118,12 @@ services:
       - ./volumes/jellyseerr-config:/app/config
     ports:
       - 5055:5055
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
   # TORRENTS
 
@@ -115,6 +144,12 @@ services:
       - 6881:6881
       - 6881:6881/udp
     restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # transmission http://localhost:9091
@@ -151,6 +186,12 @@ services:
       - ./volumes/prowlarr-config:/config
     ports:
       - 9696:9696
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # BUSCADOR PELICULAS
@@ -173,6 +214,12 @@ services:
       - ./volumes/radarr-custom-cont-init.d:/custom-cont-init.d
     ports:
       - 7878:7878
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+
 
   
   # BUSCADOR SERIES
@@ -193,6 +240,12 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 8989:8989
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # SUBTÍTULOS
@@ -211,6 +264,12 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 6767:6767
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # BUSCADOR MÚSICA
@@ -229,6 +288,12 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 8686:8686
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # BUSCADOR LIBROS
@@ -247,6 +312,12 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
     ports:
       - 8787:8787
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
 
 
   # OTROS

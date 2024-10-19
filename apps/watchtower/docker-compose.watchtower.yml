@@ -7,3 +7,8 @@ services:
     command: --interval 86400 --cleanup --remove-volumes --revive-stopped
     environment:
       - TZ=${TIMEZONE}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
