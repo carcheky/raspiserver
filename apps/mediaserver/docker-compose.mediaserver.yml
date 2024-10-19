@@ -218,7 +218,7 @@ services:
       resources:
         limits:
           cpus: '0.50'
-          memory: 256M
+          memory: 512M
 
 
   
@@ -243,8 +243,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 128M
+          cpus: '0.50'
+          memory: 512M
 
 
 
