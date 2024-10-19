@@ -5,9 +5,19 @@ services:
     container_name: cloudflared_cckdev
     restart: always
     command: tunnel --no-autoupdate run --token ${CCKDEV_TOKEN}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
 
   cloudflared_mediacheky:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared_mediacheky
     restart: always
     command: tunnel --no-autoupdate run --token ${MEDIACHEKY_TOKEN}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
