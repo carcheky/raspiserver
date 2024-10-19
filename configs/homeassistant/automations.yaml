@@ -476,11 +476,20 @@
     entity_id:
     - sensor.presencia_salon_iluminancia
     above: 80
-    enabled: true
+    enabled: false
   - trigger: numeric_state
     entity_id:
     - sensor.presencia_salon_iluminancia
     below: 80
+    enabled: false
+  - trigger: state
+    entity_id:
+    - binary_sensor.presencia_salon
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 20
   conditions: []
   actions:
   - choose:
@@ -506,6 +515,13 @@
           - light.salon
           area_id:
           - salon
+        data: {}
+      - action: media_player.media_play
+        target:
+          entity_id:
+          - media_player.tv_del_salon
+          device_id:
+          - db1f4e373fee33c423ef98ac3336686e
         data: {}
       alias: Enciende luces
     - conditions:
@@ -589,14 +605,15 @@
           - light.salon
         data: {}
         action: light.turn_off
-      - action: remote.turn_off
-        metadata: {}
-        data: {}
+      - action: media_player.media_pause
         target:
+          device_id:
+          - db1f4e373fee33c423ef98ac3336686e
+          - cccbfd423018b3306094fe773ed9e448
           entity_id:
-          - remote.tv_del_salon
-          - remote.atv_101
-        enabled: false
+          - media_player.tv_del_salon
+          - media_player.atv_101
+        data: {}
       alias: apaga luces
   mode: restart
 - id: '1713363099665'
