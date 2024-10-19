@@ -444,26 +444,23 @@
   description: ''
   triggers:
   - entity_id:
-    - binary_sensor.movimiento_extra_movimiento
-    - binary_sensor.presencia_salon_ocupacion
+    - binary_sensor.presencia_salon
     trigger: state
   - event: sunset
     offset: 0
     trigger: sun
-  - entity_id:
-    - remote.tv_del_salon
-    - media_player.tv_del_salon_2
-    to:
-    trigger: state
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
-    enabled: false
   - trigger: state
     entity_id:
     - binary_sensor.presencia_salon
     to: 'off'
+  - trigger: state
+    entity_id:
+    - binary_sensor.presencia_salon
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 20
   - trigger: state
     entity_id:
     - binary_sensor.presencia_salon
@@ -482,14 +479,16 @@
     - sensor.presencia_salon_iluminancia
     below: 80
     enabled: false
-  - trigger: state
-    entity_id:
-    - binary_sensor.presencia_salon
-    to: 'off'
+  - entity_id:
+    - remote.tv_del_salon
+    - media_player.tv_del_salon_2
+    to:
+    trigger: state
     for:
       hours: 0
       minutes: 5
-      seconds: 20
+      seconds: 0
+    enabled: false
   conditions: []
   actions:
   - choose:
@@ -504,9 +503,6 @@
             minutes: 0
             seconds: 0
           enabled: true
-        - condition: numeric_state
-          entity_id: sensor.presencia_salon_iluminancia
-          below: 60
       sequence:
       - action: light.turn_on
         target:
@@ -565,20 +561,6 @@
     - conditions:
       - condition: or
         conditions:
-        - alias: Probar ocupación off - tv on
-          condition: and
-          conditions:
-          - condition: state
-            entity_id: binary_sensor.presencia_salon
-            state: 'off'
-            for:
-              hours: 0
-              minutes: 0
-              seconds: 10
-          - condition: state
-            entity_id: remote.tv_del_salon
-            state: 'on'
-          enabled: false
         - alias: Probar ocupación off - tv off
           condition: and
           conditions:
@@ -587,15 +569,8 @@
             state: 'off'
             for:
               hours: 0
-              minutes: 0
-              seconds: 0
-          - condition: not
-            conditions:
-            - condition: state
-              entity_id: remote.tv_del_salon
-              state: 'on'
-            alias: y la tele está apagada
-            enabled: false
+              minutes: 5
+              seconds: 10
       sequence:
       - target:
           area_id:
