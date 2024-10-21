@@ -8,8 +8,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 128M
+          cpus: '0.50'
+          memory: 512M
 
   cloudflared_mediacheky:
     image: cloudflare/cloudflared:latest
@@ -19,5 +19,5 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 128M
+          cpus: '0.50'
+          memory: 512M
