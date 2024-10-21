@@ -32,7 +32,7 @@ services:
       resources:
         reservations:
           cpus: '0.80'
-          memory: 4G
+          memory: 6G
 
 
   # ESTADÍSTICAS

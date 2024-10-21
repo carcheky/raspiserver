@@ -20,8 +20,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.23'
-          memory: 500M
+          cpus: '0.50'
+          memory: 512M
 
       
   # # organizr http://localhost:8085
