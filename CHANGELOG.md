@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## [6.29.1](https://gitlab.com/carcheky/raspiserver/compare/v6.29.0...v6.29.1) (2024-10-20)
+
+
+### Bug Fixes
+
+* configs ([b4cd217](https://gitlab.com/carcheky/raspiserver/commit/b4cd21732c6cb82167bc7709e3af3058579edfd1))
+* limit resources ([64eb671](https://gitlab.com/carcheky/raspiserver/commit/64eb671f6bb502287902a39b7acd3e44a2ff4aaa))
+* limit resources ([9bbb26d](https://gitlab.com/carcheky/raspiserver/commit/9bbb26da4689f1bbdbacd154c10e1ee2f3f5ee57))
+* performance ([5e2592a](https://gitlab.com/carcheky/raspiserver/commit/5e2592a238378bb1eb1960e0035327310a965fef))
+
 # [6.29.0](https://gitlab.com/carcheky/raspiserver/compare/v6.28.0...v6.29.0) (2024-10-18)
 
 
