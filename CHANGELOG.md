@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [6.29.2](https://gitlab.com/carcheky/raspiserver/compare/v6.29.1...v6.29.2) (2024-10-22)
+
+
+### Bug Fixes
+
+* performance ([a4a18d0](https://gitlab.com/carcheky/raspiserver/commit/a4a18d08aba65647d468d0649bbe0196a00253d5))
+* performance ([8a5b65f](https://gitlab.com/carcheky/raspiserver/commit/8a5b65f942ba0df517ab3791227fa1a95a650bcb))
+
 ## [6.29.1](https://gitlab.com/carcheky/raspiserver/compare/v6.29.0...v6.29.1) (2024-10-20)
 
 
