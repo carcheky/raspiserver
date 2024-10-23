@@ -324,18 +324,31 @@ services:
 
   # janitorr:
   #   container_name: janitorr
-  #   ports:
-  #     - 8978:8978
   #   restart: always
   #   user: ${PUID}:${PGID}
-  #   image: ghcr.io/schaka/janitorr:stable
   #   volumes:
   #     - ./volumes/janitorr-config/:/config
+  #     - ./volumes/janitorr-logs:/logs
   #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   # modo 1
+  #   image: ghcr.io/schaka/janitorr:stable
+  #   healthcheck:
+  #     test: "wget -T5 -qO- http://localhost:8081/health | grep UP || exit 1"
+  #     start_period: 30s
+  #     interval: 5s
+  #     retries: 3
+
+    # # modo 2
     # image: ghcr.io/schaka/janitorr:native-stable
-    # volumes:
-    #   - ./volumes/janitorr-config/application.yml:/workspace/application.yml
-    #   - ${RASPIMEDIA}:/BibliotecaMultimedia
+    # environment:
+    #   # Uses https://github.com/dmikusa/tiny-health-checker supplied by paketo buildpacks
+    #   - THC_PATH=/health
+    #   - THC_PORT=8081
+    # healthcheck:
+    #   test: [ "CMD", "/workspace/health-check" ]
+    #   start_period: 30s
+    #   interval: 5s
+    #   retries: 3
 
   # recyclarr:
   #   image: ghcr.io/recyclarr/recyclarr
