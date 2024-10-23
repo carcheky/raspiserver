@@ -236,6 +236,8 @@ services:
     volumes:
       - ./volumes/sonarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
+      - ./volumes/sonarr-custom-services.d:/custom-services.d
+      - ./volumes/sonarr-custom-cont-init.d:/custom-cont-init.d
     ports:
       - 8989:8989
     deploy:
