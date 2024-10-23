@@ -199,7 +199,6 @@ services:
   # radarr http://localhost:7878
   radarr:
     image: linuxserver/radarr:latest
-    # image: ghcr.io/hotio/radarr
     container_name: radarr
     restart: always
     environment:
@@ -226,8 +225,7 @@ services:
   
   # sonarr http://localhost:8989
   sonarr:
-    # image: linuxserver/sonarr:latest
-    image: ghcr.io/hotio/sonarr
+    image: linuxserver/sonarr:latest
     container_name: sonarr
     restart: always
     environment:
@@ -238,6 +236,8 @@ services:
     volumes:
       - ./volumes/sonarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
+      - ./volumes/sonarr-custom-services.d:/custom-services.d
+      - ./volumes/sonarr-custom-cont-init.d:/custom-cont-init.d
     ports:
       - 8989:8989
     deploy:
