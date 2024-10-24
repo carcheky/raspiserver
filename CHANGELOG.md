@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.30.0](https://gitlab.com/carcheky/raspiserver/compare/v6.29.2...v6.30.0) (2024-10-24)
+
+
+### Bug Fixes
+
+* restore linuxserver containers ([350d81a](https://gitlab.com/carcheky/raspiserver/commit/350d81a49979f3f421bcc9ed83053973c77fb988))
+
+
+### Features
+
+* added sonarr scripts ([1b21f07](https://gitlab.com/carcheky/raspiserver/commit/1b21f07a5dbedec225ccfef2baf2b928ce45ffdf))
+
 ## [6.29.2](https://gitlab.com/carcheky/raspiserver/compare/v6.29.1...v6.29.2) (2024-10-22)
 
 
