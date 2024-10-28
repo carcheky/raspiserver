@@ -493,7 +493,8 @@
   actions:
   - choose:
     - conditions:
-      - condition: and
+      - alias: Presencia on
+        condition: and
         conditions:
         - condition: state
           entity_id: binary_sensor.presencia_salon
@@ -503,6 +504,9 @@
             minutes: 0
             seconds: 0
           enabled: true
+        - condition: state
+          entity_id: light.salon
+          state: 'off'
       sequence:
       - action: light.turn_on
         target:
@@ -516,14 +520,16 @@
         target:
           entity_id:
           - media_player.tv_del_salon
+          - media_player.atv_101
           device_id:
           - db1f4e373fee33c423ef98ac3336686e
+          - cccbfd423018b3306094fe773ed9e448
         data: {}
       alias: Enciende luces
     - conditions:
       - condition: or
         conditions:
-        - alias: Probar ocupación off - tv on
+        - alias: Probar ocupación off - tv off
           condition: and
           conditions:
           - condition: state
@@ -531,11 +537,46 @@
             state: 'off'
             for:
               hours: 0
-              minutes: 10
+              minutes: 5
               seconds: 10
-          - condition: state
-            entity_id: remote.tv_del_salon
-            state: 'on'
+          - condition: not
+            conditions:
+            - condition: state
+              entity_id: remote.tv_del_salon
+              state: 'on'
+      sequence:
+      - target:
+          area_id:
+          - salon
+          entity_id:
+          - light.enchufe_2_interruptor
+          - light.salon
+        data: {}
+        action: light.turn_off
+      - action: media_player.media_pause
+        target:
+          device_id:
+          - db1f4e373fee33c423ef98ac3336686e
+          - cccbfd423018b3306094fe773ed9e448
+          entity_id:
+          - media_player.tv_del_salon
+          - media_player.atv_101
+        data: {}
+      alias: apaga luces y pausa tv en 5'
+    - conditions:
+      - alias: Probar ocupación off - tv on
+        condition: and
+        conditions:
+        - condition: state
+          entity_id: binary_sensor.presencia_salon
+          state: 'off'
+          for:
+            hours: 0
+            minutes: 10
+            seconds: 10
+        - condition: state
+          entity_id: remote.tv_del_salon
+          state: 'on'
       sequence:
       - target:
           area_id:
@@ -557,39 +598,7 @@
         data: {}
         target:
           entity_id: switch.wake_tv
-      alias: apaga luces y puede que tv
-    - conditions:
-      - condition: or
-        conditions:
-        - alias: Probar ocupación off - tv off
-          condition: and
-          conditions:
-          - condition: state
-            entity_id: binary_sensor.presencia_salon
-            state: 'off'
-            for:
-              hours: 0
-              minutes: 5
-              seconds: 10
-      sequence:
-      - target:
-          area_id:
-          - salon
-          entity_id:
-          - light.enchufe_2_interruptor
-          - light.salon
-        data: {}
-        action: light.turn_off
-      - action: media_player.media_pause
-        target:
-          device_id:
-          - db1f4e373fee33c423ef98ac3336686e
-          - cccbfd423018b3306094fe773ed9e448
-          entity_id:
-          - media_player.tv_del_salon
-          - media_player.atv_101
-        data: {}
-      alias: apaga luces
+      alias: apaga luces y tv en 10m
   mode: restart
 - id: '1713363099665'
   alias: Amanecer anochecer
