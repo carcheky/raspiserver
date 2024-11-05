@@ -6,7 +6,7 @@
   <EnableFallbackFont>false</EnableFallbackFont>
   <EnableAudioVbr>false</EnableAudioVbr>
   <DownMixAudioBoost>3</DownMixAudioBoost>
-  <DownMixStereoAlgorithm>NightmodeDialogue</DownMixStereoAlgorithm>
+  <DownMixStereoAlgorithm>Rfc7845</DownMixStereoAlgorithm>
   <MaxMuxingQueueSize>2048</MaxMuxingQueueSize>
   <EnableThrottling>false</EnableThrottling>
   <ThrottleDelaySeconds>180</ThrottleDelaySeconds>
@@ -15,6 +15,7 @@
   <HardwareAccelerationType>qsv</HardwareAccelerationType>
   <EncoderAppPathDisplay>/usr/lib/jellyfin-ffmpeg/ffmpeg</EncoderAppPathDisplay>
   <VaapiDevice>/dev/dri/renderD128</VaapiDevice>
+  <QsvDevice>/dev/dri/renderD128</QsvDevice>
   <EnableTonemapping>true</EnableTonemapping>
   <EnableVppTonemapping>false</EnableVppTonemapping>
   <EnableVideoToolboxTonemapping>false</EnableVideoToolboxTonemapping>
@@ -28,11 +29,13 @@
   <VppTonemappingContrast>1</VppTonemappingContrast>
   <H264Crf>23</H264Crf>
   <H265Crf>28</H265Crf>
-  <EncoderPreset />
+  <EncoderPreset>veryslow</EncoderPreset>
   <DeinterlaceDoubleRate>false</DeinterlaceDoubleRate>
   <DeinterlaceMethod>yadif</DeinterlaceMethod>
   <EnableDecodingColorDepth10Hevc>true</EnableDecodingColorDepth10Hevc>
   <EnableDecodingColorDepth10Vp9>true</EnableDecodingColorDepth10Vp9>
+  <EnableDecodingColorDepth10HevcRext>false</EnableDecodingColorDepth10HevcRext>
+  <EnableDecodingColorDepth12HevcRext>false</EnableDecodingColorDepth12HevcRext>
   <EnableEnhancedNvdecDecoder>true</EnableEnhancedNvdecDecoder>
   <PreferSystemNativeHwDecoder>true</PreferSystemNativeHwDecoder>
   <EnableIntelLowPowerH264HwEncoder>false</EnableIntelLowPowerH264HwEncoder>
