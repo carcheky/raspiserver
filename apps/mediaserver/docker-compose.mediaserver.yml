@@ -8,10 +8,10 @@ services:
     container_name: jellyfin
     restart: always
     ports:
-      - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
+      - 8096:8096 # access port
+      # - 8920:8920 # access port
+      # - 7359:7359/udp # optional
+      # - 1900:1900/udp # optional
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -319,7 +319,7 @@ services:
 
 
   # OTROS
-
+  # https://github.com/Schaka/janitorr
   # janitorr:
   #   container_name: janitorr
   #   restart: always
@@ -328,14 +328,18 @@ services:
   #     - ./volumes/janitorr-config/:/config
   #     - ./volumes/janitorr-logs:/logs
   #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   environment:
+  #     - LANG=es_ES.UTF-8
+  #     - LANGUAGE=es_ES:es
+  #     # - LC_ALL=es_ES.UTF-8
   #   # modo 1
-  #   image: ghcr.io/schaka/janitorr:stable
+  #   image: ghcr.io/schaka/janitorr:develop
   #   healthcheck:
   #     test: "wget -T5 -qO- http://localhost:8081/health | grep UP || exit 1"
   #     start_period: 30s
   #     interval: 5s
   #     retries: 3
-
+    # fin modo 1
     # # modo 2
     # image: ghcr.io/schaka/janitorr:native-stable
     # environment:
@@ -347,21 +351,9 @@ services:
     #   start_period: 30s
     #   interval: 5s
     #   retries: 3
+    # fin modo 2
 
-  # recyclarr:
-  #   image: ghcr.io/recyclarr/recyclarr
-  #   container_name: recyclarr
-  #   user: ${PUID}:${PGID}
-  #   restart: always
-  #   environment:
-  #     - PUID=${PUID}
-  #     - PGID=${PGID}
-  #     - TZ=${TIMEZONE}
-  #     - CRON_SCHEDULE?"@daily"
-  #     - RECYCLARR_CREATE_CONFIG=true
-  #   volumes:
-  #     - ./volumes/recyclarr-config:/config
-
+  # https://docs.linuxserver.io/images/docker-mylar3/
   mylar3:
     image: lscr.io/linuxserver/mylar3:latest
     container_name: mylar3
