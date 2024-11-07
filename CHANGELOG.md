@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.31.0](https://gitlab.com/carcheky/raspiserver/compare/v6.30.0...v6.31.0) (2024-11-07)
+
+
+### Bug Fixes
+
+* intros in library ([35b29d2](https://gitlab.com/carcheky/raspiserver/commit/35b29d2618eb2c65a3619c86f6d19f80111d955c))
+
+
+### Features
+
+* code server ([ac04f9d](https://gitlab.com/carcheky/raspiserver/commit/ac04f9d3482fd2ad84d426e6f08e46155295624b))
+
 # [6.30.0](https://gitlab.com/carcheky/raspiserver/compare/v6.29.2...v6.30.0) (2024-10-24)
 
 
