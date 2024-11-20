@@ -8,10 +8,10 @@ services:
       - 8265:8265 # webUI port
       - 8266:8266 # server port
     environment:
-      - TZ=Europe/London
       - PUID=${PUID}
       - PGID=${PGID}
-      - UMASK_SET=002
+      - TZ=${TIMEZONE}
+      - UMASK_SET=${UMASK}
       - serverIP=0.0.0.0
       - serverPort=8266
       - webUIPort=8265
@@ -27,7 +27,8 @@ services:
       - ./volumes/tdarr/logs:/app/logs
       - ./volumes/tdarr/media:/media
       - ${RASPIMEDIA}:/media-mounted
-      - ./volumes/transcode_cache:/temp
+      - ${RASPIMEDIA}/tdarr/Samples:/app/server/Tdarr/Samples
+      - ${RASPIMEDIA}/transcode_cache:/temp
 
     devices:
       - /dev/dri:/dev/dri
@@ -47,7 +48,7 @@ services:
     restart: unless-stopped
     network_mode: service:tdarr
     environment:
-      - TZ=Europe/London
+      - TZ=Europe/Madrid
       - PUID=${PUID}
       - PGID=${PGID}
       - UMASK_SET=002
@@ -62,8 +63,9 @@ services:
     volumes:
       - ./volumes/tdarr/configs:/app/configs
       - ./volumes/tdarr/logs:/app/logs
-      - ${RASPIMEDIA}:/media
-      - ./volumes/transcode_cache:/temp
+      - ./volumes/tdarr/media:/media
+      - ${RASPIMEDIA}:/media-mounted
+      - ${RASPIMEDIA}/transcode_cache:/temp
 
     devices:
       - /dev/dri:/dev/dri
