@@ -30,8 +30,11 @@ services:
     deploy:
       resources:
         reservations:
-          cpus: '0.80'
-          memory: 6G
+          cpus: '1'
+          memory: 4G
+        limits:
+          cpus: '3'
+          memory: 8G
 
 
   # ESTADÍSTICAS
