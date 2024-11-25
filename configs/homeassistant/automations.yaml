@@ -789,47 +789,47 @@
 - id: '1713479413152'
   alias: Smart dormitorio
   description: ''
-  trigger:
-  - platform: state
-    entity_id:
-    - binary_sensor.movimiento_dormitorio_movimiento
-  - platform: state
-    entity_id:
+  triggers:
+  - entity_id:
+    - binary_sensor.presencia_dormitorio
+    trigger: state
+  - entity_id:
     - binary_sensor.sensor_puerta_apertura
-  condition:
+    trigger: state
+  conditions:
   - condition: state
     entity_id: person.carcheky
     state: home
-  action:
+  actions:
   - choose:
     - conditions:
       - condition: state
         entity_id: binary_sensor.sensor_puerta_apertura
         state: 'on'
       - condition: state
-        entity_id: binary_sensor.movimiento_dormitorio_movimiento
         state: 'on'
+        entity_id: binary_sensor.presencia_dormitorio
       sequence:
-      - service: light.turn_on
-        metadata: {}
+      - metadata: {}
         data: {}
         target:
           area_id: dormitorio
+        action: light.turn_on
       alias: puerta abierta y movimiento
     - conditions:
       - condition: state
         entity_id: binary_sensor.sensor_puerta_apertura
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.movimiento_dormitorio_movimiento
         state: 'on'
+        entity_id: binary_sensor.presencia_dormitorio
       sequence:
-      - service: light.turn_on
-        metadata: {}
+      - metadata: {}
         data: {}
         target:
           entity_id:
           - light.luz_mesita
+        action: light.turn_on
       - if:
         - condition: time
           after: '23:00:00'
@@ -839,68 +839,68 @@
             minutes: 2
             seconds: 0
             milliseconds: 0
-        - service: light.turn_off
-          metadata: {}
+        - metadata: {}
           data: {}
           target:
             entity_id:
             - light.dormitorio
-      - service: light.turn_off
-        metadata: {}
+          action: light.turn_off
+      - metadata: {}
         data: {}
         target:
           entity_id:
           - light.dormitorio
+        action: light.turn_off
       alias: puerta cerrada y movimiento
     - conditions:
       - condition: state
         entity_id: binary_sensor.sensor_puerta_apertura
         state: 'on'
       - condition: state
-        entity_id: binary_sensor.movimiento_dormitorio_movimiento
         state: 'off'
+        entity_id: binary_sensor.presencia_dormitorio
       sequence:
       - delay:
           hours: 0
           minutes: 5
           seconds: 0
           milliseconds: 0
-      - service: light.turn_off
-        target:
+      - target:
           entity_id:
           - light.luz_mesita
         data: {}
-      - service: light.turn_off
-        metadata: {}
+        action: light.turn_off
+      - metadata: {}
         data: {}
         target:
           entity_id:
           - light.dormitorio
+        action: light.turn_off
       alias: puerta abierta sin movimiento
     - conditions:
       - condition: state
         entity_id: binary_sensor.sensor_puerta_apertura
         state: 'off'
       - condition: state
-        entity_id: binary_sensor.movimiento_dormitorio_movimiento
         state: 'off'
+        entity_id: binary_sensor.presencia_dormitorio
       sequence:
-      - service: light.turn_off
-        metadata: {}
+      - metadata: {}
         data: {}
         target:
           entity_id:
           - light.dormitorio
+        action: light.turn_off
       - delay:
           hours: 0
           minutes: 5
           seconds: 0
           milliseconds: 0
-      - service: light.turn_off
-        target:
+      - target:
           entity_id:
           - light.luz_mesita
         data: {}
+        action: light.turn_off
       alias: puerta cerrada sin movimiento
   mode: restart
 - id: '1713888941627'
