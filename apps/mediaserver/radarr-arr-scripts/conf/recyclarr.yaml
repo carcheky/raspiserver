@@ -108,11 +108,6 @@ radarr:
           - name: Any
             score: 70
       - trash_ids:
-          - fb392fb0d61a010ae38e49ceaa24a1ef # 2160p
-        quality_profiles:
-          - name: Any
-            score: 30
-      - trash_ids:
           - 89dac1be53d5268a7e10a19d3c896826 # 2.0 Stereo
           - 205125755c411c3b8622ca3175d27b37 # 3.0 Sound
           - 373b58bd188fc00c817bd8c7470ea285 # 4.0 Sound
@@ -208,6 +203,7 @@ radarr:
           - 08d6d8834ad9ec87b1dc7ec8148e7a1f # PQ
           - 9364dd386c9b4a1100dde8264690add7 # HLG
           - 923b6abef9b17f937fab56cfcf89e1f1 # DV (WEBDL)
+          - fb392fb0d61a010ae38e49ceaa24a1ef # 2160p
         quality_profiles:
           - name: Any
             score: -100000

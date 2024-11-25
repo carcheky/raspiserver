@@ -208,14 +208,14 @@ services:
       - ./volumes/radarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
       - ./volumes/radarr-custom-services.d:/custom-services.d
-      - ./volumes/radarr-custom-cont-init.d:/custom-cont-init.d
+      - ./radarr-arr-scripts:/custom-cont-init.d
     ports:
       - 7878:7878
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '0.80'
+          memory: 1G
 
 
   
@@ -235,14 +235,14 @@ services:
       - ./volumes/sonarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
       - ./volumes/sonarr-custom-services.d:/custom-services.d
-      - ./volumes/sonarr-custom-cont-init.d:/custom-cont-init.d
+      - ./sonarr-arr-scripts:/custom-cont-init.d
     ports:
       - 8989:8989
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '0.80'
+          memory: 1G
 
 
 
