@@ -272,49 +272,49 @@ services:
 
   # BUSCADOR MÚSICA
 
-  # lidarr http://localhost:8686
-  lidarr:
-    image: linuxserver/lidarr:latest
-    container_name: lidarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ./volumes/lidarr-config:/config
-      - ${RASPIMEDIA}:/BibliotecaMultimedia
-    ports:
-      - 8686:8686
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
+  # # lidarr http://localhost:8686
+  # lidarr:
+  #   image: linuxserver/lidarr:latest
+  #   container_name: lidarr
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   volumes:
+  #     - ./volumes/lidarr-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 8686:8686
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.50'
+  #         memory: 512M
 
 
 
-  # BUSCADOR LIBROS
+  # # BUSCADOR LIBROS
   
-  # readarr http://localhost:8787
-  readarr:
-    image: linuxserver/readarr:nightly
-    container_name: readarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ./volumes/readarr-config:/config
-      - ${RASPIMEDIA}:/BibliotecaMultimedia
-    ports:
-      - 8787:8787
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
+  # # readarr http://localhost:8787
+  # readarr:
+  #   image: linuxserver/readarr:nightly
+  #   container_name: readarr
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   volumes:
+  #     - ./volumes/readarr-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 8787:8787
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.50'
+  #         memory: 512M
 
 
 
@@ -353,17 +353,17 @@ services:
     #   retries: 3
     # fin modo 2
 
-  # https://docs.linuxserver.io/images/docker-mylar3/
-  mylar3:
-    image: lscr.io/linuxserver/mylar3:latest
-    container_name: mylar3
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ./volumes/mylar3-config:/config
-      - ${RASPIMEDIA}:/BibliotecaMultimedia
-    ports:
-      - 8090:8090
-    restart: always
+  # # https://docs.linuxserver.io/images/docker-mylar3/
+  # mylar3:
+  #   image: lscr.io/linuxserver/mylar3:latest
+  #   container_name: mylar3
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   volumes:
+  #     - ./volumes/mylar3-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 8090:8090
+  #   restart: always
