@@ -90,8 +90,9 @@ switch:
 #     debug
 #     notset
 logger:
-  default: warn
-  # logs:
+  default: info
+  logs:
+    homeassistant.util.logging: debug
   #   homeassistant.setup: debug
     # homeassistant.components.proximity: debug
     # homeassistant.components.automation: warn
