@@ -1,5 +1,22 @@
 # CHANGELOG
 
+# [6.32.0](https://gitlab.com/carcheky/raspiserver/compare/v6.31.0...v6.32.0) (2024-11-26)
+
+
+### Bug Fixes
+
+* configs ([747376d](https://gitlab.com/carcheky/raspiserver/commit/747376d624634b29ce3735e7ef09006267a69bcf))
+* configs ([aaf1967](https://gitlab.com/carcheky/raspiserver/commit/aaf196712f3eb0ed17850ce9375cbe420cc26e8b))
+* configs ([61ff2c8](https://gitlab.com/carcheky/raspiserver/commit/61ff2c8311ef61b5c56bd472ae6733c6bcfc1806))
+* disable services ([efdae77](https://gitlab.com/carcheky/raspiserver/commit/efdae779f279f30f4be0d295d099b05b5306649d))
+* tdarr ([83552eb](https://gitlab.com/carcheky/raspiserver/commit/83552eba037ea64995229835acb71f6479892703))
+
+
+### Features
+
+* arr scripts included ([98e6d27](https://gitlab.com/carcheky/raspiserver/commit/98e6d27a6cf5bcb53b318454b14b781465c0f6fc))
+* tdarr ([efe1382](https://gitlab.com/carcheky/raspiserver/commit/efe138275dc6596d800a0ef080f22fadb644a91e))
+
 # [6.31.0](https://gitlab.com/carcheky/raspiserver/compare/v6.30.0...v6.31.0) (2024-11-07)
 
 
