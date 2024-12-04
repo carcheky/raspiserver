@@ -1,2 +1,3 @@
 @reboot carcheky /usr/local/bin/mediacheky update
 @daily carcheky /usr/local/bin/mediacheky update
+@reboot root bash /home/carcheky/mediacheky/raspiserver/scripts/bthelper.sh hci0
