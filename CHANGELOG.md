@@ -1,5 +1,21 @@
 # CHANGELOG
 
+# [6.33.0](https://gitlab.com/carcheky/raspiserver/compare/v6.32.0...v6.33.0) (2024-12-05)
+
+
+### Bug Fixes
+
+* added bthelper ([32a95ed](https://gitlab.com/carcheky/raspiserver/commit/32a95edf45548eecf2b1cf75974c9ed50c8913b5))
+* configs ([877fab1](https://gitlab.com/carcheky/raspiserver/commit/877fab1bad909498de882ba2b7a62ad6619464f5))
+* configs ([f80ec83](https://gitlab.com/carcheky/raspiserver/commit/f80ec835c3715f1e89d0029c0630ce8997877c1e))
+* configs ([e6a2d91](https://gitlab.com/carcheky/raspiserver/commit/e6a2d91a8dcafff2509b664b3a91d0e61d668d57))
+
+
+### Features
+
+* added esphome ([72377b1](https://gitlab.com/carcheky/raspiserver/commit/72377b157aef11c31412220c49ff22035c54cb0c))
+* bthelper.sh ([1b2d6b0](https://gitlab.com/carcheky/raspiserver/commit/1b2d6b05746c76a77f1b893b28ddbb28d9501181))
+
 # [6.32.0](https://gitlab.com/carcheky/raspiserver/compare/v6.31.0...v6.32.0) (2024-11-26)
 
 
