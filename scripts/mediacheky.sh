@@ -116,4 +116,31 @@ function help() {
     cat /usr/local/bin/mediacheky | grep '##'
 }
 
+
+function updater() {
+  
+    for task in "${tasks[@]}"; do
+    # Dividimos cada entrada en User:Password@IP, Ruta y Comando
+    IFS='|' read -r credentials path command <<< "$task"
+
+    # Extraemos el usuario, la contraseña y la IP
+    IFS='@' read -r user_password ip <<< "$credentials"
+    IFS=':' read -r user password <<< "$user_password"
+
+    echo "Conectando a $ip como $user..."
+
+    # Ejecutamos el comando en el miniPC usando sshpass
+    sshpass -p "$password" ssh -o "StrictHostKeyChecking=no" "$user@$ip" "
+      cd $path && 
+      $command
+    "
+
+    if [ $? -eq 0 ]; then
+      echo "Tarea en $ip completada con éxito."
+    else
+      echo "Error ejecutando tarea en $ip."
+    fi
+  done
+}
+
 ${@:-help}

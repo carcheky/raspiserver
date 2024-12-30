@@ -8,10 +8,10 @@ services:
     container_name: jellyfin
     restart: always
     ports:
-      - 8096:8096
-      - 8920:8920 #optional
-      - 7359:7359/udp #optional
-      - 1900:1900/udp #optional
+      - 8096:8096 # access port
+      # - 8920:8920 # access port
+      # - 7359:7359/udp # optional
+      # - 1900:1900/udp # optional
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -30,8 +30,11 @@ services:
     deploy:
       resources:
         reservations:
-          cpus: '0.80'
-          memory: 6G
+          cpus: '1'
+          memory: 4G
+        limits:
+          cpus: '3'
+          memory: 8G
 
 
   # ESTADÍSTICAS
@@ -208,14 +211,14 @@ services:
       - ./volumes/radarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
       - ./volumes/radarr-custom-services.d:/custom-services.d
-      - ./volumes/radarr-custom-cont-init.d:/custom-cont-init.d
+      - ./radarr-arr-scripts:/custom-cont-init.d
     ports:
       - 7878:7878
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '0.80'
+          memory: 1G
 
 
   
@@ -235,14 +238,14 @@ services:
       - ./volumes/sonarr-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia
       - ./volumes/sonarr-custom-services.d:/custom-services.d
-      - ./volumes/sonarr-custom-cont-init.d:/custom-cont-init.d
+      - ./sonarr-arr-scripts:/custom-cont-init.d
     ports:
       - 8989:8989
     deploy:
       resources:
         limits:
-          cpus: '0.50'
-          memory: 512M
+          cpus: '0.80'
+          memory: 1G
 
 
 
@@ -272,54 +275,54 @@ services:
 
   # BUSCADOR MÚSICA
 
-  # lidarr http://localhost:8686
-  lidarr:
-    image: linuxserver/lidarr:latest
-    container_name: lidarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ./volumes/lidarr-config:/config
-      - ${RASPIMEDIA}:/BibliotecaMultimedia
-    ports:
-      - 8686:8686
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
+  # # lidarr http://localhost:8686
+  # lidarr:
+  #   image: linuxserver/lidarr:latest
+  #   container_name: lidarr
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   volumes:
+  #     - ./volumes/lidarr-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 8686:8686
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.50'
+  #         memory: 512M
 
 
 
-  # BUSCADOR LIBROS
+  # # BUSCADOR LIBROS
   
-  # readarr http://localhost:8787
-  readarr:
-    image: linuxserver/readarr:nightly
-    container_name: readarr
-    restart: always
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ./volumes/readarr-config:/config
-      - ${RASPIMEDIA}:/BibliotecaMultimedia
-    ports:
-      - 8787:8787
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
+  # # readarr http://localhost:8787
+  # readarr:
+  #   image: linuxserver/readarr:nightly
+  #   container_name: readarr
+  #   restart: always
+  #   environment:
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE}
+  #   volumes:
+  #     - ./volumes/readarr-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 8787:8787
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.50'
+  #         memory: 512M
 
 
 
   # OTROS
-
+  # https://github.com/Schaka/janitorr
   # janitorr:
   #   container_name: janitorr
   #   restart: always
@@ -328,14 +331,18 @@ services:
   #     - ./volumes/janitorr-config/:/config
   #     - ./volumes/janitorr-logs:/logs
   #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   environment:
+  #     - LANG=es_ES.UTF-8
+  #     - LANGUAGE=es_ES:es
+  #     # - LC_ALL=es_ES.UTF-8
   #   # modo 1
-  #   image: ghcr.io/schaka/janitorr:stable
+  #   image: ghcr.io/schaka/janitorr:develop
   #   healthcheck:
   #     test: "wget -T5 -qO- http://localhost:8081/health | grep UP || exit 1"
   #     start_period: 30s
   #     interval: 5s
   #     retries: 3
-
+    # fin modo 1
     # # modo 2
     # image: ghcr.io/schaka/janitorr:native-stable
     # environment:
@@ -347,31 +354,19 @@ services:
     #   start_period: 30s
     #   interval: 5s
     #   retries: 3
+    # fin modo 2
 
-  # recyclarr:
-  #   image: ghcr.io/recyclarr/recyclarr
-  #   container_name: recyclarr
-  #   user: ${PUID}:${PGID}
-  #   restart: always
+  # # https://docs.linuxserver.io/images/docker-mylar3/
+  # mylar3:
+  #   image: lscr.io/linuxserver/mylar3:latest
+  #   container_name: mylar3
   #   environment:
   #     - PUID=${PUID}
   #     - PGID=${PGID}
   #     - TZ=${TIMEZONE}
-  #     - CRON_SCHEDULE?"@daily"
-  #     - RECYCLARR_CREATE_CONFIG=true
   #   volumes:
-  #     - ./volumes/recyclarr-config:/config
-
-  mylar3:
-    image: lscr.io/linuxserver/mylar3:latest
-    container_name: mylar3
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - ./volumes/mylar3-config:/config
-      - ${RASPIMEDIA}:/BibliotecaMultimedia
-    ports:
-      - 8090:8090
-    restart: always
+  #     - ./volumes/mylar3-config:/config
+  #     - ${RASPIMEDIA}:/BibliotecaMultimedia
+  #   ports:
+  #     - 8090:8090
+  #   restart: always
