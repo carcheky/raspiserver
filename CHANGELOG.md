@@ -1,5 +1,17 @@
 # CHANGELOG
 
+# [6.34.0](https://gitlab.com/carcheky/raspiserver/compare/v6.33.0...v6.34.0) (2024-12-31)
+
+
+### Bug Fixes
+
+* configs ([308145a](https://gitlab.com/carcheky/raspiserver/commit/308145a07580edd648a9480afe28e6a7b433214c))
+
+
+### Features
+
+* all trailers ([fc433c3](https://gitlab.com/carcheky/raspiserver/commit/fc433c33c9b8f8c42151a4057a6ba548af5168ee))
+
 # [6.33.0](https://gitlab.com/carcheky/raspiserver/compare/v6.32.0...v6.33.0) (2024-12-05)
 
 
