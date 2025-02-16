@@ -13,29 +13,30 @@ cd "$MOVIES_DIR" || exit
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
-    local final_image="$1"
-    local flag_file="$2"
-    offset_x=0
-    offset_y=0
-    increment_x=200 # Ajusta según lo necesites
-    increment_y=0   # Ajusta según lo necesites
+    if [ "${creatortool}" != "34663s" ]; then
+        local final_image="$1"
+        local flag_file="$2"
+        offset_x=0
+        offset_y=0
+        increment_x=300 # Ajusta según lo necesites
+        increment_y=0   # Ajusta según lo necesites
 
-    for flag_file in "${flag_files[@]}"; do
-        if [ -f "$OVERLAY_DIR/$flag_file" ]; then
+        for flag_file in "${flag_files[@]}"; do
+            if [ -f "$OVERLAY_DIR/$flag_file" ]; then
+                convert "$final_image" \
+                    \( "$OVERLAY_DIR/$flag_file" -resize ${increment_x}x${increment_x} \) \
+                    -gravity SouthWest -geometry +${offset_x}+${offset_y} -composite \
+                    "$final_image"
 
-            # echo "Aplicando overlay $flag_file a $final_image"
-            convert "$final_image" \
-                \( "$OVERLAY_DIR/$flag_file" -resize 200x200 \) \
-                -gravity SouthWest -geometry +${offset_x}+${offset_y} -composite \
-                "$final_image"
-            echo "convert $final_image -resize 200x200 $OVERLAY_DIR/$flag_file -gravity SouthWest -geometry +${offset_x}+${offset_y} -composite $final_image"
-            chmod 644 "$final_image"
-            chown nobody "$final_image"
-            exiftool -creatortool="languageaddedbycarcheky" -overwrite_original "$final_image"
-            offset_x=$((offset_x + increment_x))
-            offset_y=$((offset_y + increment_y))
-        fi
-    done
+                
+                chmod 644 "$final_image"
+                chown nobody "$final_image"
+                exiftool -creatortool="languageaddedbycarcheky" -overwrite_original "$final_image"
+                echo $final_image $offset_x $offset_y 
+                offset_x=$((offset_x + increment_x))
+            fi
+        done
+    fi
 
 }
 
@@ -49,18 +50,18 @@ function get_languages() {
     # Mapa de conversión de ISO 639-3 a ISO 639-1
     declare -A map
     map=(
-        ["eng"]="en"
-        ["spa"]="es"
-        ["fra"]="fr"
-        ["deu"]="de"
-        ["ita"]="it"
-        ["por"]="pt"
+        ["spa"]="es.svg"
+        ["eng"]="en.svg"
+        ["fra"]="fr.svg"
+        ["deu"]="de.svg"
+        ["ita"]="it.svg"
+        ["por"]="pt.svg"
     )
     flag_files=()
 
     # Recorrer los idiomas y generar nombres de archivos
     for lang in "${langs[@]}"; do
-        flag_files+=("${map[$lang]:-$lang}.svg") # Si no está en el mapa, usa el código original
+        flag_files+=("${map[$lang]:-$lang}") # Si no está en el mapa, usa el código original
     done
 
     # Imprimir el array de archivos
@@ -92,9 +93,8 @@ function full_logic() {
             get_languages "$mlink"
             for file in *.jpg; do
                 creatortool=$(exiftool -f -s3 -"creatortool" "$file")
-                if [ "${creatortool}" != "languageaddedbycarcheky" ]; then
-                    add_overlay $file
-                fi
+                add_overlay $file
+
             done
 
         elif [[ "$(check_content_type)" == "serie" ]]; then
@@ -103,15 +103,12 @@ function full_logic() {
             # get chapters
             mapfile -t chapters < <(find . -type f -name "*.mkv")
             echo "Archivos generados:"
-            printf "%s\n" "${chapters[@]}"
 
             for chapter in "${chapters[@]}"; do
                 get_languages "$chapter"
                 thumb_file="${chapter%.mkv}-thumb.jpg"
                 add_overlay "$thumb_file"
             done
-
-            
 
             # | while read -r file; do
             #     # replace .mkv with -thumb.jpg
