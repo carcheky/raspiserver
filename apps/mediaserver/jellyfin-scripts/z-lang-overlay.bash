@@ -15,11 +15,6 @@ cd "$MOVIES_DIR" || exit
 function add_overlay() {
     local final_image="$1"
     local flag_file="$2"
-    # for lang in $langs; do
-    # convert "$final_image" \( "$flag_file" -resize 200x200 \) -gravity SouthWest -composite "$final_image"
-    # chmod 644 "$final_image"
-    # chown nobody "$final_image"
-    # exiftool -creatortool="language-flag-added" -overwrite_original "$final_image"
     offset_x=0
     offset_y=0
     increment_x=200 # Ajusta según lo necesites
@@ -27,16 +22,16 @@ function add_overlay() {
 
     for flag_file in "${flag_files[@]}"; do
         if [ -f "$OVERLAY_DIR/$flag_file" ]; then
-            echo "Aplicando overlay $flag_file a $final_image"
+
+            # echo "Aplicando overlay $flag_file a $final_image"
             convert "$final_image" \
                 \( "$OVERLAY_DIR/$flag_file" -resize 200x200 \) \
                 -gravity SouthWest -geometry +${offset_x}+${offset_y} -composite \
                 "$final_image"
-
+            echo "convert $final_image -resize 200x200 $OVERLAY_DIR/$flag_file -gravity SouthWest -geometry +${offset_x}+${offset_y} -composite $final_image"
             chmod 644 "$final_image"
             chown nobody "$final_image"
-            exiftool -creatortool="language-flag-added" -overwrite_original "$final_image"
-
+            exiftool -creatortool="languageaddedbycarcheky" -overwrite_original "$final_image"  
             offset_x=$((offset_x + increment_x))
             offset_y=$((offset_y + increment_y))
         fi
@@ -69,7 +64,7 @@ function get_languages() {
     done
 
     # Imprimir el array de archivos
-    echo "Archivos de banderas: ${flag_files[@]}"
+    # echo "Archivos de banderas: ${flag_files[@]}"
 
 }
 
@@ -88,26 +83,20 @@ function check_content_type() {
     echo "desconocido"
 }
 
-full_logic() {
-    # Recorremos cada carpeta (cada rave, digo, cada directorio).
+function full_logic() {
     for dir in */; do
         cd "$MOVIES_DIR/$dir" || continue
-        # Restaurar folder.jpg si existe backup (¡para que la nostalgia no se pierda!).
-        if [ -f "folder copy.jpg" ]; then
-            cp "folder copy.jpg" folder.jpg
-        fi
-
         if [[ "$(check_content_type)" == "pelicula" ]]; then
             echo "PELÍCULA: $dir"
             mlink=$(readlink -f *.mkv)
             get_languages "$mlink"
-            echo $mlink
-            echo $langs
-            add_overlay "folder.jpg"
             for file in *.jpg; do
-                add_overlay $file
+                creatortool=$( exiftool -f -s3 -"creatortool" "$file" )
+                if [ "${creatortool}" != "languageaddedbycarcheky" ]; then
+                    echo $file - $creatortool
+                    add_overlay $file
+                fi
             done
-
 
         elif [[ "$(check_content_type)" == "serie" ]]; then
             echo "SERIE: $dir"
