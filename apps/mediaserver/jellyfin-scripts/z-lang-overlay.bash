@@ -1,24 +1,24 @@
 #!/bin/bash
 
-if not find command -v exiftool; then
-    apt update
-    apt install -y libimage-exiftool-perl jq ffmpeg imagemagick
+# Verificar si exiftool está instalado, si no, instalar dependencias
+if ! command -v exiftool &>/dev/null; then
+    apt update && apt install -y libimage-exiftool-perl jq ffmpeg imagemagick
 fi
-clear
+
 # Directorios: asegúrate de que estas rutas estén bien configuradas.
 MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
-OVERLAY_DIR="/BibliotecaMultimedia/overlay"
+OVERLAY_DIR="/BibliotecaMultimedia/flags/4x3"
 cd "$OVERLAY_DIR" || exit
 cd "$MOVIES_DIR" || exit
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
-    if [ "${creatortool}" != "languageaddedbycarcheky" ]; then
+    if [ "${creatortool}" != "345" ]; then
         local final_image="$1"
         local type="$2"
         offset_x=0
         offset_y=0
-        increment_x=300 # Ajusta según lo necesites
+        increment_x=200 # Ajusta según lo necesites
         increment_y=0   # Ajusta según lo necesites
         gravity="SouthWest"
         if [ "$type" == "serie" ]; then
@@ -33,13 +33,12 @@ function add_overlay() {
 
                 chmod 644 "$final_image"
                 chown nobody "$final_image"
-                exiftool -creatortool="languageaddedbycarcheky" -overwrite_original "$final_image"
+                exiftool -creatortool="345" -overwrite_original "$final_image"
                 # echo $final_image $offset_x $offset_y
                 offset_x=$((offset_x + increment_x))
             fi
         done
     fi
-
 }
 
 # Función para extraer los idiomas disponibles del archivo .mkv usando ffprobe.
@@ -53,7 +52,7 @@ function get_languages() {
     declare -A map
     map=(
         ["spa"]="es.svg"
-        ["eng"]="en.svg"
+        ["eng"]="gb.svg"
         ["fra"]="fr.svg"
         ["deu"]="de.svg"
         ["ita"]="it.svg"
@@ -88,11 +87,10 @@ function full_logic() {
             echo "PELÍCULA: $dir"
             mlink=$(readlink -f *.mkv)
             get_languages "$mlink"
-            for file in *.jpg; do
-                creatortool=$(exiftool -f -s3 -"creatortool" "$file")
-                add_overlay $file
-
-            done
+            creatortool=$(exiftool -f -s3 -"creatortool" folder.jpg)
+            add_overlay folder.jpg
+            # for file in *.jpg; do
+            # done
 
         elif [[ "$(check_content_type)" == "serie" ]]; then
             echo "SERIE: $dir"
@@ -103,8 +101,11 @@ function full_logic() {
             for chapter in "${chapters[@]}"; do
                 get_languages "$chapter"
                 thumb_file="${chapter%.mkv}-thumb.jpg"
-                convert "$thumb_file" -resize 1920x1080^ -gravity center -extent 1920x1080 tmp_thumb && mv tmp_thumb "$thumb_file"
-                add_overlay "$thumb_file" serie
+                creatortool=$(exiftool -f -s3 -"creatortool" "$thumb_file")
+                if [ "${creatortool}" != "345" ]; then
+                    convert "$thumb_file" -resize 1920x1080^ -gravity center -extent 1920x1080 tmp_thumb && mv tmp_thumb "$thumb_file"
+                    add_overlay "$thumb_file" serie
+                fi
             done
 
         else
