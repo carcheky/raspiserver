@@ -19,7 +19,8 @@ services:
     ports:
       - 8034:80
       - 4434:443
-      # - 443:443
+      - 443:443
+      - 80:80
     devices:
       - /dev/dri:/dev/dri
     group_add:
