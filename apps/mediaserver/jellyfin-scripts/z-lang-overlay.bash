@@ -31,7 +31,7 @@ function add_overlay() {
             echo "convert $final_image -resize 200x200 $OVERLAY_DIR/$flag_file -gravity SouthWest -geometry +${offset_x}+${offset_y} -composite $final_image"
             chmod 644 "$final_image"
             chown nobody "$final_image"
-            exiftool -creatortool="languageaddedbycarcheky" -overwrite_original "$final_image"  
+            exiftool -creatortool="languageaddedbycarcheky" -overwrite_original "$final_image"
             offset_x=$((offset_x + increment_x))
             offset_y=$((offset_y + increment_y))
         fi
@@ -91,15 +91,34 @@ function full_logic() {
             mlink=$(readlink -f *.mkv)
             get_languages "$mlink"
             for file in *.jpg; do
-                creatortool=$( exiftool -f -s3 -"creatortool" "$file" )
+                creatortool=$(exiftool -f -s3 -"creatortool" "$file")
                 if [ "${creatortool}" != "languageaddedbycarcheky" ]; then
-                    echo $file - $creatortool
                     add_overlay $file
                 fi
             done
 
         elif [[ "$(check_content_type)" == "serie" ]]; then
             echo "SERIE: $dir"
+
+            # get chapters
+            mapfile -t chapters < <(find . -type f -name "*.mkv")
+            echo "Archivos generados:"
+            printf "%s\n" "${chapters[@]}"
+
+            for chapter in "${chapters[@]}"; do
+                get_languages "$chapter"
+                thumb_file="${chapter%.mkv}-thumb.jpg"
+                add_overlay "$thumb_file"
+            done
+
+            
+
+            # | while read -r file; do
+            #     # replace .mkv with -thumb.jpg
+            #     file="${file%.mkv}-thumb.jpg"
+            #     get_languages "$file"
+            #     add_overlay "$file"
+            # done
         else
             echo "No se pudo determinar el tipo de contenido en la carpeta. ¡Esto es un remix inesperado!"
         fi
