@@ -10,7 +10,7 @@ OVERLAY_DIR="/BibliotecaMultimedia/flags/4x3"
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
-    if [ "${creatortool}" != "345" ]; then
+    if [ "${creatortool}" != "432" ]; then
         local final_image="$1"
         local type="$2"
         offset_x=0
@@ -18,11 +18,15 @@ function add_overlay() {
         increment_x=200 # Ajusta según lo necesites
         increment_y=0   # Ajusta según lo necesites
         gravity="SouthWest"
+        resize=1920x2880
         if [ "$type" == "serie" ]; then
             gravity="South"
+            resize=1920x1080
         fi
         for flag_file in "${flag_files[@]}"; do
             if [ -f "$OVERLAY_DIR/$flag_file" ]; then
+                convert "$final_image" -resize ${resize}^ -gravity center -extent ${resize} tmp_thumb && mv tmp_thumb "$final_image"
+
                 convert "$final_image" \
                     \( -density 300 "$OVERLAY_DIR/$flag_file" -background none -resize "${increment_x}x${increment_x}" \) \
                     -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
@@ -30,7 +34,7 @@ function add_overlay() {
 
                 chmod 644 "$final_image"
                 chown nobody "$final_image"
-                exiftool -creatortool="345" -overwrite_original "$final_image"
+                exiftool -creatortool="432" -overwrite_original "$final_image"
                 # echo $final_image $offset_x $offset_y
                 offset_x=$((offset_x + increment_x))
             fi
@@ -102,7 +106,6 @@ function run_on_dir() {
                 thumb_file="${chapter%.mkv}-thumb.jpg"
                 creatortool=$(exiftool -f -s3 -"creatortool" "$thumb_file")
                 if [ "${creatortool}" != "345" ]; then
-                    convert "$thumb_file" -resize 1920x1080^ -gravity center -extent 1920x1080 tmp_thumb && mv tmp_thumb "$thumb_file"
                     add_overlay "$thumb_file" serie
                 fi
             done
