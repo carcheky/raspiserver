@@ -10,12 +10,12 @@ OVERLAY_DIR="/BibliotecaMultimedia/flags/4x3"
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
-    if [ "${creatortool}" != "432" ]; then
+    if [ "${creatortool}" != "52524" ]; then
         local final_image="$1"
         local type="$2"
         offset_x=0
         offset_y=0
-        increment_x=200 # Ajusta según lo necesites
+        increment_x=300 # Ajusta según lo necesites
         increment_y=0   # Ajusta según lo necesites
         gravity="SouthWest"
         resize=1920x2880
@@ -34,7 +34,7 @@ function add_overlay() {
 
                 chmod 644 "$final_image"
                 chown nobody "$final_image"
-                exiftool -creatortool="432" -overwrite_original "$final_image"
+                exiftool -creatortool="52524" -overwrite_original "$final_image"
                 # echo $final_image $offset_x $offset_y
                 offset_x=$((offset_x + increment_x))
             fi
@@ -122,7 +122,7 @@ function run_on_dir() {
 
 full_logic() {
     while true; do
-        # sleep 120
+        sleep 120
 
         MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
         run_on_dir
@@ -137,4 +137,4 @@ full_logic() {
     done
 }
 
-full_logic
+full_logic &
