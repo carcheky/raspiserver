@@ -13,7 +13,7 @@ cd "$MOVIES_DIR" || exit
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
-    if [ "${creatortool}" != "languageaddedbycarchessky" ]; then
+    if [ "${creatortool}" != "languageaddedbycarcheky" ]; then
         local final_image="$1"
         local type="$2"
         offset_x=0
