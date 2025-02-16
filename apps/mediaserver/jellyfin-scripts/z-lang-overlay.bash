@@ -13,26 +13,28 @@ cd "$MOVIES_DIR" || exit
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
-    if [ "${creatortool}" != "34663s" ]; then
+    if [ "${creatortool}" != "languageaddedbycarchessky" ]; then
         local final_image="$1"
-        local flag_file="$2"
+        local type="$2"
         offset_x=0
         offset_y=0
         increment_x=300 # Ajusta según lo necesites
         increment_y=0   # Ajusta según lo necesites
-
+        gravity="SouthWest"
+        if [ "$type" == "serie" ]; then
+            gravity="South"
+        fi
         for flag_file in "${flag_files[@]}"; do
             if [ -f "$OVERLAY_DIR/$flag_file" ]; then
                 convert "$final_image" \
-                    \( "$OVERLAY_DIR/$flag_file" -resize ${increment_x}x${increment_x} \) \
-                    -gravity SouthWest -geometry +${offset_x}+${offset_y} -composite \
+                    \( -density 300 "$OVERLAY_DIR/$flag_file" -background none -resize "${increment_x}x${increment_x}" \) \
+                    -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
                     "$final_image"
 
-                
                 chmod 644 "$final_image"
                 chown nobody "$final_image"
                 exiftool -creatortool="languageaddedbycarcheky" -overwrite_original "$final_image"
-                echo $final_image $offset_x $offset_y 
+                # echo $final_image $offset_x $offset_y
                 offset_x=$((offset_x + increment_x))
             fi
         done
@@ -59,14 +61,9 @@ function get_languages() {
     )
     flag_files=()
 
-    # Recorrer los idiomas y generar nombres de archivos
     for lang in "${langs[@]}"; do
         flag_files+=("${map[$lang]:-$lang}") # Si no está en el mapa, usa el código original
     done
-
-    # Imprimir el array de archivos
-    # echo "Archivos de banderas: ${flag_files[@]}"
-
 }
 
 # Función para identificar el tipo de contenido en la carpeta.
@@ -102,20 +99,14 @@ function full_logic() {
 
             # get chapters
             mapfile -t chapters < <(find . -type f -name "*.mkv")
-            echo "Archivos generados:"
 
             for chapter in "${chapters[@]}"; do
                 get_languages "$chapter"
                 thumb_file="${chapter%.mkv}-thumb.jpg"
-                add_overlay "$thumb_file"
+                convert "$thumb_file" -resize 1920x1080^ -gravity center -extent 1920x1080 tmp_thumb && mv tmp_thumb "$thumb_file"
+                add_overlay "$thumb_file" serie
             done
 
-            # | while read -r file; do
-            #     # replace .mkv with -thumb.jpg
-            #     file="${file%.mkv}-thumb.jpg"
-            #     get_languages "$file"
-            #     add_overlay "$file"
-            # done
         else
             echo "No se pudo determinar el tipo de contenido en la carpeta. ¡Esto es un remix inesperado!"
         fi
