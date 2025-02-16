@@ -1,7 +1,7 @@
 services:
 
   # SERVIDOR DE MEDIOS
-
+  
   # jellyfin http://localhost:8096
   jellyfin:
     image: linuxserver/jellyfin:latest
@@ -23,6 +23,7 @@ services:
     volumes:
       - ./volumes/jellyfin-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
+      - ./jellyfin-scripts:/custom-cont-init.d
     devices:
       - /dev/dri:/dev/dri
     group_add:
