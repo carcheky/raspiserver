@@ -1,15 +1,12 @@
 #!/bin/bash
 
 # Verificar si exiftool está instalado, si no, instalar dependencias
-if ! command -v exiftool &>/dev/null; then
-    apt update && apt install -y libimage-exiftool-perl jq ffmpeg imagemagick
-fi
+# if ! command -v jq &>/dev/null; then
+apt update && apt install -y libimage-exiftool-perl jq ffmpeg imagemagick
+# fi
 
 # Directorios: asegúrate de que estas rutas estén bien configuradas.
-MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
 OVERLAY_DIR="/BibliotecaMultimedia/flags/4x3"
-cd "$OVERLAY_DIR" || exit
-cd "$MOVIES_DIR" || exit
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
@@ -80,7 +77,9 @@ function check_content_type() {
     echo "desconocido"
 }
 
-function full_logic() {
+function run_on_dir() {
+    cd "$OVERLAY_DIR" || exit
+    cd "$MOVIES_DIR" || exit
     for dir in */; do
         cd "$MOVIES_DIR/$dir" || continue
         if [[ "$(check_content_type)" == "pelicula" ]]; then
@@ -116,6 +115,23 @@ function full_logic() {
         echo
     done
 
+}
+
+full_logic() {
+    while true; do
+        # sleep 120
+
+        MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
+        run_on_dir
+
+        MOVIES_DIR="/BibliotecaMultimedia/Peliculas/"
+        run_on_dir
+
+        MOVIES_DIR="/BibliotecaMultimedia/Series"
+        run_on_dir
+
+        sleep 1d
+    done
 }
 
 full_logic
