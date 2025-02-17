@@ -177,8 +177,6 @@ function run_on_dir() {
 
 }
 
-
-
 resize_all_flags() {
     if [ ! -f $OVERLAY_DIR/resized ]; then
         for flag_file in "$OVERLAY_DIR/*.svg"; do
@@ -194,22 +192,23 @@ function full_logic() {
     sleep 180
 
     resize_all_flags
-    
-    MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
-    run_on_dir
-    # watch_folder $MOVIES_DIR &
 
-    MOVIES_DIR="/BibliotecaMultimedia/Peliculas/"
-    run_on_dir
-    # watch_folder $MOVIES_DIR &
+    while true; do
 
-    MOVIES_DIR="/BibliotecaMultimedia/Series"
-    run_on_dir
-    # watch_folder $MOVIES_DIR &
+        MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
+        run_on_dir
+
+        MOVIES_DIR="/BibliotecaMultimedia/Peliculas/"
+        run_on_dir
+
+        MOVIES_DIR="/BibliotecaMultimedia/Series"
+        run_on_dir
+
+        sleep 1d
+    done
+
 
 }
 
 install_deps &
 full_logic &
-
-
