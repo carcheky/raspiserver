@@ -189,7 +189,7 @@ resize_all_flags() {
 }
 
 function full_logic() {
-    sleep 180
+    sleep 300
 
     resize_all_flags
 
