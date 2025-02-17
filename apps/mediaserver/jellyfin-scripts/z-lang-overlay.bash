@@ -152,8 +152,6 @@ function run_on_dir() {
             creatortool=$(exiftool -f -s3 -"creatortool" folder.jpg)
             add_overlay folder.jpg
             add_overlay backdrop.jpg
-            add_overlay poster.jpg
-            add_overlay landscape.jpg
 
         elif [[ "$(check_content_type)" == "serie" ]]; then
             echo "SERIE: $dir"
