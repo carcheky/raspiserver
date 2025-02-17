@@ -10,7 +10,7 @@ flag_height=300 # Ajusta según lo necesites
 # Dependencias
 function install_deps() {
     # Lista de paquetes a verificar
-    PACKAGES=("libimage-exiftool-perl" "jq" "imagemagick" "inkscape" "librsvg2-bin")
+    PACKAGES=("libimage-exiftool-perl" "jq" "imagemagick" "ffmpeg" "inkscape" "librsvg2-bin")
 
     # Filtra solo los paquetes que faltan
     MISSING_PACKAGES=()
