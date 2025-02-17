@@ -23,7 +23,7 @@ services:
     volumes:
       - ./volumes/jellyfin-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
-      - ./jellyfin-scripts:/custom-cont-init.disabled
+      - ./jellyfin-scripts:/custom-cont-init.d
     devices:
       - /dev/dri:/dev/dri
     group_add:
