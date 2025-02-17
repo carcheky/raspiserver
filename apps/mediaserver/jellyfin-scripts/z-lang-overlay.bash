@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Verificar si exiftool está instalado, si no, instalar dependencias
-# if ! command -v jq &>/dev/null; then
-apt update && apt install -y libimage-exiftool-perl jq ffmpeg imagemagick
-# fi
+# Dependencias
+install_deps() {
+    apt update && apt install -y libimage-exiftool-perl jq ffmpeg imagemagick
+}
 
 # Directorios: asegúrate de que estas rutas estén bien configuradas.
 OVERLAY_DIR="/BibliotecaMultimedia/flags/4x3"
@@ -121,6 +121,8 @@ function run_on_dir() {
 }
 
 full_logic() {
+    install_deps
+    
     while true; do
         sleep 120
 
