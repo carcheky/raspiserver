@@ -22,8 +22,8 @@ function install_deps() {
     if [ ${#MISSING_PACKAGES[@]} -gt 0 ]; then
         echo "Instalando paquetes faltantes: ${MISSING_PACKAGES[*]}"
         apt update && apt install -y "${MISSING_PACKAGES[@]}"
-    else
-        echo "Todos los paquetes ya están instalados."
+    # else
+    #     echo "Todos los paquetes ya están instalados."
     fi
 }
 
@@ -144,8 +144,8 @@ function run_on_dir() {
     cd "$MOVIES_DIR" || exit
     for dir in */; do
         cd "$MOVIES_DIR/$dir" || continue
-        echo
         if [[ "$(check_content_type)" == "pelicula" ]]; then
+            echo
             echo "PELÍCULA: $dir"
             mlink=$(readlink -f *.mkv)
             get_languages "$mlink"
@@ -158,15 +158,12 @@ function run_on_dir() {
         elif [[ "$(check_content_type)" == "serie" ]]; then
             echo "SERIE: $dir"
 
-            # get chapters
             mapfile -t chapters < <(find . -type f -name "*.mkv")
 
             for chapter in "${chapters[@]}"; do
                 get_languages "$chapter"
                 thumb_file="${chapter%.mkv}-thumb.jpg"
                 creatortool=$(exiftool -f -s3 -"creatortool" "$thumb_file")
-                # echo $chapter
-                # echo $thumb_file
 
                 if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
                     add_overlay "$thumb_file" thumb
@@ -182,21 +179,24 @@ function run_on_dir() {
 
 }
 
-function watch_folder() {
-    DIR="$1"
-    EXTENSION="jpg" # Extensiones de imágenes que te interesan
 
-    inotifywait -m -e close_write --format "%w%f" "$DIR" | while read filepath; do
-        # Filtrar solo imágenes
-        if [[ "$filepath" =~ \.($EXTENSION)$ ]]; then
-            echo "Se ha modificado: $filepath"
-        fi
-    done
+
+resize_all_flags() {
+    if [ ! -f $OVERLAY_DIR/resized ]; then
+        for flag_file in "$OVERLAY_DIR/*.svg"; do
+            if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
+                convert -verbose "$flag_file" -resize ${flag_width}x${flag_height}! "$flag_file"
+            fi
+        done
+        touch $OVERLAY_DIR/resized
+    fi
 }
 
 function full_logic() {
     sleep 180
 
+    resize_all_flags
+    
     MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
     run_on_dir
     # watch_folder $MOVIES_DIR &
@@ -211,27 +211,7 @@ function full_logic() {
 
 }
 
-resize_all_flags() {
-    if [ ! -f $OVERLAY_DIR/resized ]; then
-        for flag_file in "$OVERLAY_DIR/*.svg"; do
-            if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
-                convert -verbose "$flag_file" -resize ${flag_width}x${flag_height}! "$flag_file"
-            fi
-        done
-        touch $OVERLAY_DIR/resized
-    fi
-}
-
-install_deps
-
-function test() {
-    resize_all_flags
-
-    MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
-    run_on_dir
-    # watch_folder $MOVIES_DIR
-}
-
-# test
-
+install_deps &
 full_logic &
+
+
