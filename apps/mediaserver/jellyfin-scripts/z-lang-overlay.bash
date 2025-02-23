@@ -1,44 +1,86 @@
 #!/bin/bash
 
-# Verificar si exiftool está instalado, si no, instalar dependencias
-# if ! command -v jq &>/dev/null; then
-apt update && apt install -y libimage-exiftool-perl jq ffmpeg imagemagick
-# fi
-
 # Directorios: asegúrate de que estas rutas estén bien configuradas.
 OVERLAY_DIR="/BibliotecaMultimedia/flags/4x3"
+CUSTOM_CREATOR_TOOL=carcheky
+# CUSTOM_CREATOR_TOOL=$(date)
+flag_width=400  # Ajusta según lo necesites
+flag_height=300 # Ajusta según lo necesites
+
+# Dependencias
+function install_deps() {
+    # Lista de paquetes a verificar
+    PACKAGES=("libimage-exiftool-perl" "jq" "imagemagick" "ffmpeg" "inkscape" "librsvg2-bin")
+
+    # Filtra solo los paquetes que faltan
+    MISSING_PACKAGES=()
+    for pkg in "${PACKAGES[@]}"; do
+        dpkg -s "$pkg" &>/dev/null || MISSING_PACKAGES+=("$pkg")
+    done
+
+    # Si hay paquetes faltantes, actualiza e instálalos
+    if [ ${#MISSING_PACKAGES[@]} -gt 0 ]; then
+        echo "Instalando paquetes faltantes: ${MISSING_PACKAGES[*]}"
+        apt update && apt install -y "${MISSING_PACKAGES[@]}"
+    # else
+    #     echo "Todos los paquetes ya están instalados."
+    fi
+}
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
 function add_overlay() {
-    if [ "${creatortool}" != "52524" ]; then
+    if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
         local final_image="$1"
         local type="$2"
         offset_x=0
         offset_y=0
-        increment_x=300 # Ajusta según lo necesites
-        increment_y=0   # Ajusta según lo necesites
-        gravity="SouthWest"
-        resize=1920x2880
-        if [ "$type" == "serie" ]; then
-            gravity="South"
-            resize=1920x1080
-        fi
-        for flag_file in "${flag_files[@]}"; do
-            if [ -f "$OVERLAY_DIR/$flag_file" ]; then
-                convert "$final_image" -resize ${resize}^ -gravity center -extent ${resize} tmp_thumb && mv tmp_thumb "$final_image"
+        if [ -f "$final_image" ]; then
 
-                convert "$final_image" \
-                    \( -density 300 "$OVERLAY_DIR/$flag_file" -background none -resize "${increment_x}x${increment_x}" \) \
-                    -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
-                    "$final_image"
+            dimensions=$(identify -format "%wx%h" "$final_image")
+            width=$(echo $dimensions | cut -d 'x' -f 1)
+            height=$(echo $dimensions | cut -d 'x' -f 2)
 
-                chmod 644 "$final_image"
-                chown nobody "$final_image"
-                exiftool -creatortool="52524" -overwrite_original "$final_image"
-                # echo $final_image $offset_x $offset_y
-                offset_x=$((offset_x + increment_x))
+            # Verificar si es horizontal o vertical
+            if [ "$width" -gt "$height" ]; then
+                # Imagen horizontal
+                gravity="SouthEast"
+                resize=2560x1440
+                offset_x=100
+            else
+                # Imagen vertical
+                gravity="SouthWest"
+                resize=1920x2880
             fi
-        done
+
+            # Verificar si es thumb o folder.jpg
+            if [ "$type" == "thumb" ]; then
+                gravity="SouthWest"
+                offset_x=150
+            fi
+
+            for flag_file in "${flag_files[@]}"; do
+                if [ -f "$OVERLAY_DIR/$flag_file" ]; then
+                    convert "$final_image" -resize ${resize}^ -gravity center -extent ${resize} tmp_thumb && mv tmp_thumb "$final_image"
+
+                    convert "$final_image" \
+                        \( -density $flag_width "$OVERLAY_DIR/$flag_file" -resize "${flag_width}x${flag_height}" \) \
+                        -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
+                        "$final_image"
+
+                    chmod 644 "$final_image"
+                    chown nobody "$final_image"
+                    [ -f folder.jpg_exiftool_tmp ] && rm folder.jpg_exiftool_tmp -f
+                    echo "-> añadiendo $flag_file a $(pwd)/$final_image" && exiftool -creatortool="$CUSTOM_CREATOR_TOOL" -overwrite_original "$final_image" 1>/dev/null
+                    # exiftool -creatortool="$CUSTOM_CREATOR_TOOL" -overwrite_original "$final_image" -v
+                    # offset_x=$((offset_x + flag_width))
+                    if [[ "$resize" == "2560x1440" ]]; then
+                        offset_x=$((offset_x + flag_width))
+                    else
+                        offset_y=$((offset_y + flag_height))
+                    fi
+                fi
+            done
+        fi
     fi
 }
 
@@ -58,10 +100,26 @@ function get_languages() {
         ["deu"]="de.svg"
         ["ita"]="it.svg"
         ["por"]="pt.svg"
+        ["jpn"]="jp.svg"
+        ["ara"]="ae.svg" # Árabe
+        ["rus"]="ru.svg" # Ruso
+        ["chi"]="cn.svg" # Chino
+        ["kor"]="kr.svg" # Coreano
+        ["dut"]="nl.svg" # Neerlandés
+        ["pol"]="pl.svg" # Polaco
+        ["swe"]="se.svg" # Sueco
+        ["fin"]="fi.svg" # Finés
+        ["nor"]="no.svg" # Noruego
+        ["dan"]="dk.svg" # Danés
+        ["tur"]="tr.svg" # Turco
+        ["hin"]="in.svg" # Hindi
+        ["bel"]="be.svg" # Belga
     )
+
     flag_files=()
 
     for lang in "${langs[@]}"; do
+        # echo $lang
         flag_files+=("${map[$lang]:-$lang}") # Si no está en el mapa, usa el código original
     done
 }
@@ -87,26 +145,26 @@ function run_on_dir() {
     for dir in */; do
         cd "$MOVIES_DIR/$dir" || continue
         if [[ "$(check_content_type)" == "pelicula" ]]; then
+            echo
             echo "PELÍCULA: $dir"
             mlink=$(readlink -f *.mkv)
             get_languages "$mlink"
             creatortool=$(exiftool -f -s3 -"creatortool" folder.jpg)
             add_overlay folder.jpg
-            # for file in *.jpg; do
-            # done
+            add_overlay backdrop.jpg
 
         elif [[ "$(check_content_type)" == "serie" ]]; then
             echo "SERIE: $dir"
 
-            # get chapters
             mapfile -t chapters < <(find . -type f -name "*.mkv")
 
             for chapter in "${chapters[@]}"; do
                 get_languages "$chapter"
                 thumb_file="${chapter%.mkv}-thumb.jpg"
                 creatortool=$(exiftool -f -s3 -"creatortool" "$thumb_file")
-                if [ "${creatortool}" != "345" ]; then
-                    add_overlay "$thumb_file" serie
+
+                if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
+                    add_overlay "$thumb_file" thumb
                 fi
             done
 
@@ -115,14 +173,27 @@ function run_on_dir() {
         fi
         # Volvemos al directorio principal para seguir la fiesta.
         cd "$MOVIES_DIR" || exit
-        echo
     done
 
 }
 
-full_logic() {
+resize_all_flags() {
+    if [ ! -f $OVERLAY_DIR/resized ]; then
+        for flag_file in "$OVERLAY_DIR/*.svg"; do
+            if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
+                convert -verbose "$flag_file" -resize ${flag_width}x${flag_height}! "$flag_file"
+            fi
+        done
+        touch $OVERLAY_DIR/resized
+    fi
+}
+
+function full_logic() {
+    sleep 300
+
+    resize_all_flags
+
     while true; do
-        sleep 120
 
         MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
         run_on_dir
@@ -135,6 +206,9 @@ full_logic() {
 
         sleep 1d
     done
+
+
 }
 
+install_deps &
 full_logic &
