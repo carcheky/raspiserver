@@ -1,5 +1,25 @@
 # CHANGELOG
 
+# [6.35.0](https://gitlab.com/carcheky/raspiserver/compare/v6.34.0...v6.35.0) (2025-02-18)
+
+
+### Bug Fixes
+
+* best work ([71b63af](https://gitlab.com/carcheky/raspiserver/commit/71b63afc020e06f7010bcecc18c445e072924f7c))
+* chapters ([852f235](https://gitlab.com/carcheky/raspiserver/commit/852f235332b96c2d31e185a9221c8f7e3cf528a4))
+* exif check ([9c040b0](https://gitlab.com/carcheky/raspiserver/commit/9c040b0cd5ce22ed7b798db160beae0f75cb04d8))
+* flags ([a308f66](https://gitlab.com/carcheky/raspiserver/commit/a308f660dd4cf138f8b071790661eade3621375a))
+* language overlay ([397595b](https://gitlab.com/carcheky/raspiserver/commit/397595b13a08c31568fce33162550c0679d412eb))
+* **nextcloud:** generic port ([a3caf11](https://gitlab.com/carcheky/raspiserver/commit/a3caf114ffefa11f560f4e1d596f827816d51b51))
+* posters with langs ([990289d](https://gitlab.com/carcheky/raspiserver/commit/990289dd415660b02e7b89bde0c06462d714ecee))
+* working ([9e7e254](https://gitlab.com/carcheky/raspiserver/commit/9e7e254217239e144036ac3002d943c5a3118536))
+
+
+### Features
+
+* add lang to images ([e1f7449](https://gitlab.com/carcheky/raspiserver/commit/e1f7449e76f81cd137ab11f0e14d2bdf7b570228))
+* chapter langs ([e08cb9e](https://gitlab.com/carcheky/raspiserver/commit/e08cb9eb6c3910be76ccb097a5152304d41faf45))
+
 # [6.34.0](https://gitlab.com/carcheky/raspiserver/compare/v6.33.0...v6.34.0) (2024-12-31)
 
 
