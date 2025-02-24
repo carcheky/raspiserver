@@ -1,5 +1,12 @@
 # CHANGELOG
 
+# [6.36.0](https://gitlab.com/carcheky/raspiserver/compare/v6.35.0...v6.36.0) (2025-02-24)
+
+
+### Features
+
+* add docker-compose configuration for uptime-kuma service ([4d1ef6e](https://gitlab.com/carcheky/raspiserver/commit/4d1ef6eaa1a372e133a0786259358ec2ba284b88))
+
 # [6.35.0](https://gitlab.com/carcheky/raspiserver/compare/v6.34.0...v6.35.0) (2025-02-18)
 
 
