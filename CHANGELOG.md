@@ -1,5 +1,12 @@
 # CHANGELOG
 
+# [6.37.0](https://gitlab.com/carcheky/raspiserver/compare/v6.36.0...v6.37.0) (2025-02-25)
+
+
+### Features
+
+* added uptime-kener ([49197fd](https://gitlab.com/carcheky/raspiserver/commit/49197fd85d4ca623a6e56ad7af3eeae218193177))
+
 # [6.36.0](https://gitlab.com/carcheky/raspiserver/compare/v6.35.0...v6.36.0) (2025-02-24)
 
 
