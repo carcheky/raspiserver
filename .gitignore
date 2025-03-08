@@ -19,3 +19,4 @@ leaving-soon
 BibliotecaMultimedia
 apps/all
 apps/mediaserver/tdarr/.env
+apps/experiments/.env
