@@ -1,5 +1,12 @@
 # CHANGELOG
 
+# [6.38.0](https://gitlab.com/carcheky/raspiserver/compare/v6.37.0...v6.38.0) (2025-03-09)
+
+
+### Features
+
+* agregar configuración de Docker para Soulseek ([3c9fd4e](https://gitlab.com/carcheky/raspiserver/commit/3c9fd4e2af55c7c529b9f46a6c7404aa38a5ceaf))
+
 # [6.37.0](https://gitlab.com/carcheky/raspiserver/compare/v6.36.0...v6.37.0) (2025-02-25)
 
 
