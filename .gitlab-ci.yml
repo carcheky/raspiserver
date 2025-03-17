@@ -1,44 +1,58 @@
-# You can override the included template(s) by including variable overrides
+# Definition of pipeline stages
 stages:
   - test
   - release
+  - sync_beta
 
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/pipeline/#customization
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+# Configuration for SAST (Static Application Security Testing)
 sast:
   stage: test
-include:
-- template: Security/SAST.gitlab-ci.yml
-- template: Jobs/Secret-Detection.gitlab-ci.yml
+  # Include templates for SAST and secret detection
+  include:
+    - template: Security/SAST.gitlab-ci.yml
+    - template: Jobs/Secret-Detection.gitlab-ci.yml
 
+# Release job for stable and next version branches
 release:
-  image: node:20
-  stage: release
+  image: node:20  # Docker image to use
+  stage: release  # Pipeline stage
   only:
-    - stable
-    - next
-    - next-major
-  when: delayed
-  start_in: 24 hours
+    - stable  # Only runs on 'stable' branch
+    - next  # Only runs on 'next' branch
+    - next-major  # Only runs on 'next-major' branch
+  when: delayed  # Delayed execution
+  start_in: 24 hours  # 24-hour delay
   script:
-    - cp .releaserc.changelog .releaserc
-    - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
-    - npx semantic-release
+    - cp .releaserc.changelog .releaserc  # Copy release configuration file
+    - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git  # Install dependencies
+    - npx semantic-release  # Run semantic-release
 
+# Pre-release job for alpha and beta branches
 pre-release:
-  image: node:20
-  stage: release
+  image: node:20  # Docker image to use
+  stage: release  # Pipeline stage
   only:
-    - alpha
-    - beta
-  when: delayed
-  start_in: 30 seconds
+    - alpha  # Only runs on 'alpha' branch
+    - beta  # Only runs on 'beta' branch
+  when: delayed  # Delayed execution
+  start_in: 30 seconds  # 30-second delay
   script:
-    - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git
-    - npx semantic-release
+    - npm install semantic-release @semantic-release/gitlab @semantic-release/changelog @semantic-release/git  # Install dependencies
+    - npx semantic-release  # Run semantic-release
 
+# Job to sync beta branch with stable branch
+sync_beta:
+  stage: sync_beta  # Pipeline stage
+  only:
+    - stable  # Only runs on 'stable' branch
+  script:
+    - git config --global user.email "$GITLAB_USER_EMAIL"  # Set Git email using GitLab variable
+    - git config --global user.name "$GITLAB_USER_NAME"  # Set Git username using GitLab variable
+    - git fetch origin beta  # Fetch latest changes from beta branch
+    - git checkout beta || git checkout -b beta  # Switch to beta branch or create it if it doesn't exist
+    - git merge --no-ff origin/stable  # Merge changes from stable branch into beta branch
+    - git push origin beta  # Push changes to beta branch
+  needs:
+    - release  # Requires the release job to be completed
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "stable"'  # Only runs if the branch is 'stable'
