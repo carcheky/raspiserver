@@ -1,0 +1,10 @@
+services:
+  meshnet:
+    image: ghcr.io/mattstechinfo/meshnet:v3.17.0
+    restart: always
+    container_name: meshnet
+    env_file: nordvpn.env
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    hostname: meshnet    # Make sure hostname is set! Without it, every restart will add a new peer to your Meshnet.
