@@ -6,7 +6,8 @@ stages:
 
 # Configuration for SAST (Static Application Security Testing)
 sast:
-stage: test
+  stage: test
+  
 # Include templates for SAST and secret detection
 include:
 - template: Security/SAST.gitlab-ci.yml
