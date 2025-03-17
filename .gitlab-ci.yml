@@ -44,8 +44,8 @@ pre-release:
 # Job to sync beta branch with stable branch
 sync_beta:
   stage: sync_beta  # Pipeline stage
-  only:
-    - stable  # Only runs on 'stable' branch
+  # only:
+    # - stable  # Only runs on 'stable' branch
   script:
     - git config --global user.email "$GITLAB_USER_EMAIL"  # Set Git email using GitLab variable
     - git config --global user.name "$GITLAB_USER_NAME"  # Set Git username using GitLab variable
