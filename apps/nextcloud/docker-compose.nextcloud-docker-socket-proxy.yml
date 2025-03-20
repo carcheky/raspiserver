@@ -1,0 +1,22 @@
+services:
+# docker run -e NC_HAPROXY_PASSWORD="some_secure_password" \
+#   -v /var/run/docker.sock:/var/run/docker.sock \
+#   --name nextcloud-appapi-dsp -h nextcloud-appapi-dsp \
+#   --restart unless-stopped --privileged -d ghcr.io/nextcloud/nextcloud-appapi-dsp:release
+
+  nextcloud-appapi-dsp:
+    image: ghcr.io/nextcloud/nextcloud-appapi-dsp:release
+    container_name: nextcloud-appapi-dsp
+    restart: unless-stopped
+    privileged: true
+    hostname: nextcloud-appapi-dsp
+    environment:
+      - NC_HAPROXY_PASSWORD=${NC_HAPROXY_PASSWORD}
+      - NC_HAPROXY_PORT=80
+      - NC_HAPROXY_SSL_PORT=443
+      - NC_HAPROXY_HOST=nextcloud-appapi-dsp
+      - NC_HAPROXY_MODE=http
+      - NC_HAPROXY_SSL=false
+      - NC_HAPROXY_ENABLE=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
