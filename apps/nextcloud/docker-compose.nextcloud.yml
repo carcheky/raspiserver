@@ -15,7 +15,8 @@ services:
       - ./volumes/nextcloud-config:/config
       - ./volumes/nextcloud-upload-tmp-dir:/nextcloud-upload-tmp-dir
       # network mounted to /data
-      - nextcloud-data:/data
+      # - nextcloud-data:/data
+      - ${NEXTCLOUD_PATH_DATA}:/data
     ports:
       - 8034:80
       - 4434:443
@@ -40,10 +41,10 @@ services:
     volumes:
       - ./volumes/nextclouddb-mysql:/var/lib/mysql
 
-volumes:
-  nextcloud-data:
-    driver: local
-    driver_opts:
-      type: cifs
-      o: "username=${cifs_username},password=${cifs_password},uid=${cifs_uid},gid=${cifs_gid}"
-      device: "${cifs_path}"
+# volumes:
+#   nextcloud-data:
+#     driver: local
+#     driver_opts:
+#       type: cifs
+#       o: "username=${cifs_username},password=${cifs_password},uid=${cifs_uid},gid=${cifs_gid}"
+#       device: "${cifs_path}"
