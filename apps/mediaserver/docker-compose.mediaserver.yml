@@ -83,26 +83,26 @@ services:
 
   # INVITACIONES
 
-  # wizarr http://localhost:5690
-  wizarr:
-    image: ghcr.io/wizarrrr/wizarr:latest
-    container_name: wizarr
-    restart: always
-    ports:
-      - 5690:5690
-    volumes:
-      - ./volumes/wizarr-database:/data/database
-    environment:
-      - APP_URL=https://wizarr.${DOMAIN} #URL at which you will access and share 
-      - DISABLE_BUILTIN_AUTH=false #Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TIMEZONE} #Set your timezone here
-    deploy:
-      resources:
-        limits:
-          cpus: '0.50'
-          memory: 512M
+  # # wizarr http://localhost:5690
+  # wizarr:
+  #   image: ghcr.io/wizarrrr/wizarr:latest
+  #   container_name: wizarr
+  #   restart: always
+  #   ports:
+  #     - 5690:5690
+  #   volumes:
+  #     - ./volumes/wizarr-database:/data/database
+  #   environment:
+  #     - APP_URL=https://wizarr.${DOMAIN} #URL at which you will access and share 
+  #     - DISABLE_BUILTIN_AUTH=false #Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
+  #     - PUID=${PUID}
+  #     - PGID=${PGID}
+  #     - TZ=${TIMEZONE} #Set your timezone here
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '0.50'
+  #         memory: 512M
 
 
 
