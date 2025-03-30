@@ -1,5 +1,30 @@
 # CHANGELOG
 
+# [6.39.0](https://gitlab.com/carcheky/raspiserver/compare/v6.38.0...v6.39.0) (2025-03-30)
+
+
+### Bug Fixes
+
+* actualizar configuración de puertos en docker-compose para AdGuard Home ([772a0fc](https://gitlab.com/carcheky/raspiserver/commit/772a0fc4f9a6acc490950a377a3d2afa24fab608))
+* actualizar configuración de volúmenes en docker-compose.nextcloud.yml ([5783652](https://gitlab.com/carcheky/raspiserver/commit/5783652563f21e4fbb2eda13a48398108f9196a8))
+* agregar configuración de Nginx Proxy Manager en docker-compose ([6ac0a53](https://gitlab.com/carcheky/raspiserver/commit/6ac0a53b05f68763bcb8325b8950630193aabc09))
+* cambiar el puerto de la aplicación de 3000 a 3002 en docker-compose ([a93da04](https://gitlab.com/carcheky/raspiserver/commit/a93da040d94dd6b216b9c8e5765cd3512f6516f1))
+* corregir formato de inclusión de plantillas en .gitlab-ci.yml ([7812455](https://gitlab.com/carcheky/raspiserver/commit/781245552f174c8746e8d1e9f5151b94f21fc208))
+* corregir sangrado en la sección de SAST en .gitlab-ci.yml ([9389124](https://gitlab.com/carcheky/raspiserver/commit/9389124ba823ac773b10acbf6bfc81ee6aaa6a38))
+* deshabilitar ejecución del trabajo de sincronización en la rama estable en .gitlab-ci.yml ([3c58812](https://gitlab.com/carcheky/raspiserver/commit/3c58812ab1889f4c7890ea71ba4a42406900c032))
+* reemplazar configuración de Nginx en docker-compose al moverla a la carpeta de proxy ([5fd5732](https://gitlab.com/carcheky/raspiserver/commit/5fd57327e2f0e70e2ff0c62bc4ab5deaa53c0e30))
+* renombrar servicio de nginx a proxy y ajustar puertos en docker-compose ([ba22def](https://gitlab.com/carcheky/raspiserver/commit/ba22def208e03ad63f84284528d4236373e38a3d))
+
+
+### Features
+
+* agregar configuración de NordVPN y archivos relacionados en docker-compose ([a17d91f](https://gitlab.com/carcheky/raspiserver/commit/a17d91fa3ca4e4174a000fce1c5a76b69b3481bf))
+* agregar configuración de Pi-hole en docker-compose ([4795163](https://gitlab.com/carcheky/raspiserver/commit/4795163427a6ab4855ea1112087fa1ede5ab378b))
+* agregar etapa de sincronización de la rama beta con la rama estable en .gitlab-ci.yml ([7fc7aea](https://gitlab.com/carcheky/raspiserver/commit/7fc7aea61f17cfa71907e4127cf9dbb9f62fbd9f))
+* **nextcloud:** agregar configuración de docker-compose para el servicio nextcloud-appapi-dsp ([4a9736f](https://gitlab.com/carcheky/raspiserver/commit/4a9736f3eb52913be4318b42b0cb2de12764ec93))
+* **nextcloud:** agregar configuración de docker-compose para el servicio nextcloud-appapi-dsp y nueva variable de entorno NC_HAPROXY_PASSWORD ([4e8c386](https://gitlab.com/carcheky/raspiserver/commit/4e8c386c94fbfa76d9fd5218a30f82a8c9bb8c95))
+* **nextcloud:** agregar script de instalación para NordVPN en múltiples gestores de paquetes ([4061a29](https://gitlab.com/carcheky/raspiserver/commit/4061a29e2005b765bdf96a34961e277ff9dc80bd))
+
 # [6.38.0](https://gitlab.com/carcheky/raspiserver/compare/v6.37.0...v6.38.0) (2025-03-09)
 
 
