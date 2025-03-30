@@ -25,8 +25,8 @@ services:
       - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
       - /:/mnt/host
       - /var/lib/cosmos:/config
-    # network_mode: host
-    ports:
-      - 8031:80
-      - 4431:443
-      - 4242:4242/udp
+    network_mode: host
+    # ports:
+    #   - 8031:80
+    #   - 4431:443
+    #   - 4242:4242/udp
