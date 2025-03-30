@@ -1,0 +1,32 @@
+services:
+  # cosmos-server:
+  #   ports:
+  #     - '8031:80'
+  #     - '4431:443'
+  #   container_name: cosmos-server
+  #   hostname: cosmos-server
+  #   restart: always
+  #   volumes:
+  #     - '/var/run/docker.sock:/var/run/docker.sock'
+  #     - '/:/mnt/host'
+  #     - '/var/lib/cosmos:/config'
+  #   image: 'azukaar/cosmos-server:latest'
+
+
+
+  cosmos-server:
+    image: azukaar/cosmos-server:latest
+    container_name: cosmos-server
+    hostname: cosmos-server
+    restart: always
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
+      - /:/mnt/host
+      - /var/lib/cosmos:/config
+    # network_mode: host
+    ports:
+      - 8031:80
+      - 4431:443
+      - 4242:4242/udp
