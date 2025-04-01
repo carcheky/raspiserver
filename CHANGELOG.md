@@ -1,5 +1,19 @@
 # CHANGELOG
 
+# [6.40.0](https://gitlab.com/carcheky/raspiserver/compare/v6.39.0...v6.40.0) (2025-04-01)
+
+
+### Bug Fixes
+
+* habilitar modo de red para cosmos y comentar puertos ([406276d](https://gitlab.com/carcheky/raspiserver/commit/406276d8790b492032782f1f52e88ff81b8f39e3))
+
+
+### Features
+
+* cosmos-server ([140b5f4](https://gitlab.com/carcheky/raspiserver/commit/140b5f49158b7237ad25f3dae78e3b7bf3823cf5))
+* **dockge:** add docker-compose configuration for dockge service ([f4a8500](https://gitlab.com/carcheky/raspiserver/commit/f4a8500e904e6578fa36a9d2661ad66411b10c5a))
+* **dockge:** enable console in docker-compose configuration ([42d9f5a](https://gitlab.com/carcheky/raspiserver/commit/42d9f5afd50dc745be2584b9fa3a3fed0600212a))
+
 # [6.39.0](https://gitlab.com/carcheky/raspiserver/compare/v6.38.0...v6.39.0) (2025-03-30)
 
 
