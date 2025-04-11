@@ -21,7 +21,7 @@ services:
       resources:
         limits:
           cpus: '0.80'
-          memory: 512M
+          memory: 1G
 
       
   # # organizr http://localhost:8085
