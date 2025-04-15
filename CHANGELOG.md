@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [6.40.1](https://gitlab.com/carcheky/raspiserver/compare/v6.40.0...v6.40.1) (2025-04-12)
+
+
+### Bug Fixes
+
+* **docker-compose:** increase CPU limit for homarr service to 0.80 ([82383a6](https://gitlab.com/carcheky/raspiserver/commit/82383a62c3e6a81a31d151645b409a49974ffd37))
+
 # [6.40.0](https://gitlab.com/carcheky/raspiserver/compare/v6.39.0...v6.40.0) (2025-04-01)
 
 
