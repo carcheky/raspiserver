@@ -213,6 +213,7 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
       - ./volumes/radarr-custom-services.d:/custom-services.d
       - ./radarr-arr-scripts:/custom-cont-init.d
+      - ./flags:/flags:ro
     ports:
       - 7878:7878
     deploy:
