@@ -23,9 +23,6 @@ services:
     volumes:
       - ./volumes/jellyfin-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
-      # - ./jellyfin-scripts:/custom-cont-init.d
-      # - ./jellyfin-scripts:/custom-scripts-webhooks
-      # - ./flags:/flags:rw
     devices:
       - /dev/dri:/dev/dri
     group_add:
