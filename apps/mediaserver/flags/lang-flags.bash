@@ -334,3 +334,4 @@ fi
 
 # Log successful execution to stdout
 echo "Script executed successfully." >&1
+echo $SECONDS
