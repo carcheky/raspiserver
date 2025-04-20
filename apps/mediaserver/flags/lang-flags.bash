@@ -1,87 +1,41 @@
 #!/bin/bash
 
-# Customizable variables
-CUSTOM_CREATOR_TOOL=$(date) # Default to current date
-OVERLAY_DIR="/flags/4x3" # Directory containing overlay flag files
-flag_width=400 # Width of the flag overlay (updated to match z-lang-overlay)
-flag_height=300 # Height of the flag overlay (updated to match z-lang-overlay)
-poster_resize="2560x1440" # Resize dimensions for horizontal posters
-vertical_resize="1920x2880" # Resize dimensions for vertical posters
-TMP_DIR="/tmp/lang-flags" # Temporary directory for intermediate files
+# ========================
+# Configurable Variables
+# ========================
+CUSTOM_CREATOR_TOOL=$(date)                      # Default to current date
+CUSTOM_CREATOR_TOOL="carcheky"                     # Default to current date
+OVERLAY_DIR="/flags/4x3"                         # Directory containing overlay flag files
+flag_width=400                                   # Width of the flag overlay (updated to match z-lang-overlay)
+flag_height=300                                  # Height of the flag overlay (updated to match z-lang-overlay)
+poster_resize="2560x1440"                        # Resize dimensions for horizontal posters
+vertical_resize="1920x2880"                      # Resize dimensions for vertical posters
+TMP_DIR="/tmp/lang-flags"                        # Temporary directory for intermediate files
+MOVIES_DIR="/BibliotecaMultimedia/Peliculas"     # Directory containing movie folders
+SERIES_DIR="/BibliotecaMultimedia/Series"        # Directory containing series folders
+A_BORRAR_DIR="/BibliotecaMultimedia/se-borraran" # Directory for files to be deleted
+
+# ========================
+# Functions
+# ========================
 
 # Ensure the temporary directory exists
-mkdir -p "$TMP_DIR"
-
-# Check and install dependencies
 install_deps() {
     echo "Script is running as user: $(whoami), group: $(id -gn)" >&2
-    local packages=("perl-image-exiftool" "jq" "imagemagick" "ffmpeg" "inkscape" "rsvg-convert")
+    local packages=("perl-image-exiftool" "jq" "imagemagick" "ffmpeg" "inkscape" "rsvg-convert" "exiftool")
     local script_dir="/custom-cont-init.d"
     local script_file="$script_dir/lang_flags-install_deps.sh"
 
     mkdir -p "$script_dir"
 
-    if [ ! -f "$script_file" ]; then
-        {
-            echo "#!/bin/bash"
-            echo "apk update && apk add --no-cache ${packages[*]}"
-        } >"$script_file"
+    {
+        echo "#!/bin/bash"
+        echo "apk update && apk add --no-cache ${packages[*]}"
+    } >"$script_file"
 
-        chmod +x "$script_file"
-        echo "Dependency installation script created at $script_file" >&2
-    fi
+    chmod +x "$script_file"
+    echo "Dependency installation script created at $script_file" >&2
 }
-
-install_deps
-
-# Print the number of instances of this script currently running
-script_name=$(basename "$0")
-instance_count=$(pgrep -fc "$script_name")
-echo "Number of instances of $script_name running: $instance_count" >&2
-
-# Identify source (Radarr or Sonarr) and log environment variables
-if [ -n "$radarr_eventtype" ]; then
-    echo "Source: Radarr" >&2
-    echo "Radarr Event Type: $radarr_eventtype" >&2
-    echo "Radarr Download ID: $radarr_download_id" >&2
-    echo "Radarr Download Client: $radarr_download_client" >&2
-    echo "Radarr Is Upgrade: $radarr_isupgrade" >&2
-    echo "Radarr Movie ID: $radarr_movie_id" >&2
-    echo "Radarr Movie IMDb ID: $radarr_movie_imdbid" >&2
-    echo "Radarr Movie Title: $radarr_movie_title" >&2
-    echo "Radarr Movie Year: $radarr_movie_year" >&2
-    echo "Radarr Movie Path: $radarr_movie_path" >&2
-    echo "Radarr Movie File Path: $radarr_moviefile_path" >&2
-    echo "Radarr Movie File Quality: $radarr_moviefile_quality" >&2
-    echo "Radarr Movie File Release Group: $radarr_moviefile_releasegroup" >&2
-elif [ -n "$sonarr_eventtype" ]; then
-    echo "Source: Sonarr" >&2
-    echo "Sonarr Event Type: $sonarr_eventtype" >&2
-    echo "Sonarr Is Upgrade: $sonarr_isupgrade" >&2
-    echo "Sonarr Series ID: $sonarr_series_id" >&2
-    echo "Sonarr Series Title: $sonarr_series_title" >&2
-    echo "Sonarr Series Path: $sonarr_series_path" >&2
-    echo "Sonarr Series TVDB ID: $sonarr_series_tvdbid" >&2
-    echo "Sonarr Series TVMaze ID: $sonarr_series_tvmazeid" >&2
-    echo "Sonarr Series IMDB ID: $sonarr_series_imdbid" >&2
-    echo "Sonarr Series Type: $sonarr_series_type" >&2
-    echo "Sonarr Series Year: $sonarr_series_year" >&2
-    echo "Sonarr Episode File ID: $sonarr_episodefile_id" >&2
-    echo "Sonarr Episode File Path: $sonarr_episodefile_path" >&2
-    echo "Sonarr Episode File Quality: $sonarr_episodefile_quality" >&2
-    echo "Sonarr Episode File Release Group: $sonarr_episodefile_releasegroup" >&2
-else
-    echo "Error: Neither Radarr nor Sonarr event detected." >&2
-    exit 1
-fi
-
-sleep 5
-
-# Check if radarr_eventtype is set to "Test"
-if [ "${radarr_eventtype}" == "Test" ]; then
-    echo "Test event detected. Script executed successfully." >&1
-    exit 0
-fi
 
 # Function to extract languages from the movie file using ffprobe
 get_languages() {
@@ -122,7 +76,7 @@ get_languages() {
 }
 
 # Function to apply the overlay on the image (thumb or folder.jpg)
-function add_overlay() {
+add_overlay() {
     echo "Starting add_overlay for image: $1, type: $2" >&2
 
     local final_image="$1"
@@ -136,7 +90,9 @@ function add_overlay() {
     echo "Debug: CUSTOM_CREATOR_TOOL is set to: $CUSTOM_CREATOR_TOOL" >&2
     echo "Debug: creatortool is set to: $creatortool" >&2
 
+    echo "Checking if creatortool matches CUSTOM_CREATOR_TOOL..." >&2
     if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
+        echo "creatortool does not match CUSTOM_CREATOR_TOOL. Proceeding with overlay application." >&2
         offset_x=0
         offset_y=0
         if [ -f "$final_image" ]; then
@@ -202,55 +158,151 @@ function add_overlay() {
             echo "Image file $final_image not found." >&2
         fi
     else
-        echo "Creator tool matches $CUSTOM_CREATOR_TOOL, skipping overlay." >&2
+        echo "creatortool matches CUSTOM_CREATOR_TOOL. Skipping overlay application." >&2
     fi
     echo "Finished add_overlay for image: $1, type: $2" >&2
 }
 
 # Function to wait for nfo and process the image
 wait_for_nfo_and_process() {
-    local movie_path="$1"
-    echo "Checking for movie.nfo or tvshow.nfo in $movie_path..." >&2
+    local content_path="$1"
+    local is_all_mode="$2" # Pass "true" if running in "all" mode
+    echo "Checking for movie.nfo or tvshow.nfo in $content_path..." >&2
 
-    while [ ! -f "$movie_path/movie.nfo" ] && [ ! -f "$movie_path/tvshow.nfo" ]; do
+    # Check if there are no .mkv files in the folder
+    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q .; then
+        echo "========================================" >&2
+        echo "WARNING: No .mkv file found in $content_path." >&2
+        echo "THIS FOLDER WILL BE MOVED TO $A_BORRAR_DIR." >&2
+        echo "========================================" >&2
+
+        mkdir -p "$A_BORRAR_DIR"
+        mv "$content_path" "$A_BORRAR_DIR/"
+        return
+    fi
+
+    local timeout=300 # 5 minutes in seconds
+    local elapsed=0
+    while [ ! -f "$content_path/movie.nfo" ] && [ ! -f "$content_path/tvshow.nfo" ]; do
         sleep 1
+        elapsed=$((elapsed + 1))
+        if [ "$elapsed" -ge "$timeout" ]; then
+            echo "Timeout reached while waiting for .nfo files in $content_path." >&2
+            return
+        fi
     done
 
-    if [ -f "$movie_path/movie.nfo" ]; then
-        echo "movie.nfo found in $movie_path! Identified as a movie." >&2
-        local mkv_file="$radarr_moviefile_path"
+    if [ -f "$content_path/movie.nfo" ]; then
+        echo "movie.nfo found in $content_path! Identified as a movie." >&2
+        local mkv_file="${radarr_moviefile_path:-$(find "$content_path" -maxdepth 1 -type f -name '*.mkv' | head -n 1)}"
         if [ -z "$mkv_file" ] || [ ! -f "$mkv_file" ]; then
-            echo "Error: No valid .mkv file found for the movie." >&2
+            echo "Error: No valid .mkv file found for the movie in $content_path." >&2
             return
         fi
 
-        while [ ! -f "$movie_path/folder.jpg" ] || [ ! -f "$movie_path/backdrop.jpg" ]; do
-            echo "Waiting for folder.jpg and backdrop.jpg in $movie_path..." >&2
-            sleep 1
-        done
-
         get_languages "$mkv_file"
 
-        if [ -f "$movie_path/folder.jpg" ]; then
-            add_overlay "$movie_path/folder.jpg" "folder"
+        if [ "$is_all_mode" == "true" ]; then
+            # Process folder.jpg and backdrop.jpg if they exist, without waiting
+            [ -f "$content_path/folder.jpg" ] && add_overlay "$content_path/folder.jpg" "folder" || echo "Skipping: folder.jpg not found in $content_path." >&2
+            [ -f "$content_path/backdrop.jpg" ] && add_overlay "$content_path/backdrop.jpg" "backdrop" || echo "Skipping: backdrop.jpg not found in $content_path." >&2
         else
-            echo "Error: folder.jpg not found in $movie_path." >&2
-        fi
+            # Wait for folder.jpg and backdrop.jpg with a timeout
+            elapsed=0
+            while [ ! -f "$content_path/folder.jpg" ] || [ ! -f "$content_path/backdrop.jpg" ]; do
+                echo "Waiting for folder.jpg and backdrop.jpg in $content_path..." >&2
+                sleep 1
+                elapsed=$((elapsed + 1))
+                if [ "$elapsed" -ge "$timeout" ]; then
+                    echo "Timeout reached while waiting for folder.jpg or backdrop.jpg in $content_path." >&2
+                    return
+                fi
+            done
 
-        if [ -f "$movie_path/backdrop.jpg" ]; then
-            add_overlay "$movie_path/backdrop.jpg" "backdrop"
-        else
-            echo "Error: backdrop.jpg not found in $movie_path." >&2
+            if [ -f "$content_path/folder.jpg" ]; then
+                add_overlay "$content_path/folder.jpg" "folder"
+            else
+                echo "Error: folder.jpg not found in $content_path." >&2
+            fi
+
+            if [ -f "$content_path/backdrop.jpg" ]; then
+                add_overlay "$content_path/backdrop.jpg" "backdrop"
+            else
+                echo "Error: backdrop.jpg not found in $content_path." >&2
+            fi
         fi
-    elif [ -f "$movie_path/tvshow.nfo" ]; then
-        echo "tvshow.nfo found in $movie_path! Identified as a series." >&2
+    elif [ -f "$content_path/tvshow.nfo" ]; then
+        echo "tvshow.nfo found in $content_path! Identified as a series." >&2
         # Add series-specific processing logic here if needed
     fi
 }
 
-# Launch a background process for each movie folder
-if [ -n "$radarr_movie_path" ]; then
-    wait_for_nfo_and_process "$radarr_movie_path" &
+# Function to process all movies or series in a base directory
+process_all() {
+    local movies_dir="$1"
+    local series_dir="$2"
+    echo "Processing all movies in $movies_dir and all series in $series_dir..." >&2
+
+    # Process movies
+    for dir in "$movies_dir"/*/; do
+        if [ -d "$dir" ]; then
+            echo "Processing movie directory: $dir" >&2
+            wait_for_nfo_and_process "$dir" "true"
+        fi
+    done
+
+    # Process series
+    # for dir in "$series_dir"/*/; do
+    #     if [ -d "$dir" ]; then
+    #         echo "Processing series directory: $dir" >&2
+    #         wait_for_nfo_and_process "$dir" "true"
+    #     fi
+    # done
+
+    wait # Wait for all background processes to finish
+    echo "Finished processing all directories in $movies_dir and $series_dir." >&2
+}
+
+# Function to handle Radarr or Sonarr events
+process_radarr_sonarr_event() {
+    if [ -n "$radarr_eventtype" ]; then
+        echo "Source: Radarr" >&2
+        echo "Radarr Event Type: $radarr_eventtype" >&2
+        if [ -n "$radarr_movie_path" ]; then
+            wait_for_nfo_and_process "$radarr_movie_path" "false"
+        fi
+    elif [ -n "$sonarr_eventtype" ]; then
+        echo "Source: Sonarr" >&2
+        echo "Sonarr Event Type: $sonarr_eventtype" >&2
+        if [ -n "$sonarr_series_path" ]; then
+            wait_for_nfo_and_process "$sonarr_series_path" "false"
+        fi
+    else
+        echo "Error: Neither Radarr nor Sonarr event detected." >&2
+        exit 1
+    fi
+}
+
+# ========================
+# Main Script Logic
+# ========================
+
+# Ensure the temporary directory exists
+mkdir -p "$TMP_DIR"
+
+# Install dependencies
+install_deps
+
+# Print the number of instances of this script currently running
+script_name=$(basename "$0")
+instance_count=$(pgrep -fc "$script_name")
+echo "Number of instances of $script_name running: $instance_count" >&2
+
+# Main logic
+if [ "$1" == "all" ]; then
+    process_all "$MOVIES_DIR" "$SERIES_DIR"
+else
+    process_radarr_sonarr_event
 fi
 
 # Log successful execution to stdout

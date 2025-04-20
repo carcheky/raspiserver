@@ -243,6 +243,7 @@ services:
       - ${RASPIMEDIA}:/BibliotecaMultimedia
       - ./volumes/sonarr-custom-services.d:/custom-services.d
       - ./sonarr-arr-scripts:/custom-cont-init.d
+      - ./flags:/flags:rw
     ports:
       - 8989:8989
     deploy:
