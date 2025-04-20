@@ -20,4 +20,4 @@ BibliotecaMultimedia
 apps/all
 apps/mediaserver/tdarr/.env
 apps/experiments/.env
-apps/mediaserver/jellyfin-scripts/z-lang-overlay.bash
+resized
