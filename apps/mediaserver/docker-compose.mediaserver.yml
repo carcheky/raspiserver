@@ -24,6 +24,7 @@ services:
       - ./volumes/jellyfin-config:/config
       - ${RASPIMEDIA}:/BibliotecaMultimedia:rw
       - ./jellyfin-scripts:/custom-cont-init.d
+      - ./flags:/flags:rw
     devices:
       - /dev/dri:/dev/dri
     group_add:
@@ -35,7 +36,7 @@ services:
           memory: 2G
         limits:
           cpus: '2'
-          memory: 8G
+          memory: 5G
 
 
   # ESTADÍSTICAS

@@ -1,11 +1,17 @@
 #!/bin/bash
 
+set -x
+
+
 # Directorios: asegúrate de que estas rutas estén bien configuradas.
-OVERLAY_DIR="/BibliotecaMultimedia/flags/4x3"
+OVERLAY_DIR="/flags/4x3"
 CUSTOM_CREATOR_TOOL=carcheky
 # CUSTOM_CREATOR_TOOL=$(date)
 flag_width=400  # Ajusta según lo necesites
 flag_height=300 # Ajusta según lo necesites
+
+# Cambiar la variable a un archivo temporal
+INSTALL_DEPS_FILE="/tmp/install_deps_completed"
 
 # Dependencias
 function install_deps() {
@@ -22,9 +28,8 @@ function install_deps() {
     if [ ${#MISSING_PACKAGES[@]} -gt 0 ]; then
         echo "Instalando paquetes faltantes: ${MISSING_PACKAGES[*]}"
         apt update && apt install -y "${MISSING_PACKAGES[@]}"
-    # else
-    #     echo "Todos los paquetes ya están instalados."
     fi
+    touch "$INSTALL_DEPS_FILE" && echo deps installed || echo error installing deps
 }
 
 # Función para aplicar el overlay sobre la imagen (thumb o folder.jpg)
@@ -184,31 +189,41 @@ resize_all_flags() {
                 convert -verbose "$flag_file" -resize ${flag_width}x${flag_height}! "$flag_file"
             fi
         done
-        touch $OVERLAY_DIR/resized
+        touch $OVERLAY_DIR/resized && echo flags resized || echo error when flags resized
     fi
 }
 
 function full_logic() {
-    sleep 300
+    while [ ! -f "$INSTALL_DEPS_FILE" ]; do # Verificar si el archivo existe
+        echo "Esperando a que se instalen las dependencias... ($SECONDS)"
+        sleep 5
+    done
+
+    
 
     resize_all_flags
 
-    while true; do
+    # while true; do
 
-        MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
-        run_on_dir
+    MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
+    run_on_dir
 
-        MOVIES_DIR="/BibliotecaMultimedia/Peliculas/"
-        run_on_dir
+    # MOVIES_DIR="/BibliotecaMultimedia/Peliculas/"
+    # run_on_dir
 
-        MOVIES_DIR="/BibliotecaMultimedia/Series"
-        run_on_dir
+    # MOVIES_DIR="/BibliotecaMultimedia/Series"
+    # run_on_dir
 
-        sleep 1d
-    done
-
-
+    # sleep 1d
+    # done
 }
 
-install_deps &
-full_logic &
+(install_deps &) >/config/log/aaaaaa-jellyfin-overlay-install_deps.log 2>&1
+(full_logic &) >/config/log/aaaaaa-jellyfin-overlay-full_logic.log 2>&1
+
+# Limpiar el archivo temporal al finalizar
+# wait
+# rm -f "$INSTALL_DEPS_FILE"
+# # Salida del script
+# exit 0
+# Fin del script
