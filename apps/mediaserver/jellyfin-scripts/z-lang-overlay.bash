@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 
 
 # Directorios: asegúrate de que estas rutas estén bien configuradas.
@@ -199,23 +198,21 @@ function full_logic() {
         sleep 5
     done
 
-    
-
     resize_all_flags
 
-    # while true; do
+    while true; do
 
     MOVIES_DIR="/BibliotecaMultimedia/se-borraran"
     run_on_dir
 
-    # MOVIES_DIR="/BibliotecaMultimedia/Peliculas/"
-    # run_on_dir
+    MOVIES_DIR="/BibliotecaMultimedia/Peliculas/"
+    run_on_dir
 
-    # MOVIES_DIR="/BibliotecaMultimedia/Series"
-    # run_on_dir
+    MOVIES_DIR="/BibliotecaMultimedia/Series"
+    run_on_dir
 
-    # sleep 1d
-    # done
+    sleep 1d
+    done
 }
 
 (install_deps &) >/config/log/aaaaaa-jellyfin-overlay-install_deps.log 2>&1
