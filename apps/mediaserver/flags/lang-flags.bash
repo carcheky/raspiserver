@@ -98,9 +98,20 @@ add_overlay() {
         if [ -f "$final_image" ]; then
             echo "Processing image: $final_image" >&2
 
-            dimensions=$(identify -format "%wx%h" "$final_image")
+            dimensions=$(identify -format "%wx%h" "$final_image" 2>/dev/null)
+            if [ -z "$dimensions" ]; then
+                echo "Error: Unable to retrieve dimensions for $final_image. Skipping." >&2
+                return
+            fi
+
             width=$(echo $dimensions | cut -d 'x' -f 1)
             height=$(echo $dimensions | cut -d 'x' -f 2)
+
+            if ! [[ "$width" =~ ^[0-9]+$ ]] || ! [[ "$height" =~ ^[0-9]+$ ]]; then
+                echo "Error: Invalid dimensions ($dimensions) for $final_image. Skipping." >&2
+                return
+            fi
+
             echo "Image dimensions: ${width}x${height}" >&2
 
             # Check if the image is horizontal or vertical
@@ -283,6 +294,20 @@ process_radarr_sonarr_event() {
     fi
 }
 
+# Function to clean up Jellyfin cache directories
+cleanup_jellyfin_cache() {
+    local cache_dirs=("/jellyfin-config/cache" "/jellyfin-config/.cache")
+    for dir in "${cache_dirs[@]}"; do
+        if [ -d "$dir" ]; then
+            echo "Deleting cache directory: $dir" >&2
+            rm -rf "$dir"
+            echo "Cache directory $dir deleted." >&2
+        else
+            echo "Cache directory $dir does not exist. Skipping." >&2
+        fi
+    done
+}
+
 # ========================
 # Main Script Logic
 # ========================
@@ -301,8 +326,10 @@ echo "Number of instances of $script_name running: $instance_count" >&2
 # Main logic
 if [ "$1" == "all" ]; then
     process_all "$MOVIES_DIR" "$SERIES_DIR"
+    cleanup_jellyfin_cache
 else
     process_radarr_sonarr_event
+    cleanup_jellyfin_cache
 fi
 
 # Log successful execution to stdout
