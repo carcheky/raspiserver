@@ -57,6 +57,53 @@
 # ========================
 DEBUG=false # Default debug mode is off
 
+# Global array to track all spawned child processes
+CHILD_PIDS=()
+
+# Check if we're running in an interactive terminal that supports ANSI escape sequences
+check_terminal_support() {
+    # Check if stdout is a terminal and if TERM is set to something that supports ANSI
+    if [ -t 1 ] && [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
+        # Try simple ANSI test
+        if echo -e "\033[1A" > /dev/null 2>&1; then
+            echo "true"
+            return
+        fi
+    fi
+    echo "false"
+}
+
+INTERACTIVE_TERMINAL=$(check_terminal_support)
+$DEBUG && echo "Interactive terminal with ANSI support: $INTERACTIVE_TERMINAL" >&2
+
+# Function to handle script interruption and cleanup
+cleanup() {
+    echo "Script interrupted. Cleaning up..." >&2
+    
+    # Clean up FIFOs
+    cleanup_fifos
+    
+    # Kill all child processes
+    for pid in "${CHILD_PIDS[@]}"; do
+        if kill -0 $pid 2>/dev/null; then
+            kill -TERM $pid 2>/dev/null || kill -KILL $pid 2>/dev/null
+            $DEBUG && echo "Killed process $pid" >&2
+        fi
+    done
+    
+    echo "All child processes terminated." >&2
+    exit 1
+}
+
+# Clean up FIFO files on exit
+cleanup_fifos() {
+    # Delete any temporary FIFOs we created
+    rm -f /tmp/series_status_$$_* 2>/dev/null
+}
+
+# Set trap to catch interrupts and call cleanup function
+trap cleanup INT TERM HUP EXIT
+
 # Parse arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -91,6 +138,39 @@ A_BORRAR_DIR="/BibliotecaMultimedia/se-borraran" # Directory for files to be del
 # ========================
 # Functions
 # ========================
+
+# Function to update terminal display in place (if supported)
+update_status() {
+    local message="$1"
+    local is_new_line="$2"
+    
+    if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+        # Clear the current line
+        echo -ne "\r\033[K"
+        
+        # Print the message
+        echo -ne "$message"
+        
+        # Add a newline if requested
+        if [ "$is_new_line" = "true" ]; then
+            echo ""
+        fi
+    else
+        # Fallback for non-interactive terminals
+        echo "$message"
+    fi
+}
+
+# Function to clear the previous status lines (if supported)
+clear_status_lines() {
+    local lines="$1"
+    
+    if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+        for ((i=0; i<$lines; i++)); do
+            echo -ne "\033[1A\033[K"  # Move up one line and clear it
+        done
+    fi
+}
 
 # Ensure the temporary directory exists
 install_deps() {
@@ -354,8 +434,13 @@ wait_for_nfo_and_process() {
         for season_dir in "${season_dirs[@]}"; do
             season_count=$((season_count + 1))
             season_name=$(basename "$season_dir")
-            echo "  • Processing season $season_count/$total_seasons: $season_name in $(basename "$content_path")" >&2
-
+            series_name=$(basename "$content_path")
+            # Extract season number (assuming format "Season XX")
+            season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
+            season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
+            
+            echo "  • ${series_name}-S${season_num} ($season_count/$total_seasons)" >&2
+            
             # Process each episode's thumb image
             episode_thumbs=()
             for thumb_file in "$season_dir"/*-thumb.jpg; do
@@ -372,10 +457,20 @@ wait_for_nfo_and_process() {
                 local base_name="${thumb_file%-thumb.jpg}"
                 local mkv_file="${base_name}.mkv"
                 local episode_name=$(basename "$base_name")
-
+                
                 if [ -f "$mkv_file" ]; then
                     episode_count=$((episode_count + 1))
-                    echo "    ◦ Processing episode $episode_count/$total_episodes: $episode_name in $season_name" >&2
+                    # Extract episode number from filename (assuming SxxExx format)
+                    episode_num=$(echo "$episode_name" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
+                    episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
+                    
+                    echo "    ◦ ${series_name}-S${season_num}E${episode_num} ($episode_count/$total_episodes)" >&2
+                    
+                    # Report progress to parent if fifo exists
+                    if [ -p "/tmp/series_status_$$" ]; then
+                        echo "S${season_num}E${episode_num} ($episode_count/$total_episodes)" > "/tmp/series_status_$$"
+                    fi
+                    
                     get_languages "$mkv_file"
                     add_overlay "$thumb_file" "thumb"
                 else
@@ -383,7 +478,7 @@ wait_for_nfo_and_process() {
                 fi
             done
         done
-
+        
         # Handle Sonarr specific event (process a single episode)
         if [ -n "$sonarr_episodefile_path" ] && [ -f "$sonarr_episodefile_path" ]; then
             local episode_basename=$(basename "$sonarr_episodefile_path" .mkv)
@@ -405,7 +500,15 @@ wait_for_nfo_and_process() {
             if [ -f "$thumb_file" ]; then
                 get_languages "$sonarr_episodefile_path"
                 add_overlay "$thumb_file" "thumb"
-                echo "  • Processing event episode: $episode_basename in $season_name" >&2
+                
+                # Extract season and episode numbers for event episode
+                series_name=$(basename "$content_path")
+                season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
+                season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
+                episode_num=$(echo "$episode_basename" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
+                episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
+                
+                echo "  • Event: ${series_name}-S${season_num}E${episode_num}" >&2
             else
                 $DEBUG && echo "Error: Thumb file not found for episode: $sonarr_episodefile_path" >&2
             fi
@@ -465,7 +568,9 @@ process_all() {
         echo "Processing MOVIE $((job_count + 1))/$total_movies: $(basename "$dir")" >&2
         # Lanzar proceso en segundo plano
         process_item "$dir" "true" "true" &
-        pids+=($!)
+        pid=$!
+        pids+=($pid)
+        CHILD_PIDS+=($pid) # Add to global tracking array
         job_count=$((job_count + 1))
     done
 
@@ -490,6 +595,11 @@ process_all() {
     total_series=${#series_dirs[@]}
     echo "Found $total_series series directories to process" >&2
 
+    # Track active series for dynamic display
+    declare -A active_series
+    declare -A series_progress
+    status_lines=0
+
     for dir in "${series_dirs[@]}"; do
         # Controlar número de trabajos en paralelo
         if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
@@ -499,24 +609,94 @@ process_all() {
             new_pids=()
             for pid in "${pids[@]}"; do
                 if kill -0 $pid 2>/dev/null; then
+                    active_pid=true
                     new_pids+=($pid)
+                else
+                    # Remove completed PID from active_series
+                    for series_name in "${!active_series[@]}"; do
+                        if [ "${active_series[$series_name]}" = "$pid" ]; then
+                            unset active_series["$series_name"]
+                            break
+                        fi
+                    done
                 fi
             done
             pids=("${new_pids[@]}")
+
+            # Update status display
+            if [ ${#active_series[@]} -gt 0 ]; then
+                # Clear previous status lines
+                if [ $status_lines -gt 0 ]; then
+                    clear_status_lines $status_lines
+                fi
+
+                # Print current status
+                status_lines=0
+                for series_name in "${!active_series[@]}"; do
+                    update_status "  ↳ Processing $series_name: ${series_progress[$series_name]:-Starting...}" "true"
+                    status_lines=$((status_lines + 1))
+                done
+                update_status "Progress: $job_count/$total_series series" "true"
+                status_lines=$((status_lines + 1))
+            fi
         fi
 
-        echo "Processing SERIES $((job_count + 1))/$total_series: $(basename "$dir")" >&2
-        # Lanzar proceso en segundo plano
-        process_item "$dir" "true" "true" &
-        pids+=($!)
+        series_name=$(basename "$dir")
+        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+            update_status "Processing SERIES $((job_count + 1))/$total_series: $series_name" "true"
+        else
+            echo "Processing SERIES $((job_count + 1))/$total_series: $series_name" >&2
+        fi
+
+        # Only create FIFO if we have interactive terminal support
+        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+            # Create a fifo to receive status updates from child process
+            fifo="/tmp/series_status_$$_$job_count"
+            mkfifo "$fifo" 2>/dev/null
+
+            # Launch background process with status reporting to parent
+            (
+                wait_for_nfo_and_process "$dir" "true" "true"
+                echo "DONE" > "$fifo" 2>/dev/null || true  # More robust
+            ) &
+
+            pid=$!
+            pids+=($pid)
+            CHILD_PIDS+=($pid)
+            active_series["$series_name"]=$pid
+
+            # Start a background process to monitor status updates
+            (
+                while read -r status < "$fifo" 2>/dev/null; do
+                    if [ "$status" = "DONE" ]; then
+                        break
+                    fi
+                    # Forward status to parent for display
+                    series_progress["$series_name"]="$status"
+                done
+                
+                # Ensure FIFO gets cleaned up
+                rm -f "$fifo" 2>/dev/null || true
+            ) &
+        else
+            # Simple execution without status updates for non-interactive terminals
+            wait_for_nfo_and_process "$dir" "true" "true" &
+            pid=$!
+            pids+=($pid)
+            CHILD_PIDS+=($pid)
+        fi
+
         job_count=$((job_count + 1))
     done
 
-    # Esperar a que terminen todos los procesos
+    # Wait for all series processes to complete
     echo "Waiting for all processes to complete..." >&2
     for pid in "${pids[@]}"; do
         wait $pid
     done
+
+    # Clean up any remaining FIFOs
+    cleanup_fifos
 
     $DEBUG && echo "Finished batch processing." >&2
 }
@@ -623,7 +803,9 @@ elif [ "$MODE" == "movies" ]; then
         echo "Processing MOVIE $((job_count + 1))/$total_movies: $(basename "$dir")" >&2
         # Lanzar proceso en segundo plano
         wait_for_nfo_and_process "$dir" "true" "true" &
-        pids+=($!)
+        pid=$!
+        pids+=($pid)
+        CHILD_PIDS+=($pid) # Add to global tracking array
         job_count=$((job_count + 1))
     done
 
@@ -654,6 +836,11 @@ elif [ "$MODE" == "tvshows" ]; then
     total_series=${#series_dirs[@]}
     echo "Found $total_series series directories to process" >&2
 
+    # Track active series for dynamic display
+    declare -A active_series
+    declare -A series_progress
+    status_lines=0
+
     # Procesar series en paralelo
     for dir in "${series_dirs[@]}"; do
         # Controlar número de trabajos en paralelo
@@ -664,24 +851,94 @@ elif [ "$MODE" == "tvshows" ]; then
             new_pids=()
             for pid in "${pids[@]}"; do
                 if kill -0 $pid 2>/dev/null; then
+                    active_pid=true
                     new_pids+=($pid)
+                else
+                    # Remove completed PID from active_series
+                    for series_name in "${!active_series[@]}"; do
+                        if [ "${active_series[$series_name]}" = "$pid" ]; then
+                            unset active_series["$series_name"]
+                            break
+                        fi
+                    done
                 fi
             done
             pids=("${new_pids[@]}")
+
+            # Update status display
+            if [ ${#active_series[@]} -gt 0 ]; then
+                # Clear previous status lines
+                if [ $status_lines -gt 0 ]; then
+                    clear_status_lines $status_lines
+                fi
+
+                # Print current status
+                status_lines=0
+                for series_name in "${!active_series[@]}"; do
+                    update_status "  ↳ Processing $series_name: ${series_progress[$series_name]:-Starting...}" "true"
+                    status_lines=$((status_lines + 1))
+                done
+                update_status "Progress: $job_count/$total_series series" "true"
+                status_lines=$((status_lines + 1))
+            fi
         fi
 
-        echo "Processing SERIES $((job_count + 1))/$total_series: $(basename "$dir")" >&2
-        # Lanzar proceso en segundo plano
-        wait_for_nfo_and_process "$dir" "true" "true" &
-        pids+=($!)
+        series_name=$(basename "$dir")
+        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+            update_status "Processing SERIES $((job_count + 1))/$total_series: $series_name" "true"
+        else
+            echo "Processing SERIES $((job_count + 1))/$total_series: $series_name" >&2
+        fi
+
+        # Only create FIFO if we have interactive terminal support
+        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+            # Create a fifo to receive status updates from child process
+            fifo="/tmp/series_status_$$_$job_count"
+            mkfifo "$fifo" 2>/dev/null
+
+            # Launch background process with status reporting to parent
+            (
+                wait_for_nfo_and_process "$dir" "true" "true"
+                echo "DONE" > "$fifo" 2>/dev/null || true  # More robust
+            ) &
+
+            pid=$!
+            pids+=($pid)
+            CHILD_PIDS+=($pid)
+            active_series["$series_name"]=$pid
+
+            # Start a background process to monitor status updates
+            (
+                while read -r status < "$fifo" 2>/dev/null; do
+                    if [ "$status" = "DONE" ]; then
+                        break
+                    fi
+                    # Forward status to parent for display
+                    series_progress["$series_name"]="$status"
+                done
+                
+                # Ensure FIFO gets cleaned up
+                rm -f "$fifo" 2>/dev/null || true
+            ) &
+        else
+            # Simple execution without status updates for non-interactive terminals
+            wait_for_nfo_and_process "$dir" "true" "true" &
+            pid=$!
+            pids+=($pid)
+            CHILD_PIDS+=($pid)
+        fi
+
         job_count=$((job_count + 1))
     done
 
-    # Esperar a que terminen todos los procesos
-    echo "Waiting for all series processes to complete..." >&2
+    # Wait for all series processes to complete
+    echo "Waiting for all processes to complete..." >&2
     for pid in "${pids[@]}"; do
         wait $pid
     done
+
+    # Clean up any remaining FIFOs
+    cleanup_fifos
 
     cleanup_jellyfin_cache
 else
