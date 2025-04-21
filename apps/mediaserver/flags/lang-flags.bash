@@ -10,6 +10,8 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         -v|--verbose) DEBUG=true ;;
         all) MODE="all" ;;
+        movies) MODE="movies" ;;
+        tvshows) MODE="tvshows" ;;
         *) ;;
     esac
     shift
@@ -157,7 +159,6 @@ add_overlay() {
                         -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
                         "$final_image"
 
-                    chown nobody "$final_image" 2>/dev/null || $DEBUG && echo "Warning: Unable to change ownership for $final_image" >&2
                     [ -f folder.jpg_exiftool_tmp ] && rm folder.jpg_exiftool_tmp -f
                     $DEBUG && echo "-> Added $flag_file to $(pwd)/$final_image" >&2
 
@@ -197,9 +198,10 @@ wait_for_nfo_and_process() {
     $DEBUG && echo "Checking for movie.nfo or tvshow.nfo in $content_path..." >&2
 
     # Check if there are no .mkv files in the folder
-    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q .; then
+    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q . && \
+       ! find "$content_path" -mindepth 2 -type f -name '*.mkv' | grep -q .; then
         $DEBUG && echo "========================================" >&2
-        $DEBUG && echo "WARNING: No .mkv file found in $content_path." >&2
+        $DEBUG && echo "WARNING: No .mkv file found in $content_path or its subdirectories." >&2
         $DEBUG && echo "THIS FOLDER WILL BE MOVED TO $A_BORRAR_DIR." >&2
         $DEBUG && echo "========================================" >&2
 
@@ -260,7 +262,75 @@ wait_for_nfo_and_process() {
         fi
     elif [ -f "$content_path/tvshow.nfo" ]; then
         $DEBUG && echo "tvshow.nfo found in $content_path! Identified as a series." >&2
-        # Add series-specific processing logic here if needed
+        
+        # Process series main images (folder.jpg and backdrop.jpg)
+        if [ -f "$content_path/folder.jpg" ]; then
+            # For main series folder, use any episode to get languages
+            local any_mkv_file=$(find "$content_path" -type f -name "*.mkv" | head -n 1)
+            if [ -n "$any_mkv_file" ] && [ -f "$any_mkv_file" ]; then
+                get_languages "$any_mkv_file"
+                add_overlay "$content_path/folder.jpg" "folder"
+                
+                if [ -f "$content_path/backdrop.jpg" ]; then
+                    add_overlay "$content_path/backdrop.jpg" "backdrop"
+                fi
+            else
+                $DEBUG && echo "No MKV files found in series directory or subdirectories. Skipping series main images." >&2
+            fi
+        fi
+        
+        # Process season folders
+        for season_dir in "$content_path"/Season*/; do
+            if [ -d "$season_dir" ] && [ -f "${season_dir}season.nfo" ]; then
+                $DEBUG && echo "Processing season directory: $season_dir" >&2
+                
+                # Process each episode's thumb image
+                for thumb_file in "$season_dir"/*-thumb.jpg; do
+                    if [ -f "$thumb_file" ]; then
+                        # Extract the base name without -thumb.jpg
+                        local base_name="${thumb_file%-thumb.jpg}"
+                        local mkv_file="${base_name}.mkv"
+                        
+                        if [ -f "$mkv_file" ]; then
+                            $DEBUG && echo "Processing episode: $mkv_file" >&2
+                            get_languages "$mkv_file"
+                            add_overlay "$thumb_file" "thumb"
+                        else
+                            $DEBUG && echo "Warning: MKV file not found for thumb: $thumb_file" >&2
+                        fi
+                    fi
+                done
+            fi
+        done
+        
+        # Handle Sonarr specific event (process a single episode)
+        if [ -n "$sonarr_episodefile_path" ] && [ -f "$sonarr_episodefile_path" ]; then
+            $DEBUG && echo "Processing Sonarr event for specific episode: $sonarr_episodefile_path" >&2
+            local episode_basename=$(basename "$sonarr_episodefile_path" .mkv)
+            local episode_dir=$(dirname "$sonarr_episodefile_path")
+            local thumb_file="${episode_dir}/${episode_basename}-thumb.jpg"
+            
+            # Wait for thumb file with a timeout
+            if [ "$is_all_mode" != "true" ]; then
+                elapsed=0
+                while [ ! -f "$thumb_file" ]; do
+                    $DEBUG && echo "Waiting for thumb file: $thumb_file" >&2
+                    sleep 1
+                    elapsed=$((elapsed + 1))
+                    if [ "$elapsed" -ge "$timeout" ]; then
+                        $DEBUG && echo "Timeout reached while waiting for thumb file." >&2
+                        return
+                    fi
+                done
+            fi
+            
+            if [ -f "$thumb_file" ]; then
+                get_languages "$sonarr_episodefile_path"
+                add_overlay "$thumb_file" "thumb"
+            else
+                $DEBUG && echo "Error: Thumb file not found for episode: $sonarr_episodefile_path" >&2
+            fi
+        fi
     else
         $DEBUG && echo "No movie.nfo or tvshow.nfo found in $content_path. Skipping." >&2
     fi
@@ -280,12 +350,18 @@ process_all() {
     done
 
     # Process series
-    # for dir in "$SERIES_DIR"/*/; do
-    #     if [ -d "$dir" ]; then
-    #         $DEBUG && echo "Processing series directory: $dir" >&2
-    #         wait_for_nfo_and_process "$dir" "true"
-    #     fi
-    # done
+    for dir in "$SERIES_DIR"/*/; do
+        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ]; then
+            # Skip trailers directory
+            if [[ "$(basename "$dir")" == "trailers" ]]; then
+                $DEBUG && echo "Skipping trailers directory: $dir" >&2
+                continue
+            fi
+            
+            $DEBUG && echo "Processing series directory: $dir" >&2
+            wait_for_nfo_and_process "$dir" "true"
+        fi
+    done
 
     wait # Wait for all background processes to finish
     $DEBUG && echo "Finished batch processing." >&2
@@ -296,14 +372,24 @@ process_radarr_sonarr_event() {
     if [ -n "$radarr_eventtype" ]; then
         $DEBUG && echo "Source: Radarr" >&2
         $DEBUG && echo "Radarr Event Type: $radarr_eventtype" >&2
+        $DEBUG && echo "Radarr Movie Path: $radarr_movie_path" >&2
+        $DEBUG && echo "Radarr Movie File Path: $radarr_moviefile_path" >&2
+        
         if [ -n "$radarr_movie_path" ]; then
             wait_for_nfo_and_process "$radarr_movie_path" "false"
+        else
+            $DEBUG && echo "Error: radarr_movie_path is empty" >&2
         fi
     elif [ -n "$sonarr_eventtype" ]; then
         $DEBUG && echo "Source: Sonarr" >&2
         $DEBUG && echo "Sonarr Event Type: $sonarr_eventtype" >&2
+        $DEBUG && echo "Sonarr Series Path: $sonarr_series_path" >&2
+        $DEBUG && echo "Sonarr Episode File Path: $sonarr_episodefile_path" >&2
+        
         if [ -n "$sonarr_series_path" ]; then
             wait_for_nfo_and_process "$sonarr_series_path" "false"
+        else
+            $DEBUG && echo "Error: sonarr_series_path is empty" >&2
         fi
     else
         echo "Error: Neither Radarr nor Sonarr event detected." >&2
@@ -343,6 +429,28 @@ $DEBUG && echo "Number of instances of $script_name running: $instance_count" >&
 # Main logic
 if [ "$MODE" == "all" ]; then
     process_all "$MOVIES_DIR" "$SERIES_DIR"
+    cleanup_jellyfin_cache
+elif [ "$MODE" == "movies" ]; then
+    for dir in "$MOVIES_DIR"/*/; do
+        if [ -d "$dir" ]; then
+            $DEBUG && echo "Processing movie directory: $dir" >&2
+            wait_for_nfo_and_process "$dir" "true"
+        fi
+    done
+    cleanup_jellyfin_cache
+elif [ "$MODE" == "tvshows" ]; then
+    for dir in "$SERIES_DIR"/*/; do
+        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ]; then
+            # Skip trailers directory
+            if [[ "$(basename "$dir")" == "trailers" ]]; then
+                $DEBUG && echo "Skipping trailers directory: $dir" >&2
+                continue
+            fi
+            
+            $DEBUG && echo "Processing series directory: $dir" >&2
+            wait_for_nfo_and_process "$dir" "true"
+        fi
+    done
     cleanup_jellyfin_cache
 else
     process_radarr_sonarr_event
