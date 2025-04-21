@@ -1,5 +1,57 @@
 #!/bin/bash
 
+# PROMPT USED TO GENERATE THIS SCRIPT:
+# "Create a bash script for a media server that automatically adds language flag overlays to movie and TV show images. The script should:
+# 1. Extract audio language tracks from video files using ffprobe
+# 2. Map language codes to SVG flag files
+# 3. Apply flag overlays to poster images (folder.jpg) and episode thumbnails using ImageMagick
+# 4. Track processed images using exiftool's creatortool metadata to avoid reprocessing
+# 5. Handle both manual processing mode and event-based processing from Radarr/Sonarr
+# 6. Support different layout for horizontal vs vertical posters
+# 7. Include debug mode with verbose logging
+# 8. Process movies, TV shows, or both with command line arguments
+# 9. Wait for NFO files to be generated before processing
+# The script should be configurable and work in a Docker environment with proper dependency installation.
+#
+# Additional requirements based on follow-up questions:
+#
+# Q: What are the key configurable variables needed for the script?
+# A: The script needs the following configurable variables:
+#    - DEBUG: Boolean flag for enabling verbose logging (default: false)
+#    - CUSTOM_CREATOR_TOOL: String identifier used in exiftool metadata to mark processed images ("carcheky")
+#    - OVERLAY_DIR: Directory containing flag SVG files ("/flags/4x3")
+#    - flag_width/flag_height: Dimensions for the flag overlays (400x300 pixels)
+#    - poster_resize: Resolution for horizontal posters ("2560x1440")
+#    - vertical_resize: Resolution for vertical posters ("1920x2880")
+#    - TMP_DIR: Temporary directory for intermediate files ("/tmp/lang-flags")
+#    - MOVIES_DIR: Base directory for movie content ("/BibliotecaMultimedia/Peliculas")
+#    - SERIES_DIR: Base directory for TV series content ("/BibliotecaMultimedia/Series")
+#    - A_BORRAR_DIR: Directory for folders to be deleted ("/BibliotecaMultimedia/se-borraran")
+#
+# Q: How should the script handle flag positioning for different image orientations?
+# A: For horizontal posters, place flags at bottom right (SouthEast gravity), for vertical posters place at bottom left (SouthWest gravity)
+#
+# Q: How should the script identify already processed images?
+# A: Use exiftool to check if 'creatortool' metadata field equals the CUSTOM_CREATOR_TOOL value ("carcheky")
+#
+# Q: What should happen to folders without valid media files?
+# A: Move them to A_BORRAR_DIR directory
+#
+# Q: What language mappings do you need?
+# A: Map common ISO language codes to their corresponding country flag SVG files (spa→es.svg, eng→gb.svg, etc.)
+#
+# Q: How should the script integrate with Radarr/Sonarr?
+# A: Detect environment variables set by Radarr/Sonarr (radarr_eventtype, sonarr_eventtype, etc.) and process relevant paths
+#
+# Q: How should we handle Jellyfin cache after processing images?
+# A: Delete cache directories at /jellyfin-config/cache and /jellyfin-config/.cache
+#
+# Q: How long should the script wait for NFO files before timing out?
+# A: Up to 300 seconds (5 minutes) timeout value
+#
+# Q: What command line arguments should be supported?
+# A: -v/--verbose for debug mode, 'all' for processing everything, 'movies' for just movies, 'tvshows' for just TV shows"
+
 # ========================
 # Configurable Variables
 # ========================
