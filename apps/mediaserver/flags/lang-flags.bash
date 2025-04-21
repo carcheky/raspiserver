@@ -64,12 +64,19 @@ while [[ "$#" -gt 0 ]]; do
         all) MODE="all" ;;
         movies) MODE="movies" ;;
         tvshows) MODE="tvshows" ;;
+        -j|--jobs) shift; MAX_PARALLEL_JOBS=$1 ;;
         *) ;;
     esac
     shift
 done
 
-CUSTOM_CREATOR_TOOL=$(date)                      # Default to current date
+# Si no se especifica, usar el número de núcleos disponibles menos 1 (mínimo 2)
+if [ -z "$MAX_PARALLEL_JOBS" ]; then
+    CORES=$(nproc 2>/dev/null || echo 4)
+    MAX_PARALLEL_JOBS=$((CORES - 1))
+    [ "$MAX_PARALLEL_JOBS" -lt 2 ] && MAX_PARALLEL_JOBS=2
+fi
+
 CUSTOM_CREATOR_TOOL="carcheky"                     # Default to current date
 OVERLAY_DIR="/flags/4x3"                         # Directory containing overlay flag files
 flag_width=400                                   # Width of the flag overlay (updated to match z-lang-overlay)
@@ -391,31 +398,107 @@ wait_for_nfo_and_process() {
 # Function to process all movies or series in a base directory
 process_all() {
     echo "Processing all movies in $MOVIES_DIR and all series in $SERIES_DIR..." >&2
-    $DEBUG && echo "Starting batch processing..." >&2
+    $DEBUG && echo "Starting batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
 
-    # Process movies
+    # Función para controlar procesos paralelos
+    process_item() {
+        local dir="$1"
+        local is_dir_valid="$2"
+        
+        if [ "$is_dir_valid" == "true" ]; then
+            wait_for_nfo_and_process "$dir" "true"
+        fi
+    }
+
+    # Crear array para almacenar PIDs
+    pids=()
+    job_count=0
+
+    # Procesar películas en paralelo
+    echo "Collecting movie directories to process..." >&2
+    movie_dirs=()
     for dir in "$MOVIES_DIR"/*/; do
         if [ -d "$dir" ]; then
-            $DEBUG && echo "Processing movie directory: $dir" >&2
-            wait_for_nfo_and_process "$dir" "true"
+            movie_dirs+=("$dir")
         fi
     done
+    
+    total_movies=${#movie_dirs[@]}
+    echo "Found $total_movies movie directories to process" >&2
+    
+    for dir in "${movie_dirs[@]}"; do
+        # Controlar número de trabajos en paralelo
+        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
+            # Esperar a que termine un proceso
+            wait -n
+            # Limpiar PIDs que ya han terminado
+            new_pids=()
+            for pid in "${pids[@]}"; do
+                if kill -0 $pid 2>/dev/null; then
+                    new_pids+=($pid)
+                fi
+            done
+            pids=("${new_pids[@]}")
+        fi
 
-    # Process series
+        $DEBUG && echo "Starting job for movie directory: $dir" >&2
+        # Lanzar proceso en segundo plano
+        process_item "$dir" "true" &
+        pids+=($!)
+        job_count=$((job_count + 1))
+        echo "Processing movie $job_count/$total_movies: $(basename "$dir")" >&2
+    done
+
+    # Esperar a que terminen todos los procesos de películas
+    for pid in "${pids[@]}"; do
+        wait $pid
+    done
+    
+    # Resetear contadores para series
+    pids=()
+    job_count=0
+    
+    # Procesar series en paralelo
+    echo "Collecting TV series directories to process..." >&2
+    series_dirs=()
     for dir in "$SERIES_DIR"/*/; do
-        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ]; then
-            # Skip trailers directory
-            if [[ "$(basename "$dir")" == "trailers" ]]; then
-                $DEBUG && echo "Skipping trailers directory: $dir" >&2
-                continue
-            fi
-            
-            $DEBUG && echo "Processing series directory: $dir" >&2
-            wait_for_nfo_and_process "$dir" "true"
+        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ] && [[ "$(basename "$dir")" != "trailers" ]]; then
+            series_dirs+=("$dir")
         fi
     done
+    
+    total_series=${#series_dirs[@]}
+    echo "Found $total_series series directories to process" >&2
+    
+    for dir in "${series_dirs[@]}"; do
+        # Controlar número de trabajos en paralelo
+        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
+            # Esperar a que termine un proceso
+            wait -n
+            # Limpiar PIDs que ya han terminado
+            new_pids=()
+            for pid in "${pids[@]}"; do
+                if kill -0 $pid 2>/dev/null; then
+                    new_pids+=($pid)
+                fi
+            done
+            pids=("${new_pids[@]}")
+        fi
 
-    wait # Wait for all background processes to finish
+        $DEBUG && echo "Starting job for series directory: $dir" >&2
+        # Lanzar proceso en segundo plano
+        process_item "$dir" "true" &
+        pids+=($!)
+        job_count=$((job_count + 1))
+        echo "Processing series $job_count/$total_series: $(basename "$dir")" >&2
+    done
+
+    # Esperar a que terminen todos los procesos
+    echo "Waiting for all processes to complete..." >&2
+    for pid in "${pids[@]}"; do
+        wait $pid
+    done
+    
     $DEBUG && echo "Finished batch processing." >&2
 }
 
@@ -483,26 +566,106 @@ if [ "$MODE" == "all" ]; then
     process_all "$MOVIES_DIR" "$SERIES_DIR"
     cleanup_jellyfin_cache
 elif [ "$MODE" == "movies" ]; then
+    echo "Processing all movies in $MOVIES_DIR..." >&2
+    $DEBUG && echo "Starting movies batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
+    
+    # Crear array para almacenar PIDs
+    pids=()
+    job_count=0
+    
+    # Recopilar todas las carpetas de películas
+    echo "Collecting movie directories to process..." >&2
+    movie_dirs=()
     for dir in "$MOVIES_DIR"/*/; do
         if [ -d "$dir" ]; then
-            $DEBUG && echo "Processing movie directory: $dir" >&2
-            wait_for_nfo_and_process "$dir" "true"
+            movie_dirs+=("$dir")
         fi
     done
+    
+    total_movies=${#movie_dirs[@]}
+    echo "Found $total_movies movie directories to process" >&2
+    
+    # Procesar películas en paralelo
+    for dir in "${movie_dirs[@]}"; do
+        # Controlar número de trabajos en paralelo
+        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
+            # Esperar a que termine un proceso
+            wait -n
+            # Limpiar PIDs que ya han terminado
+            new_pids=()
+            for pid in "${pids[@]}"; do
+                if kill -0 $pid 2>/dev/null; then
+                    new_pids+=($pid)
+                fi
+            done
+            pids=("${new_pids[@]}")
+        fi
+
+        $DEBUG && echo "Starting job for movie directory: $dir" >&2
+        # Lanzar proceso en segundo plano
+        wait_for_nfo_and_process "$dir" "true" &
+        pids+=($!)
+        job_count=$((job_count + 1))
+        echo "Processing movie $job_count/$total_movies: $(basename "$dir")" >&2
+    done
+    
+    # Esperar a que terminen todos los procesos
+    echo "Waiting for all movie processes to complete..." >&2
+    for pid in "${pids[@]}"; do
+        wait $pid
+    done
+    
     cleanup_jellyfin_cache
 elif [ "$MODE" == "tvshows" ]; then
+    echo "Processing all TV series in $SERIES_DIR..." >&2
+    $DEBUG && echo "Starting TV series batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
+    
+    # Crear array para almacenar PIDs
+    pids=()
+    job_count=0
+    
+    # Recopilar todas las carpetas de series
+    echo "Collecting TV series directories to process..." >&2
+    series_dirs=()
     for dir in "$SERIES_DIR"/*/; do
-        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ]; then
-            # Skip trailers directory
-            if [[ "$(basename "$dir")" == "trailers" ]]; then
-                $DEBUG && echo "Skipping trailers directory: $dir" >&2
-                continue
-            fi
-            
-            $DEBUG && echo "Processing series directory: $dir" >&2
-            wait_for_nfo_and_process "$dir" "true"
+        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ] && [[ "$(basename "$dir")" != "trailers" ]]; then
+            series_dirs+=("$dir")
         fi
     done
+    
+    total_series=${#series_dirs[@]}
+    echo "Found $total_series series directories to process" >&2
+    
+    # Procesar series en paralelo
+    for dir in "${series_dirs[@]}"; do
+        # Controlar número de trabajos en paralelo
+        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
+            # Esperar a que termine un proceso
+            wait -n
+            # Limpiar PIDs que ya han terminado
+            new_pids=()
+            for pid in "${pids[@]}"; do
+                if kill -0 $pid 2>/dev/null; then
+                    new_pids+=($pid)
+                fi
+            done
+            pids=("${new_pids[@]}")
+        fi
+
+        $DEBUG && echo "Starting job for series directory: $dir" >&2
+        # Lanzar proceso en segundo plano
+        wait_for_nfo_and_process "$dir" "true" &
+        pids+=($!)
+        job_count=$((job_count + 1))
+        echo "Processing series $job_count/$total_series: $(basename "$dir")" >&2
+    done
+    
+    # Esperar a que terminen todos los procesos
+    echo "Waiting for all series processes to complete..." >&2
+    for pid in "${pids[@]}"; do
+        wait $pid
+    done
+    
     cleanup_jellyfin_cache
 else
     process_radarr_sonarr_event
