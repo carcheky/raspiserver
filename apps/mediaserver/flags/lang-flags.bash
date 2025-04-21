@@ -249,21 +249,16 @@ add_overlay() {
 wait_for_nfo_and_process() {
     local content_path="$1"
     local is_all_mode="$2" # Pass "true" if running in "all" mode
+    local skip_header="$3" # New parameter to skip the header in batch mode
 
-    echo "=======================" >&2
-    echo "Processing folder: $content_path" >&2
-    echo "=======================" >&2
+    $DEBUG && echo "Processing folder: $content_path" >&2
 
     $DEBUG && echo "Checking for movie.nfo or tvshow.nfo in $content_path..." >&2
 
     # Check if there are no .mkv files in the folder
     if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q . && \
        ! find "$content_path" -mindepth 2 -type f -name '*.mkv' | grep -q .; then
-        $DEBUG && echo "========================================" >&2
-        $DEBUG && echo "WARNING: No .mkv file found in $content_path or its subdirectories." >&2
-        $DEBUG && echo "THIS FOLDER WILL BE MOVED TO $A_BORRAR_DIR." >&2
-        $DEBUG && echo "========================================" >&2
-
+        echo "WARNING: No .mkv file found in $content_path. Moving to $A_BORRAR_DIR." >&2
         mkdir -p "$A_BORRAR_DIR"
         mv "$content_path" "$A_BORRAR_DIR/"
         return
@@ -281,7 +276,11 @@ wait_for_nfo_and_process() {
     done
 
     if [ -f "$content_path/movie.nfo" ]; then
-        $DEBUG && echo "movie.nfo found in $content_path! Identified as a movie." >&2
+        # Only print the header if not already printed in batch mode
+        if [ "$skip_header" != "true" ]; then
+            echo "Processing MOVIE: $(basename "$content_path")" >&2
+        fi
+
         local mkv_file="${radarr_moviefile_path:-$(find "$content_path" -maxdepth 1 -type f -name '*.mkv' | head -n 1)}"
         if [ -z "$mkv_file" ] || [ ! -f "$mkv_file" ]; then
             $DEBUG && echo "Error: No valid .mkv file found for the movie in $content_path." >&2
@@ -320,8 +319,11 @@ wait_for_nfo_and_process() {
             fi
         fi
     elif [ -f "$content_path/tvshow.nfo" ]; then
-        $DEBUG && echo "tvshow.nfo found in $content_path! Identified as a series." >&2
-        
+        # Only print the header if not already printed in batch mode
+        if [ "$skip_header" != "true" ]; then
+            echo "Processing SERIES: $(basename "$content_path")" >&2
+        fi
+
         # Process series main images (folder.jpg and backdrop.jpg)
         if [ -f "$content_path/folder.jpg" ]; then
             # For main series folder, use any episode to get languages
@@ -329,7 +331,7 @@ wait_for_nfo_and_process() {
             if [ -n "$any_mkv_file" ] && [ -f "$any_mkv_file" ]; then
                 get_languages "$any_mkv_file"
                 add_overlay "$content_path/folder.jpg" "folder"
-                
+
                 if [ -f "$content_path/backdrop.jpg" ]; then
                     add_overlay "$content_path/backdrop.jpg" "backdrop"
                 fi
@@ -337,55 +339,73 @@ wait_for_nfo_and_process() {
                 $DEBUG && echo "No MKV files found in series directory or subdirectories. Skipping series main images." >&2
             fi
         fi
-        
+
         # Process season folders
+        season_dirs=()
         for season_dir in "$content_path"/Season*/; do
             if [ -d "$season_dir" ] && [ -f "${season_dir}season.nfo" ]; then
-                $DEBUG && echo "Processing season directory: $season_dir" >&2
-                
-                # Process each episode's thumb image
-                for thumb_file in "$season_dir"/*-thumb.jpg; do
-                    if [ -f "$thumb_file" ]; then
-                        # Extract the base name without -thumb.jpg
-                        local base_name="${thumb_file%-thumb.jpg}"
-                        local mkv_file="${base_name}.mkv"
-                        
-                        if [ -f "$mkv_file" ]; then
-                            $DEBUG && echo "Processing episode: $mkv_file" >&2
-                            get_languages "$mkv_file"
-                            add_overlay "$thumb_file" "thumb"
-                        else
-                            $DEBUG && echo "Warning: MKV file not found for thumb: $thumb_file" >&2
-                        fi
-                    fi
-                done
+                season_dirs+=("$season_dir")
             fi
         done
-        
+
+        total_seasons=${#season_dirs[@]}
+        season_count=0
+
+        for season_dir in "${season_dirs[@]}"; do
+            season_count=$((season_count + 1))
+            season_name=$(basename "$season_dir")
+            echo "  • Processing season $season_count/$total_seasons: $season_name in $(basename "$content_path")" >&2
+
+            # Process each episode's thumb image
+            episode_thumbs=()
+            for thumb_file in "$season_dir"/*-thumb.jpg; do
+                if [ -f "$thumb_file" ]; then
+                    episode_thumbs+=("$thumb_file")
+                fi
+            done
+
+            total_episodes=${#episode_thumbs[@]}
+            episode_count=0
+
+            for thumb_file in "${episode_thumbs[@]}"; do
+                # Extract the base name without -thumb.jpg
+                local base_name="${thumb_file%-thumb.jpg}"
+                local mkv_file="${base_name}.mkv"
+                local episode_name=$(basename "$base_name")
+
+                if [ -f "$mkv_file" ]; then
+                    episode_count=$((episode_count + 1))
+                    echo "    ◦ Processing episode $episode_count/$total_episodes: $episode_name in $season_name" >&2
+                    get_languages "$mkv_file"
+                    add_overlay "$thumb_file" "thumb"
+                else
+                    $DEBUG && echo "Warning: MKV file not found for thumb: $thumb_file" >&2
+                fi
+            done
+        done
+
         # Handle Sonarr specific event (process a single episode)
         if [ -n "$sonarr_episodefile_path" ] && [ -f "$sonarr_episodefile_path" ]; then
-            $DEBUG && echo "Processing Sonarr event for specific episode: $sonarr_episodefile_path" >&2
             local episode_basename=$(basename "$sonarr_episodefile_path" .mkv)
             local episode_dir=$(dirname "$sonarr_episodefile_path")
+            local season_name=$(basename "$episode_dir")
             local thumb_file="${episode_dir}/${episode_basename}-thumb.jpg"
-            
-            # Wait for thumb file with a timeout
-            if [ "$is_all_mode" != "true" ]; then
-                elapsed=0
-                while [ ! -f "$thumb_file" ]; do
-                    $DEBUG && echo "Waiting for thumb file: $thumb_file" >&2
-                    sleep 1
-                    elapsed=$((elapsed + 1))
-                    if [ "$elapsed" -ge "$timeout" ]; then
-                        $DEBUG && echo "Timeout reached while waiting for thumb file." >&2
-                        return
-                    fi
-                done
-            fi
-            
+
+            elapsed=0
+            while [ ! -f "$thumb_file" ]; do
+                $DEBUG && echo "Waiting for thumb file: $thumb_file" >&2
+                sleep 1
+                elapsed=$((elapsed + 1))
+                if [ "$elapsed" -ge "$timeout" ]; then
+                    $DEBUG && echo "Timeout reached while waiting for thumb file." >&2
+                    return
+                fi
+            done
+
             if [ -f "$thumb_file" ]; then
                 get_languages "$sonarr_episodefile_path"
                 add_overlay "$thumb_file" "thumb"
+                echo "  • Processing event episode: $episode_basename in $season_name" >&2
             else
                 $DEBUG && echo "Error: Thumb file not found for episode: $sonarr_episodefile_path" >&2
             fi
@@ -404,9 +424,10 @@ process_all() {
     process_item() {
         local dir="$1"
         local is_dir_valid="$2"
-        
+        local skip_header="$3"
+
         if [ "$is_dir_valid" == "true" ]; then
-            wait_for_nfo_and_process "$dir" "true"
+            wait_for_nfo_and_process "$dir" "true" "$skip_header"
         fi
     }
 
@@ -422,10 +443,10 @@ process_all() {
             movie_dirs+=("$dir")
         fi
     done
-    
+
     total_movies=${#movie_dirs[@]}
     echo "Found $total_movies movie directories to process" >&2
-    
+
     for dir in "${movie_dirs[@]}"; do
         # Controlar número de trabajos en paralelo
         if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
@@ -441,23 +462,22 @@ process_all() {
             pids=("${new_pids[@]}")
         fi
 
-        $DEBUG && echo "Starting job for movie directory: $dir" >&2
+        echo "Processing MOVIE $((job_count + 1))/$total_movies: $(basename "$dir")" >&2
         # Lanzar proceso en segundo plano
-        process_item "$dir" "true" &
+        process_item "$dir" "true" "true" &
         pids+=($!)
         job_count=$((job_count + 1))
-        echo "Processing movie $job_count/$total_movies: $(basename "$dir")" >&2
     done
 
     # Esperar a que terminen todos los procesos de películas
     for pid in "${pids[@]}"; do
         wait $pid
     done
-    
+
     # Resetear contadores para series
     pids=()
     job_count=0
-    
+
     # Procesar series en paralelo
     echo "Collecting TV series directories to process..." >&2
     series_dirs=()
@@ -466,10 +486,10 @@ process_all() {
             series_dirs+=("$dir")
         fi
     done
-    
+
     total_series=${#series_dirs[@]}
     echo "Found $total_series series directories to process" >&2
-    
+
     for dir in "${series_dirs[@]}"; do
         # Controlar número de trabajos en paralelo
         if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
@@ -485,12 +505,11 @@ process_all() {
             pids=("${new_pids[@]}")
         fi
 
-        $DEBUG && echo "Starting job for series directory: $dir" >&2
+        echo "Processing SERIES $((job_count + 1))/$total_series: $(basename "$dir")" >&2
         # Lanzar proceso en segundo plano
-        process_item "$dir" "true" &
+        process_item "$dir" "true" "true" &
         pids+=($!)
         job_count=$((job_count + 1))
-        echo "Processing series $job_count/$total_series: $(basename "$dir")" >&2
     done
 
     # Esperar a que terminen todos los procesos
@@ -498,33 +517,33 @@ process_all() {
     for pid in "${pids[@]}"; do
         wait $pid
     done
-    
+
     $DEBUG && echo "Finished batch processing." >&2
 }
 
 # Function to handle Radarr or Sonarr events
 process_radarr_sonarr_event() {
     if [ -n "$radarr_eventtype" ]; then
-        $DEBUG && echo "Source: Radarr" >&2
-        $DEBUG && echo "Radarr Event Type: $radarr_eventtype" >&2
+        echo "Processing Radarr event: $radarr_eventtype" >&2
         $DEBUG && echo "Radarr Movie Path: $radarr_movie_path" >&2
         $DEBUG && echo "Radarr Movie File Path: $radarr_moviefile_path" >&2
-        
+
         if [ -n "$radarr_movie_path" ]; then
-            wait_for_nfo_and_process "$radarr_movie_path" "false"
+            echo "Processing MOVIE: $(basename "$radarr_movie_path")" >&2
+            wait_for_nfo_and_process "$radarr_movie_path" "false" "false"
         else
-            $DEBUG && echo "Error: radarr_movie_path is empty" >&2
+            echo "Error: radarr_movie_path is empty" >&2
         fi
     elif [ -n "$sonarr_eventtype" ]; then
-        $DEBUG && echo "Source: Sonarr" >&2
-        $DEBUG && echo "Sonarr Event Type: $sonarr_eventtype" >&2
+        echo "Processing Sonarr event: $sonarr_eventtype" >&2
         $DEBUG && echo "Sonarr Series Path: $sonarr_series_path" >&2
         $DEBUG && echo "Sonarr Episode File Path: $sonarr_episodefile_path" >&2
-        
+
         if [ -n "$sonarr_series_path" ]; then
-            wait_for_nfo_and_process "$sonarr_series_path" "false"
+            echo "Processing SERIES: $(basename "$sonarr_series_path")" >&2
+            wait_for_nfo_and_process "$sonarr_series_path" "false" "false"
         else
-            $DEBUG && echo "Error: sonarr_series_path is empty" >&2
+            echo "Error: sonarr_series_path is empty" >&2
         fi
     else
         echo "Error: Neither Radarr nor Sonarr event detected." >&2
@@ -542,7 +561,7 @@ cleanup_jellyfin_cache() {
             $DEBUG && echo "Cache directory $dir deleted." >&2
         else
             $DEBUG && echo "Cache directory $dir does not exist. Skipping." >&2
-        fi
+    fi
     done
 }
 
@@ -568,11 +587,11 @@ if [ "$MODE" == "all" ]; then
 elif [ "$MODE" == "movies" ]; then
     echo "Processing all movies in $MOVIES_DIR..." >&2
     $DEBUG && echo "Starting movies batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
-    
+
     # Crear array para almacenar PIDs
     pids=()
     job_count=0
-    
+
     # Recopilar todas las carpetas de películas
     echo "Collecting movie directories to process..." >&2
     movie_dirs=()
@@ -581,10 +600,10 @@ elif [ "$MODE" == "movies" ]; then
             movie_dirs+=("$dir")
         fi
     done
-    
+
     total_movies=${#movie_dirs[@]}
     echo "Found $total_movies movie directories to process" >&2
-    
+
     # Procesar películas en paralelo
     for dir in "${movie_dirs[@]}"; do
         # Controlar número de trabajos en paralelo
@@ -601,29 +620,28 @@ elif [ "$MODE" == "movies" ]; then
             pids=("${new_pids[@]}")
         fi
 
-        $DEBUG && echo "Starting job for movie directory: $dir" >&2
+        echo "Processing MOVIE $((job_count + 1))/$total_movies: $(basename "$dir")" >&2
         # Lanzar proceso en segundo plano
-        wait_for_nfo_and_process "$dir" "true" &
+        wait_for_nfo_and_process "$dir" "true" "true" &
         pids+=($!)
         job_count=$((job_count + 1))
-        echo "Processing movie $job_count/$total_movies: $(basename "$dir")" >&2
     done
-    
+
     # Esperar a que terminen todos los procesos
     echo "Waiting for all movie processes to complete..." >&2
     for pid in "${pids[@]}"; do
         wait $pid
     done
-    
+
     cleanup_jellyfin_cache
 elif [ "$MODE" == "tvshows" ]; then
     echo "Processing all TV series in $SERIES_DIR..." >&2
     $DEBUG && echo "Starting TV series batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
-    
+
     # Crear array para almacenar PIDs
     pids=()
     job_count=0
-    
+
     # Recopilar todas las carpetas de series
     echo "Collecting TV series directories to process..." >&2
     series_dirs=()
@@ -632,10 +650,10 @@ elif [ "$MODE" == "tvshows" ]; then
             series_dirs+=("$dir")
         fi
     done
-    
+
     total_series=${#series_dirs[@]}
     echo "Found $total_series series directories to process" >&2
-    
+
     # Procesar series en paralelo
     for dir in "${series_dirs[@]}"; do
         # Controlar número de trabajos en paralelo
@@ -652,20 +670,19 @@ elif [ "$MODE" == "tvshows" ]; then
             pids=("${new_pids[@]}")
         fi
 
-        $DEBUG && echo "Starting job for series directory: $dir" >&2
+        echo "Processing SERIES $((job_count + 1))/$total_series: $(basename "$dir")" >&2
         # Lanzar proceso en segundo plano
-        wait_for_nfo_and_process "$dir" "true" &
+        wait_for_nfo_and_process "$dir" "true" "true" &
         pids+=($!)
         job_count=$((job_count + 1))
-        echo "Processing series $job_count/$total_series: $(basename "$dir")" >&2
     done
-    
+
     # Esperar a que terminen todos los procesos
     echo "Waiting for all series processes to complete..." >&2
     for pid in "${pids[@]}"; do
         wait $pid
     done
-    
+
     cleanup_jellyfin_cache
 else
     process_radarr_sonarr_event
