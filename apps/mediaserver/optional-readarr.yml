@@ -1,0 +1,21 @@
+services:
+  # BUSCADOR LIBROS
+  # readarr http://localhost:8787
+  readarr:
+    image: linuxserver/readarr:nightly
+    container_name: readarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./volumes/readarr-config:/config
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    ports:
+      - 8787:8787
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M

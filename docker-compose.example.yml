@@ -4,8 +4,8 @@
 # 4 docker-compose up -d
 
 include:
+# - apps/mediaserver/MEDIASERVER.yml
 # - apps/homeassistant/docker-compose.homeassistant.yml
-# - apps/mediaserver/docker-compose.mediaserver.yml
 # - apps/tunnel/docker-compose.tunnel.yml
 # - apps/dashboard/docker-compose.homarr.yml
 # - apps/adguard/docker-compose.adguardhome.yml
