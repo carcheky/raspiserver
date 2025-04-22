@@ -66,9 +66,9 @@ CHILD_PIDS=()
 # stdout -> Debug, stderr -> Info
 # Función para manejar salidas según Sonarr/Radarr
 log() {
-    m_time=`date "+%F %T"`
+    m_time=$(date "+%F %T")
     echo $m_time" :: $scriptName :: $scriptVersion :: "$1
-    echo $m_time" :: $scriptName :: $scriptVersion :: "$1 >> "/config/logs/$logFileName"
+    echo $m_time" :: $scriptName :: $scriptVersion :: "$1 >>"/config/logs/$logFileName"
 }
 
 # Debug log envía a stdout (nivel Debug en Sonarr/Radarr)
@@ -79,7 +79,7 @@ debug_log() {
 # Error log envía a stderr (nivel Info en Sonarr/Radarr)
 error_log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: ERROR :: $1" >&2
-    echo "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: ERROR :: $1" >> "/config/logs/$logFileName"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: ERROR :: $1" >>"/config/logs/$logFileName"
 }
 
 # Configuración del archivo de log
@@ -88,10 +88,10 @@ logfileSetup() {
 
     # Borrar archivos de log más antiguos que 5 días
     find "/config/logs" -type f -iname "$scriptName-*.txt" -mtime +5 -delete 2>/dev/null || true
-    
+
     if [ ! -f "/config/logs/$logFileName" ]; then
         mkdir -p "/config/logs" 2>/dev/null || true
-        echo "" > "/config/logs/$logFileName"
+        echo "" >"/config/logs/$logFileName"
         chmod 666 "/config/logs/$logFileName" 2>/dev/null || true
     fi
 }
@@ -113,7 +113,7 @@ check_terminal_support() {
     # Check if stdout is a terminal and if TERM is set to something that supports ANSI
     if [ -t 1 ] && [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
         # Try simple ANSI test
-        if echo -e "\033[1A" > /dev/null 2>&1; then
+        if echo -e "\033[1A" >/dev/null 2>&1; then
             echo "true"
             return
         fi
@@ -127,10 +127,10 @@ $DEBUG && debug_log "Interactive terminal with ANSI support: $INTERACTIVE_TERMIN
 # Function to handle script interruption and cleanup
 cleanup() {
     log "Script interrupted. Cleaning up..."
-    
+
     # Clean up FIFOs
     cleanup_fifos
-    
+
     # Kill all child processes
     for pid in "${CHILD_PIDS[@]}"; do
         if kill -0 $pid 2>/dev/null; then
@@ -138,7 +138,7 @@ cleanup() {
             $DEBUG && debug_log "Killed process $pid"
         fi
     done
-    
+
     log "All child processes terminated."
     exit 1
 }
@@ -149,19 +149,22 @@ cleanup_fifos() {
     rm -f /tmp/series_status_$$_* 2>/dev/null
 }
 
-# # Set trap to catch interrupts and call cleanup function 
+# # Set trap to catch interrupts and call cleanup function
 # # Eliminamos EXIT del trap para que no se ejecute la función cleanup al salir normalmente
 # trap cleanup INT TERM HUP
 
 # Parse arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -v|--verbose) DEBUG=true ;;
-        all) MODE="all" ;;
-        movies) MODE="movies" ;;
-        tvshows) MODE="tvshows" ;;
-        -j|--jobs) shift; MAX_PARALLEL_JOBS=$1 ;;
-        *) ;;
+    -v | --verbose) DEBUG=true ;;
+    all) MODE="all" ;;
+    movies) MODE="movies" ;;
+    tvshows) MODE="tvshows" ;;
+    -j | --jobs)
+        shift
+        MAX_PARALLEL_JOBS=$1
+        ;;
+    *) ;;
     esac
     shift
 done
@@ -171,7 +174,7 @@ if [ -z "$MAX_PARALLEL_JOBS" ]; then
     MAX_PARALLEL_JOBS=1
 fi
 
-CUSTOM_CREATOR_TOOL="carcheky"                     # Default to current date
+CUSTOM_CREATOR_TOOL="carcheky"                   # Default to current date
 OVERLAY_DIR="/flags/4x3"                         # Directory containing overlay flag files
 flag_width=400                                   # Width of the flag overlay (updated to match z-lang-overlay)
 flag_height=300                                  # Height of the flag overlay (updated to match z-lang-overlay)
@@ -190,14 +193,14 @@ A_BORRAR_DIR="/BibliotecaMultimedia/se-borraran" # Directory for files to be del
 update_status() {
     local message="$1"
     local is_new_line="$2"
-    
+
     if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
         # Clear the current line
         echo -ne "\r\033[K"
-        
+
         # Print the message
         echo -ne "$message"
-        
+
         # Add a newline if requested
         if [ "$is_new_line" = "true" ]; then
             echo ""
@@ -211,10 +214,10 @@ update_status() {
 # Function to clear the previous status lines (if supported)
 clear_status_lines() {
     local lines="$1"
-    
+
     if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-        for ((i=0; i<$lines; i++)); do
-            echo -ne "\033[1A\033[K"  # Move up one line and clear it
+        for ((i = 0; i < $lines; i++)); do
+            echo -ne "\033[1A\033[K" # Move up one line and clear it
         done
     fi
 }
@@ -228,15 +231,20 @@ install_deps() {
 
     mkdir -p "$script_dir"
 
-        {
-        echo "#!/bin/bash"
-        echo "apk update && apk add --no-cache ${packages[*]}"
-        echo "sleep 300" # Wait for 5 minutes to ensure all dependencies are installed
-        echo "if ls -f /config/radarr* >/dev/null 2>&1; then"
-        echo "  bash /flags/lang-flags.sh -j 1 -f movies"
-        echo "elif ls -f /config/sonarr* >/dev/null 2>&1; then"
-        echo "  bash /flags/lang-flags.sh -j 1 -f tvshows"
-        echo "fi"
+    {
+        echo "#!/bin/bash
+apk update && apk add --no-cache perl-image-exiftool jq imagemagick ffmpeg inkscape rsvg-convert exiftool
+(
+  sleep 120
+  if ls -f /config/radarr* >/dev/null 2>&1; then
+    echo "Running lang-flags for Radarr"
+    bash /flags/lang-flags.sh -j 1 -f movies
+  elif ls -f /config/sonarr* >/dev/null 2>&1; then
+    echo "Running lang-flags for Sonarr"
+    bash /flags/lang-flags.sh -j 1 -f tvshows
+  fi
+) &
+"
     } >"$script_file"
 
     chmod +x "$script_file"
@@ -381,8 +389,8 @@ add_overlay() {
 # Function to wait for nfo and process the image
 wait_for_nfo_and_process() {
     local content_path="$1"
-    local is_all_mode="$2" # Pass "true" if running in "all" mode
-    local skip_header="$3" # New parameter to skip the header in batch mode
+    local is_all_mode="$2"     # Pass "true" if running in "all" mode
+    local skip_header="$3"     # New parameter to skip the header in batch mode
     local background_wait="$4" # New parameter to control if we wait in background
 
     debug_log "Processing folder: $content_path"
@@ -390,14 +398,14 @@ wait_for_nfo_and_process() {
     debug_log "Checking for movie.nfo or tvshow.nfo in $content_path..."
 
     # Check if there are no .mkv files in the folder
-    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q . && \
-       ! find "$content_path" -mindepth 2 -type f -name '*.mkv' | grep -q .; then
+    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q . &&
+        ! find "$content_path" -mindepth 2 -type f -name '*.mkv' | grep -q .; then
         log "WARNING: No .mkv file found in $content_path. Moving to $A_BORRAR_DIR."
         mkdir -p "$A_BORRAR_DIR"
         mv "$content_path" "$A_BORRAR_DIR/"
         return
     fi
-    
+
     # Si se solicita espera en segundo plano, ejecutamos el procesamiento en un subproceso
     if [ "$background_wait" = "true" ]; then
         (
@@ -420,10 +428,10 @@ _process_content() {
     local content_path="$1"
     local is_all_mode="$2"
     local skip_header="$3"
-    
+
     local timeout=300 # 5 minutes in seconds
     local elapsed=0
-    
+
     # Esperar por NFO files
     debug_log "Waiting for NFO files in $content_path..."
     while [ ! -f "$content_path/movie.nfo" ] && [ ! -f "$content_path/tvshow.nfo" ]; do
@@ -518,9 +526,9 @@ _process_content() {
             # Extract season number (assuming format "Season XX")
             season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
             season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
-            
+
             log "  • ${series_name}-S${season_num} ($season_count/$total_seasons)"
-            
+
             # Process each episode's thumb image
             episode_thumbs=()
             for thumb_file in "$season_dir"/*-thumb.jpg; do
@@ -537,20 +545,20 @@ _process_content() {
                 local base_name="${thumb_file%-thumb.jpg}"
                 local mkv_file="${base_name}.mkv"
                 local episode_name=$(basename "$base_name")
-                
+
                 if [ -f "$mkv_file" ]; then
                     episode_count=$((episode_count + 1))
                     # Extract episode number from filename (assuming SxxExx format)
                     episode_num=$(echo "$episode_name" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
                     episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
-                    
+
                     log "    ◦ ${series_name}-S${season_num}E${episode_num} ($episode_count/$total_episodes)"
-                    
+
                     # Report progress to parent if fifo exists
                     if [ -p "/tmp/series_status_$$" ]; then
-                        echo "S${season_num}E${episode_num} ($episode_count/$total_episodes)" > "/tmp/series_status_$$"
+                        echo "S${season_num}E${episode_num} ($episode_count/$total_episodes)" >"/tmp/series_status_$$"
                     fi
-                    
+
                     get_languages "$mkv_file"
                     add_overlay "$thumb_file" "thumb"
                 else
@@ -558,7 +566,7 @@ _process_content() {
                 fi
             done
         done
-        
+
         # Handle Sonarr specific event (process a single episode)
         if [ -n "$sonarr_episodefile_path" ] && [ -f "$sonarr_episodefile_path" ]; then
             local episode_basename=$(basename "$sonarr_episodefile_path" .mkv)
@@ -580,14 +588,14 @@ _process_content() {
             if [ -f "$thumb_file" ]; then
                 get_languages "$sonarr_episodefile_path"
                 add_overlay "$thumb_file" "thumb"
-                
+
                 # Extract season and episode numbers for event episode
                 series_name=$(basename "$content_path")
                 season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
                 season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
                 episode_num=$(echo "$episode_basename" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
                 episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
-                
+
                 log "  • Event: ${series_name}-S${season_num}E${episode_num}"
             else
                 debug_log "Error: Thumb file not found for episode: $sonarr_episodefile_path"
@@ -737,7 +745,7 @@ process_all() {
             # Launch background process with status reporting to parent
             (
                 wait_for_nfo_and_process "$dir" "true" "true" "true"
-                echo "DONE" > "$fifo" 2>/dev/null || true  # More robust
+                echo "DONE" >"$fifo" 2>/dev/null || true # More robust
             ) &
 
             pid=$!
@@ -747,14 +755,14 @@ process_all() {
 
             # Start a background process to monitor status updates
             (
-                while read -r status < "$fifo" 2>/dev/null; do
+                while read -r status <"$fifo" 2>/dev/null; do
                     if [ "$status" = "DONE" ]; then
                         break
                     fi
                     # Forward status to parent for display
                     series_progress["$series_name"]="$status"
                 done
-                
+
                 # Ensure FIFO gets cleaned up
                 rm -f "$fifo" 2>/dev/null || true
             ) &
@@ -826,7 +834,7 @@ cleanup_jellyfin_cache() {
             debug_log "Cache directory $dir deleted."
         else
             debug_log "Cache directory $dir does not exist. Skipping."
-    fi
+        fi
     done
 }
 
@@ -849,7 +857,7 @@ debug_log "Number of instances of $script_name running: $instance_count"
 if [ "$MODE" == "all" ]; then
     process_all "$MOVIES_DIR" "$SERIES_DIR"
     cleanup_jellyfin_cache
-elif [ "$MODE" == "movies" ];then
+elif [ "$MODE" == "movies" ]; then
     log "Processing all movies in $MOVIES_DIR..."
     debug_log "Starting movies batch processing with max $MAX_PARALLEL_JOBS parallel jobs..."
 
@@ -861,7 +869,7 @@ elif [ "$MODE" == "movies" ];then
     log "Collecting movie directories to process..."
     movie_dirs=()
     for dir in "$MOVIES_DIR"/*/; do
-        if [ -d "$dir" ];then
+        if [ -d "$dir" ]; then
             movie_dirs+=("$dir")
         fi
     done
@@ -893,7 +901,7 @@ elif [ "$MODE" == "movies" ];then
     done
 
     cleanup_jellyfin_cache
-elif [ "$MODE" == "tvshows" ];then
+elif [ "$MODE" == "tvshows" ]; then
     log "Processing all TV series in $SERIES_DIR..."
     debug_log "Starting TV series batch processing with max $MAX_PARALLEL_JOBS parallel jobs..."
 
@@ -976,7 +984,7 @@ elif [ "$MODE" == "tvshows" ];then
             # Launch background process with status reporting to parent
             (
                 wait_for_nfo_and_process "$dir" "true" "true" "true"
-                echo "DONE" > "$fifo" 2>/dev/null || true  # More robust
+                echo "DONE" >"$fifo" 2>/dev/null || true # More robust
             ) &
 
             pid=$!
@@ -986,14 +994,14 @@ elif [ "$MODE" == "tvshows" ];then
 
             # Start a background process to monitor status updates
             (
-                while read -r status < "$fifo" 2>/dev/null; do
+                while read -r status <"$fifo" 2>/dev/null; do
                     if [ "$status" = "DONE" ]; then
                         break
                     fi
                     # Forward status to parent for display
                     series_progress["$series_name"]="$status"
                 done
-                
+
                 # Ensure FIFO gets cleaned up
                 rm -f "$fifo" 2>/dev/null || true
             ) &
