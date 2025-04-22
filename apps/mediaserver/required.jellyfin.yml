@@ -32,5 +32,5 @@ services:
           cpus: '1'
           memory: 2G
         limits:
-          cpus: '2'
-          memory: 5G
+          cpus: '3'
+          memory: 6G

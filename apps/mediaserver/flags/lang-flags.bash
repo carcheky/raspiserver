@@ -166,11 +166,9 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-# Si no se especifica, usar el número de núcleos disponibles menos 1 (mínimo 2)
+# Si no se especifica, usar un solo hilo por defecto
 if [ -z "$MAX_PARALLEL_JOBS" ]; then
-    CORES=$(nproc 2>/dev/null || echo 4)
-    MAX_PARALLEL_JOBS=$((CORES - 1))
-    [ "$MAX_PARALLEL_JOBS" -lt 2 ] && MAX_PARALLEL_JOBS=2
+    MAX_PARALLEL_JOBS=1
 fi
 
 CUSTOM_CREATOR_TOOL="carcheky"                     # Default to current date
@@ -230,9 +228,15 @@ install_deps() {
 
     mkdir -p "$script_dir"
 
-    {
+        {
         echo "#!/bin/bash"
         echo "apk update && apk add --no-cache ${packages[*]}"
+        echo "# Detectar automáticamente qué procesar basado en configuración de Radarr/Sonarr"
+        echo "if ls -f /config/radarr* >/dev/null 2>&1; then"
+        echo "  bash /flags/lang-flags.sh -j 1 -f movies"
+        echo "elif ls -f /config/sonarr* >/dev/null 2>&1; then"
+        echo "  bash /flags/lang-flags.sh -j 1 -f tvshows"
+        echo "fi"
     } >"$script_file"
 
     chmod +x "$script_file"
