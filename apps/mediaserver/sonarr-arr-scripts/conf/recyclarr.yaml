@@ -24,7 +24,7 @@ sonarr:
     replace_existing_custom_formats: True
 
     quality_profiles:
-      - name: Any
+      - name: Any-original
         reset_unmatched_scores:
           enabled: false
         upgrade:
@@ -64,7 +64,7 @@ sonarr:
           - c9eafd50846d299b862ca9bb6ea91950 # x265
           - cddfb4e32db826151d97352b8e37c648 # x264
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 2000
       - trash_ids:
           # Streaming Services
@@ -95,14 +95,15 @@ sonarr:
           - d2d299244a92b8a52d4921ce3897a256 # UHD Streaming Cut
           - 5d2317d99af813b6529c7ebf01c83533 # VDL
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 1000
       - trash_ids:
           - 290078c8b266272a5cc8e251b5e2eb0b # 1080p
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 1000
       - trash_ids:
+          - 1bef6c151fa35093015b0bfef18279e5 # 2160p
           - 3e2c4e748b64a1a1118e0ea3f4cf6875 # HDR
           - bb019e1cd00f304f80971c965de064dc # HDR (undefined)
           - 3497799d29a085e2ac2df9d468413c94 # HDR10
@@ -120,7 +121,7 @@ sonarr:
           - 026d5aadd1a6b4e550b134cb6c72b3ca # Uncensored
           - 3bc5f395426614e155e585a2f056cdf1 # Season Pack
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 500
       - trash_ids:
           # Audio Channels
@@ -130,34 +131,34 @@ sonarr:
           # Audio Advanced #1
           - 63487786a8b01b7f20dd2bc90dd4a477 # DD+
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 75
       - trash_ids:
           # Audio Advanced #2
           - dbe00161b08a25ac6154c55f95e6318d # DD
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 30
       - trash_ids:
           # Audio Channels
           - bd6dd5e043aa27ff4696a08d011c7d96 # 1.0 Mono
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 25
       - trash_ids:
           - 44e7c4de10ae50265753082e5dc76047 # Repack v3
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 20
       - trash_ids:
           - eb3d5cc0a2be0db205fb823640db6a3c # Repack v2
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 15
       - trash_ids:
           - ec8fa7296b64e8cd390a1600981f3923 # Repack/Proper
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 10
       - trash_ids:
           - 851bd64e04c9374c51102be3dd9ae4cc # FLAC
@@ -189,7 +190,7 @@ sonarr:
           # Unwanted
           - 47435ece6b99a0b477caf360e79ba0bb # x265 (HD)
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: 5
       - trash_ids:
           # Misc
@@ -199,7 +200,7 @@ sonarr:
           - 90501962793d580d011511155c97e4e5 # VP9
           - 82d40da2bc6923f41e14394075dd4b03 # No-RlsGroup
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: -10
       - trash_ids:
           # Optional
@@ -249,8 +250,7 @@ sonarr:
           - ddb8eaa9c85a549c50034d280539d54d # FR WEB Tier 01
           - a4c51febd4d8b2a0db10a3c974f21d92 # FR WEB Tier 02
           - dbfc0a4b5cb4cbd693311c4482ae9683 # FR WEB Tier 03
-          - 1bef6c151fa35093015b0bfef18279e5 # 2160p
         quality_profiles:
-          - name: Any
+          - name: Any-original
             score: -100000
 
