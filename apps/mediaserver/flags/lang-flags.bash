@@ -59,9 +59,6 @@ scriptName="Lang-Flags"
 scriptVersion="1.0"
 DEBUG=false # Default debug mode is off
 
-# Global array to track all spawned child processes
-CHILD_PIDS=()
-
 # Configuración para la gestión de salida según Sonarr/Radarr
 # stdout -> Debug, stderr -> Info
 # Función para manejar salidas según Sonarr/Radarr
@@ -127,31 +124,9 @@ $DEBUG && debug_log "Interactive terminal with ANSI support: $INTERACTIVE_TERMIN
 # Function to handle script interruption and cleanup
 cleanup() {
     log "Script interrupted. Cleaning up..."
-
-    # Clean up FIFOs
-    cleanup_fifos
-
-    # Kill all child processes
-    for pid in "${CHILD_PIDS[@]}"; do
-        if kill -0 $pid 2>/dev/null; then
-            kill -TERM $pid 2>/dev/null || kill -KILL $pid 2>/dev/null
-            $DEBUG && debug_log "Killed process $pid"
-        fi
-    done
-
     log "All child processes terminated."
     exit 1
 }
-
-# Clean up FIFO files on exit
-cleanup_fifos() {
-    # Delete any temporary FIFOs we created
-    rm -f /tmp/series_status_$$_* 2>/dev/null
-}
-
-# # Set trap to catch interrupts and call cleanup function
-# # Eliminamos EXIT del trap para que no se ejecute la función cleanup al salir normalmente
-# trap cleanup INT TERM HUP
 
 # Parse arguments
 while [[ "$#" -gt 0 ]]; do
@@ -208,17 +183,6 @@ update_status() {
     else
         # Fallback for non-interactive terminals
         echo "$message"
-    fi
-}
-
-# Function to clear the previous status lines (if supported)
-clear_status_lines() {
-    local lines="$1"
-
-    if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-        for ((i = 0; i < $lines; i++)); do
-            echo -ne "\033[1A\033[K" # Move up one line and clear it
-        done
     fi
 }
 
@@ -296,8 +260,14 @@ add_overlay() {
     local final_image="$1"
     local type="$2"
 
+    # Verificar si el archivo existe y no está vacío
+    if [ ! -s "$final_image" ]; then
+        debug_log "Error: File is empty or does not exist: $final_image. Skipping."
+        return 1
+    fi
+
     # Generate creatortool using exiftool
-    creatortool=$(exiftool -f -s3 -"creatortool" "$final_image")
+    creatortool=$(exiftool -f -s3 -"creatortool" "$final_image" 2>/dev/null || echo "")
     if [ -z "$creatortool" ]; then
         debug_log "Warning: creatortool has no value for image: $final_image"
     fi
@@ -312,10 +282,17 @@ add_overlay() {
         if [ -f "$final_image" ]; then
             debug_log "Processing image: $final_image"
 
+            # Verificar que el archivo tenga un tamaño mínimo para ser procesado
+            local file_size=$(stat -c%s "$final_image" 2>/dev/null || echo "0")
+            if [ "$file_size" -lt 1000 ]; then
+                debug_log "Error: File size too small ($file_size bytes) for $final_image. Skipping."
+                return 1
+            fi
+
             dimensions=$(identify -format "%wx%h" "$final_image" 2>/dev/null)
             if [ -z "$dimensions" ]; then
                 debug_log "Error: Unable to retrieve dimensions for $final_image. Skipping."
-                return
+                return 1
             fi
 
             width=$(echo $dimensions | cut -d 'x' -f 1)
@@ -323,7 +300,7 @@ add_overlay() {
 
             if ! [[ "$width" =~ ^[0-9]+$ ]] || ! [[ "$height" =~ ^[0-9]+$ ]]; then
                 debug_log "Error: Invalid dimensions ($dimensions) for $final_image. Skipping."
-                return
+                return 1
             fi
 
             debug_log "Image dimensions: ${width}x${height}"
@@ -348,22 +325,28 @@ add_overlay() {
             fi
 
             # Resize the poster image (without cropping)
-            magick "$final_image" -resize "$resize" "$final_image"
+            if ! magick "$final_image" -resize "$resize" "$final_image" 2>/dev/null; then
+                debug_log "Error: Failed to resize image $final_image. Skipping."
+                return 1
+            fi
 
             for flag_file in "${flag_files[@]}"; do
                 if [ -f "$OVERLAY_DIR/$flag_file" ]; then
                     debug_log "Adding flag: $flag_file to image: $final_image"
 
-                    magick "$final_image" \
+                    if ! magick "$final_image" \
                         \( -density $flag_width "$OVERLAY_DIR/$flag_file" -resize "${flag_width}x${flag_height}" \) \
                         -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
-                        "$final_image"
+                        "$final_image" 2>/dev/null; then
+                        debug_log "Error: Failed to add flag overlay to $final_image. Skipping."
+                        continue
+                    fi
 
                     [ -f folder.jpg_exiftool_tmp ] && rm folder.jpg_exiftool_tmp -f
                     debug_log "-> Added $flag_file to $(pwd)/$final_image"
 
                     if command -v exiftool >/dev/null 2>&1; then
-                        exiftool -creatortool="$CUSTOM_CREATOR_TOOL" -overwrite_original "$final_image" 1>/dev/null
+                        exiftool -creatortool="$CUSTOM_CREATOR_TOOL" -overwrite_original "$final_image" 1>/dev/null 2>&1 || debug_log "Warning: Failed to update metadata for $final_image"
                     else
                         debug_log "Error: exiftool not found. Skipping metadata update."
                     fi
@@ -391,7 +374,6 @@ wait_for_nfo_and_process() {
     local content_path="$1"
     local is_all_mode="$2"     # Pass "true" if running in "all" mode
     local skip_header="$3"     # New parameter to skip the header in batch mode
-    local background_wait="$4" # New parameter to control if we wait in background
 
     debug_log "Processing folder: $content_path"
 
@@ -406,21 +388,8 @@ wait_for_nfo_and_process() {
         return
     fi
 
-    # Si se solicita espera en segundo plano, ejecutamos el procesamiento en un subproceso
-    if [ "$background_wait" = "true" ]; then
-        (
-            debug_log "Starting background wait process for $content_path"
-            _process_content "$content_path" "$is_all_mode" "$skip_header"
-            debug_log "Background wait process completed for $content_path"
-        ) &
-        local bg_pid=$!
-        debug_log "Started background process $bg_pid for $content_path"
-        CHILD_PIDS+=($bg_pid)
-        return
-    else
-        # Procesamiento normal si no se solicita en segundo plano
-        _process_content "$content_path" "$is_all_mode" "$skip_header"
-    fi
+    # Procesamiento directo sin espera en segundo plano
+    _process_content "$content_path" "$is_all_mode" "$skip_header"
 }
 
 # Función interna que realiza el verdadero procesamiento después de esperar los archivos
@@ -459,12 +428,12 @@ _process_content() {
 
         if [ "$is_all_mode" == "true" ]; then
             # Process folder.jpg and backdrop.jpg if they exist, without waiting
-            [ -f "$content_path/folder.jpg" ] && add_overlay "$content_path/folder.jpg" "folder" || debug_log "Skipping: folder.jpg not found in $content_path."
-            [ -f "$content_path/backdrop.jpg" ] && add_overlay "$content_path/backdrop.jpg" "backdrop" || debug_log "Skipping: backdrop.jpg not found in $content_path."
+            [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ] && add_overlay "$content_path/folder.jpg" "folder" || debug_log "Skipping: folder.jpg not found or empty in $content_path."
+            [ -f "$content_path/backdrop.jpg" ] && [ -s "$content_path/backdrop.jpg" ] && add_overlay "$content_path/backdrop.jpg" "backdrop" || debug_log "Skipping: backdrop.jpg not found or empty in $content_path."
         else
             # Wait for folder.jpg and backdrop.jpg with a timeout
             elapsed=0
-            debug_log "Waiting for image files in background for $content_path..."
+            debug_log "Waiting for image files for $content_path..."
             while [ ! -f "$content_path/folder.jpg" ] || [ ! -f "$content_path/backdrop.jpg" ]; do
                 sleep 1
                 elapsed=$((elapsed + 1))
@@ -474,16 +443,16 @@ _process_content() {
                 fi
             done
 
-            if [ -f "$content_path/folder.jpg" ]; then
+            if [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ]; then
                 add_overlay "$content_path/folder.jpg" "folder"
             else
-                debug_log "Error: folder.jpg not found in $content_path."
+                debug_log "Error: folder.jpg not found or is empty in $content_path."
             fi
 
-            if [ -f "$content_path/backdrop.jpg" ]; then
+            if [ -f "$content_path/backdrop.jpg" ] && [ -s "$content_path/backdrop.jpg" ]; then
                 add_overlay "$content_path/backdrop.jpg" "backdrop"
             else
-                debug_log "Error: backdrop.jpg not found in $content_path."
+                debug_log "Error: backdrop.jpg not found or is empty in $content_path."
             fi
         fi
     elif [ -f "$content_path/tvshow.nfo" ]; then
@@ -554,11 +523,6 @@ _process_content() {
 
                     log "    ◦ ${series_name}-S${season_num}E${episode_num} ($episode_count/$total_episodes)"
 
-                    # Report progress to parent if fifo exists
-                    if [ -p "/tmp/series_status_$$" ]; then
-                        echo "S${season_num}E${episode_num} ($episode_count/$total_episodes)" >"/tmp/series_status_$$"
-                    fi
-
                     get_languages "$mkv_file"
                     add_overlay "$thumb_file" "thumb"
                 else
@@ -609,24 +573,9 @@ _process_content() {
 # Function to process all movies or series in a base directory
 process_all() {
     log "Processing all movies in $MOVIES_DIR and all series in $SERIES_DIR..."
-    debug_log "Starting batch processing with max $MAX_PARALLEL_JOBS parallel jobs..."
+    debug_log "Starting batch processing..."
 
-    # Función para controlar procesos paralelos
-    process_item() {
-        local dir="$1"
-        local is_dir_valid="$2"
-        local skip_header="$3"
-
-        if [ "$is_dir_valid" == "true" ]; then
-            wait_for_nfo_and_process "$dir" "true" "$skip_header" "true"
-        fi
-    }
-
-    # Crear array para almacenar PIDs
-    pids=()
-    job_count=0
-
-    # Procesar películas en paralelo
+    # Procesar películas secuencialmente
     log "Collecting movie directories to process..."
     movie_dirs=()
     for dir in "$MOVIES_DIR"/*/; do
@@ -637,41 +586,15 @@ process_all() {
 
     total_movies=${#movie_dirs[@]}
     log "Found $total_movies movie directories to process"
-
+    
+    movie_count=0
     for dir in "${movie_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    new_pids+=($pid)
-                fi
-            done
-            pids=("${new_pids[@]}")
-        fi
-
-        log "Processing MOVIE $((job_count + 1))/$total_movies: $(basename "$dir")"
-        # Lanzar proceso en segundo plano
-        process_item "$dir" "true" "true" &
-        pid=$!
-        pids+=($pid)
-        CHILD_PIDS+=($pid) # Add to global tracking array
-        job_count=$((job_count + 1))
+        movie_count=$((movie_count + 1))
+        log "Processing MOVIE $movie_count/$total_movies: $(basename "$dir")"
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
 
-    # Esperar a que terminen todos los procesos de películas
-    for pid in "${pids[@]}"; do
-        wait $pid
-    done
-
-    # Resetear contadores para series
-    pids=()
-    job_count=0
-
-    # Procesar series en paralelo
+    # Procesar series secuencialmente
     log "Collecting TV series directories to process..."
     series_dirs=()
     for dir in "$SERIES_DIR"/*/; do
@@ -682,109 +605,20 @@ process_all() {
 
     total_series=${#series_dirs[@]}
     log "Found $total_series series directories to process"
-
-    # Track active series for dynamic display
-    declare -A active_series
-    declare -A series_progress
-    status_lines=0
-
+    
+    series_count=0
     for dir in "${series_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    active_pid=true
-                    new_pids+=($pid)
-                else
-                    # Remove completed PID from active_series
-                    for series_name in "${!active_series[@]}"; do
-                        if [ "${active_series[$series_name]}" = "$pid" ]; then
-                            unset active_series["$series_name"]
-                            break
-                        fi
-                    done
-                fi
-            done
-            pids=("${new_pids[@]}")
-
-            # Update status display
-            if [ ${#active_series[@]} -gt 0 ]; then
-                # Clear previous status lines
-                if [ $status_lines -gt 0 ]; then
-                    clear_status_lines $status_lines
-                fi
-
-                # Print current status
-                status_lines=0
-                for series_name in "${!active_series[@]}"; do
-                    update_status "  ↳ Processing $series_name: ${series_progress[$series_name]:-Starting...}" "true"
-                    status_lines=$((status_lines + 1))
-                done
-                update_status "Progress: $job_count/$total_series series" "true"
-                status_lines=$((status_lines + 1))
-            fi
-        fi
-
+        series_count=$((series_count + 1))
         series_name=$(basename "$dir")
+        
         if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-            update_status "Processing SERIES $((job_count + 1))/$total_series: $series_name" "true"
+            update_status "Processing SERIES $series_count/$total_series: $series_name" "true"
         else
-            log "Processing SERIES $((job_count + 1))/$total_series: $series_name"
+            log "Processing SERIES $series_count/$total_series: $series_name"
         fi
-
-        # Only create FIFO if we have interactive terminal support
-        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-            # Create a fifo to receive status updates from child process
-            fifo="/tmp/series_status_$$_$job_count"
-            mkfifo "$fifo" 2>/dev/null
-
-            # Launch background process with status reporting to parent
-            (
-                wait_for_nfo_and_process "$dir" "true" "true" "true"
-                echo "DONE" >"$fifo" 2>/dev/null || true # More robust
-            ) &
-
-            pid=$!
-            pids+=($pid)
-            CHILD_PIDS+=($pid)
-            active_series["$series_name"]=$pid
-
-            # Start a background process to monitor status updates
-            (
-                while read -r status <"$fifo" 2>/dev/null; do
-                    if [ "$status" = "DONE" ]; then
-                        break
-                    fi
-                    # Forward status to parent for display
-                    series_progress["$series_name"]="$status"
-                done
-
-                # Ensure FIFO gets cleaned up
-                rm -f "$fifo" 2>/dev/null || true
-            ) &
-        else
-            # Simple execution without status updates for non-interactive terminals
-            wait_for_nfo_and_process "$dir" "true" "true" &
-            pid=$!
-            pids+=($pid)
-            CHILD_PIDS+=($pid)
-        fi
-
-        job_count=$((job_count + 1))
+        
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
-
-    # Wait for all series processes to complete
-    log "Waiting for all processes to complete..."
-    for pid in "${pids[@]}"; do
-        wait $pid
-    done
-
-    # Clean up any remaining FIFOs
-    cleanup_fifos
 
     debug_log "Finished batch processing."
 }
@@ -803,7 +637,7 @@ process_radarr_sonarr_event() {
 
         if [ -n "$radarr_movie_path" ]; then
             log "Processing MOVIE: $(basename "$radarr_movie_path")"
-            wait_for_nfo_and_process "$radarr_movie_path" "false" "false" "true"
+            wait_for_nfo_and_process "$radarr_movie_path" "false" "false"
         else
             log "Error: radarr_movie_path is empty"
         fi
@@ -814,7 +648,7 @@ process_radarr_sonarr_event() {
 
         if [ -n "$sonarr_series_path" ]; then
             log "Processing SERIES: $(basename "$sonarr_series_path")"
-            wait_for_nfo_and_process "$sonarr_series_path" "false" "false" "true"
+            wait_for_nfo_and_process "$sonarr_series_path" "false" "false"
         else
             log "Error: sonarr_series_path is empty"
         fi
@@ -859,17 +693,13 @@ if [ "$MODE" == "all" ]; then
     cleanup_jellyfin_cache
 elif [ "$MODE" == "movies" ]; then
     log "Processing all movies in $MOVIES_DIR..."
-    debug_log "Starting movies batch processing with max $MAX_PARALLEL_JOBS parallel jobs..."
-
-    # Crear array para almacenar PIDs
-    pids=()
-    job_count=0
+    debug_log "Starting movies batch processing..."
 
     # Recopilar todas las carpetas de películas
     log "Collecting movie directories to process..."
     movie_dirs=()
     for dir in "$MOVIES_DIR"/*/; do
-        if [ -d "$dir" ]; then
+        if [ -d "$dir" ];then
             movie_dirs+=("$dir")
         fi
     done
@@ -877,37 +707,18 @@ elif [ "$MODE" == "movies" ]; then
     total_movies=${#movie_dirs[@]}
     log "Found $total_movies movie directories to process"
 
-    # Procesar películas en paralelo
+    # Procesar películas secuencialmente
+    movie_count=0
     for dir in "${movie_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    new_pids+=($pid)
-                fi
-            done
-            pids=("${new_pids[@]}")
-        fi
-    done
-
-    # Esperar a que terminen todos los procesos
-    log "Waiting for all movie processes to complete..."
-    for pid in "${pids[@]}"; do
-        wait $pid
+        movie_count=$((movie_count + 1))
+        log "Processing MOVIE $movie_count/$total_movies: $(basename "$dir")"
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
 
     cleanup_jellyfin_cache
 elif [ "$MODE" == "tvshows" ]; then
     log "Processing all TV series in $SERIES_DIR..."
-    debug_log "Starting TV series batch processing with max $MAX_PARALLEL_JOBS parallel jobs..."
-
-    # Crear array para almacenar PIDs
-    pids=()
-    job_count=0
+    debug_log "Starting TV series batch processing..."
 
     # Recopilar todas las carpetas de series
     log "Collecting TV series directories to process..."
@@ -921,109 +732,20 @@ elif [ "$MODE" == "tvshows" ]; then
     total_series=${#series_dirs[@]}
     log "Found $total_series series directories to process"
 
-    # Track active series for dynamic display
-    declare -A active_series
-    declare -A series_progress
-    status_lines=0
-
-    # Procesar series en paralelo
+    # Procesar series secuencialmente
+    series_count=0
     for dir in "${series_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    active_pid=true
-                    new_pids+=($pid)
-                else
-                    # Remove completed PID from active_series
-                    for series_name in "${!active_series[@]}"; do
-                        if [ "${active_series[$series_name]}" = "$pid" ]; then
-                            unset active_series["$series_name"]
-                            break
-                        fi
-                    done
-                fi
-            done
-            pids=("${new_pids[@]}")
-
-            # Update status display
-            if [ ${#active_series[@]} -gt 0 ]; then
-                # Clear previous status lines
-                if [ $status_lines -gt 0 ]; then
-                    clear_status_lines $status_lines
-                fi
-
-                # Print current status
-                status_lines=0
-                for series_name in "${!active_series[@]}"; do
-                    update_status "  ↳ Processing $series_name: ${series_progress[$series_name]:-Starting...}" "true"
-                    status_lines=$((status_lines + 1))
-                done
-                update_status "Progress: $job_count/$total_series series" "true"
-                status_lines=$((status_lines + 1))
-            fi
-        fi
-
+        series_count=$((series_count + 1))
         series_name=$(basename "$dir")
+        
         if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-            update_status "Processing SERIES $((job_count + 1))/$total_series: $series_name" "true"
+            update_status "Processing SERIES $series_count/$total_series: $series_name" "true"
         else
-            log "Processing SERIES $((job_count + 1))/$total_series: $series_name"
+            log "Processing SERIES $series_count/$total_series: $series_name"
         fi
-
-        # Only create FIFO if we have interactive terminal support
-        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-            # Create a fifo to receive status updates from child process
-            fifo="/tmp/series_status_$$_$job_count"
-            mkfifo "$fifo" 2>/dev/null
-
-            # Launch background process with status reporting to parent
-            (
-                wait_for_nfo_and_process "$dir" "true" "true" "true"
-                echo "DONE" >"$fifo" 2>/dev/null || true # More robust
-            ) &
-
-            pid=$!
-            pids+=($pid)
-            CHILD_PIDS+=($pid)
-            active_series["$series_name"]=$pid
-
-            # Start a background process to monitor status updates
-            (
-                while read -r status <"$fifo" 2>/dev/null; do
-                    if [ "$status" = "DONE" ]; then
-                        break
-                    fi
-                    # Forward status to parent for display
-                    series_progress["$series_name"]="$status"
-                done
-
-                # Ensure FIFO gets cleaned up
-                rm -f "$fifo" 2>/dev/null || true
-            ) &
-        else
-            # Simple execution without status updates for non-interactive terminals
-            wait_for_nfo_and_process "$dir" "true" "true" &
-            pid=$!
-            pids+=($pid)
-            CHILD_PIDS+=($pid)
-        fi
-
-        job_count=$((job_count + 1))
+        
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
-
-    # Wait for all series processes to complete
-    log "Waiting for all processes to complete..."
-    for pid in "${pids[@]}"; do
-        wait $pid
-    done
-
-    # Clean up any remaining FIFOs
-    cleanup_fifos
 
     cleanup_jellyfin_cache
 else
