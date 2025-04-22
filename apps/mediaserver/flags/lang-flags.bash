@@ -149,9 +149,9 @@ cleanup_fifos() {
     rm -f /tmp/series_status_$$_* 2>/dev/null
 }
 
-# Set trap to catch interrupts and call cleanup function 
-# Eliminamos EXIT del trap para que no se ejecute la función cleanup al salir normalmente
-trap cleanup INT TERM HUP
+# # Set trap to catch interrupts and call cleanup function 
+# # Eliminamos EXIT del trap para que no se ejecute la función cleanup al salir normalmente
+# trap cleanup INT TERM HUP
 
 # Parse arguments
 while [[ "$#" -gt 0 ]]; do
@@ -231,7 +231,7 @@ install_deps() {
         {
         echo "#!/bin/bash"
         echo "apk update && apk add --no-cache ${packages[*]}"
-        echo "# Detectar automáticamente qué procesar basado en configuración de Radarr/Sonarr"
+        echo "sleep 300" # Wait for 5 minutes to ensure all dependencies are installed
         echo "if ls -f /config/radarr* >/dev/null 2>&1; then"
         echo "  bash /flags/lang-flags.sh -j 1 -f movies"
         echo "elif ls -f /config/sonarr* >/dev/null 2>&1; then"
