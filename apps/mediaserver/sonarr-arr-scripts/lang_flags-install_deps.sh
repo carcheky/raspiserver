@@ -1,6 +1,7 @@
 #!/bin/bash
 apk update && apk add --no-cache perl-image-exiftool jq imagemagick ffmpeg inkscape rsvg-convert exiftool
 (
+  set -x
   sleep 120
   if ls -f /config/radarr* >/dev/null 2>&1; then
     echo "Running lang-flags for Radarr"
