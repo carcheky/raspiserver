@@ -1,5 +1,35 @@
 # CHANGELOG
 
+# [6.41.0](https://gitlab.com/carcheky/raspiserver/compare/v6.40.2...v6.41.0) (2025-04-22)
+
+
+### Bug Fixes
+
+* configs ([ec4b71a](https://gitlab.com/carcheky/raspiserver/commit/ec4b71a475e703a6bb13de202b93c3174484e363))
+* ensure proper script termination by adding exit command in scripts_init.bash ([d7e767f](https://gitlab.com/carcheky/raspiserver/commit/d7e767f64454098a15f36d5ddc7db41516ba8d3d))
+* update z-lang-overlay script for improved directory handling and cleanup ([c03f33a](https://gitlab.com/carcheky/raspiserver/commit/c03f33a4555fef5e71c3c87175e625bde88c21a8))
+
+
+### Features
+
+* add flags directory to docker-compose and update lang-flags script for improved dependency installation ([5cc051f](https://gitlab.com/carcheky/raspiserver/commit/5cc051ff6a535e2501f5f9c3afd0cdce4fc699ef))
+* add Jellyfin configuration volume and enhance lang-flags script with error handling and cache cleanup ([86bb836](https://gitlab.com/carcheky/raspiserver/commit/86bb8367ae76e5acebd6e4b3968e1afc77333cc1))
+* add jellyfin configuration volume to radarr service in docker-compose ([f164995](https://gitlab.com/carcheky/raspiserver/commit/f1649958da8f7a68e20ab437da9c1fdc804b7d2d))
+* add lang-flags script and dependency installation for flag overlays ([cfcbc64](https://gitlab.com/carcheky/raspiserver/commit/cfcbc64bc1afd107efc138816d6154302241c159))
+* add support for processing movies and tv shows in lang-flags script ([4c0b268](https://gitlab.com/carcheky/raspiserver/commit/4c0b2689e908a52923c74aae0fa9cc62fc12dd81))
+* add verbose mode to lang-flags script for enhanced debugging ([b294110](https://gitlab.com/carcheky/raspiserver/commit/b294110258617218a27a14d1fee1bd6f6ab5ce7f))
+* add z-lang-overlay script for flag overlay processing and dependency management ([682b347](https://gitlab.com/carcheky/raspiserver/commit/682b347c29ac70757d20bef403ce5f06c60b5a0a))
+* agregar soporte para omitir encabezados en el procesamiento por lotes y mejorar la salida de registro ([cc3f206](https://gitlab.com/carcheky/raspiserver/commit/cc3f206360c2a1c2b70a2d51ef003a307bae2ae1))
+* agregar soporte para procesamiento paralelo de películas y series en lang-flags.bash ([43581af](https://gitlab.com/carcheky/raspiserver/commit/43581afb58f8e052563277b64762a4c1f1822d5a))
+* enable all scripts and update configuration settings in extended.conf ([fea53e6](https://gitlab.com/carcheky/raspiserver/commit/fea53e62a62a324e9b0388630b7c149178edb7ff))
+* enable metadata provider and custom scripts in Sonarr extended configuration ([527a9a8](https://gitlab.com/carcheky/raspiserver/commit/527a9a8fe766bb192d41876b34bb90f315d55036))
+* enhance lang-flags script with verbose mode and improved argument parsing ([4cf5e98](https://gitlab.com/carcheky/raspiserver/commit/4cf5e98b4354a2c71be9ec55adfcfab8f803b7da))
+* expand documentation in lang-flags.bash with additional requirements and command line arguments ([4ce0267](https://gitlab.com/carcheky/raspiserver/commit/4ce0267b90f6663e632507f2207e522b31f7ff3b))
+* implement z-lang-overlay script for flag overlay processing and language extraction ([87b6f92](https://gitlab.com/carcheky/raspiserver/commit/87b6f9242782a1d4382c0af86dbd23f72a897080))
+* update extrasType to 'trailers' in extended.conf for improved video selection ([1dd9603](https://gitlab.com/carcheky/raspiserver/commit/1dd9603a0e7938506761579314893a4e870ddf27))
+* update hardware acceleration type to 'qsv' in encoding configuration ([e1f1eab](https://gitlab.com/carcheky/raspiserver/commit/e1f1eab3ac7ec5ebe88e4f81b00fe4c8e9fb21ea))
+* update jellyfin configuration and enhance z-lang-overlay script for dependency management ([ae1357d](https://gitlab.com/carcheky/raspiserver/commit/ae1357d487f537fb42d7c0e516cf40d7d6533a1b))
+
 ## [6.40.2](https://gitlab.com/carcheky/raspiserver/compare/v6.40.1...v6.40.2) (2025-04-16)
 
 
