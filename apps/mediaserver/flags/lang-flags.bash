@@ -55,59 +55,218 @@
 # ========================
 # Configurable Variables
 # ========================
+scriptName="Lang-Flags"
+scriptVersion="1.0"
 DEBUG=false # Default debug mode is off
 
+# Configuración para la gestión de salida según Sonarr/Radarr
+# stdout -> Debug, stderr -> Info
+# Función para manejar salidas según Sonarr/Radarr
+log() {
+    m_time=$(date "+%F %T")
+    echo $m_time" :: $scriptName :: $scriptVersion :: "$1
+    echo $m_time" :: $scriptName :: $scriptVersion :: "$1 >>"/config/logs/$logFileName"
+}
+
+# Debug log envía a stdout (nivel Debug en Sonarr/Radarr)
+debug_log() {
+    $DEBUG && log "DEBUG :: $1"
+}
+
+# Error log envía a stderr (nivel Info en Sonarr/Radarr)
+error_log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: ERROR :: $1" >&2
+    echo "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: ERROR :: $1" >>"/config/logs/$logFileName"
+}
+
+# Configuración del archivo de log
+logfileSetup() {
+    logFileName="$scriptName-$(date +"%Y_%m_%d_%I_%M_%p").txt"
+
+    # Borrar archivos de log más antiguos que 5 días
+    find "/config/logs" -type f -iname "$scriptName-*.txt" -mtime +5 -delete 2>/dev/null || true
+
+    if [ ! -f "/config/logs/$logFileName" ]; then
+        mkdir -p "/config/logs" 2>/dev/null || true
+        echo "" >"/config/logs/$logFileName"
+        chmod 666 "/config/logs/$logFileName" 2>/dev/null || true
+    fi
+}
+
+# Verificar eventos de prueba inmediatamente al inicio del script, antes de cualquier otra operación
+logfileSetup
+# Handle event type test at beginning of script, with proper logging message
+if [ "$radarr_eventtype" == "Test" ]; then
+    log "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: Tested Successfully"
+    exit 0
+fi
+if [ "$sonarr_eventtype" == "Test" ]; then
+    log "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: Tested Successfully"
+    exit 0
+fi
+
+# Check if we're running in an interactive terminal that supports ANSI escape sequences
+check_terminal_support() {
+    # Check if stdout is a terminal and if TERM is set to something that supports ANSI
+    if [ -t 1 ] && [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
+        # Try simple ANSI test
+        if echo -e "\033[1A" >/dev/null 2>&1; then
+            echo "true"
+            return
+        fi
+    fi
+    echo "false"
+}
+
+INTERACTIVE_TERMINAL=$(check_terminal_support)
+$DEBUG && debug_log "Interactive terminal with ANSI support: $INTERACTIVE_TERMINAL"
+
+# Function to handle script interruption and cleanup
+cleanup() {
+    log "Script interrupted. Cleaning up..."
+    log "All child processes terminated."
+    exit 1
+}
+
 # Parse arguments
+FORCE_UPDATE=false  # Variable global para forzar actualización
+
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -v|--verbose) DEBUG=true ;;
-        all) MODE="all" ;;
-        movies) MODE="movies" ;;
-        tvshows) MODE="tvshows" ;;
-        -j|--jobs) shift; MAX_PARALLEL_JOBS=$1 ;;
-        *) ;;
+    -v | --verbose) DEBUG=true ;;
+    -f | --force) FORCE_UPDATE=true ;;  # Nueva opción para forzar actualización
+    all) MODE="all" ;;
+    movies) MODE="movies" ;;
+    tvshows) MODE="tvshows" ;;
+    -j | --jobs)
+        shift
+        MAX_PARALLEL_JOBS=$1
+        ;;
+    *) ;;
     esac
     shift
 done
 
-# Si no se especifica, usar el número de núcleos disponibles menos 1 (mínimo 2)
+# Si no se especifica, usar un solo hilo por defecto
 if [ -z "$MAX_PARALLEL_JOBS" ]; then
-    CORES=$(nproc 2>/dev/null || echo 4)
-    MAX_PARALLEL_JOBS=$((CORES - 1))
-    [ "$MAX_PARALLEL_JOBS" -lt 2 ] && MAX_PARALLEL_JOBS=2
+    MAX_PARALLEL_JOBS=1
 fi
 
-CUSTOM_CREATOR_TOOL="carcheky"                     # Default to current date
-OVERLAY_DIR="/flags/4x3"                         # Directory containing overlay flag files
-flag_width=400                                   # Width of the flag overlay (updated to match z-lang-overlay)
-flag_height=300                                  # Height of the flag overlay (updated to match z-lang-overlay)
-poster_resize="2560x1440"                        # Resize dimensions for horizontal posters
-vertical_resize="1920x2880"                      # Resize dimensions for vertical posters
-TMP_DIR="/tmp/lang-flags"                        # Temporary directory for intermediate files
-MOVIES_DIR="/BibliotecaMultimedia/Peliculas"     # Directory containing movie folders
-SERIES_DIR="/BibliotecaMultimedia/Series"        # Directory containing series folders
-A_BORRAR_DIR="/BibliotecaMultimedia/se-borraran" # Directory for files to be deleted
+CUSTOM_CREATOR_TOOL="carcheky"
+OVERLAY_DIR="/flags/4x3"
+flag_width=400
+flag_height=300
+poster_resize="2560x1440"
+vertical_resize="1920x2880"
+TMP_DIR="/tmp/lang-flags"
+MOVIES_DIR="/BibliotecaMultimedia/Peliculas"
+SERIES_DIR="/BibliotecaMultimedia/Series"
+A_BORRAR_DIR="/BibliotecaMultimedia/se-borraran"
 
 # ========================
 # Functions
 # ========================
 
+# Function to update terminal display in place (if supported)
+update_status() {
+    local message="$1"
+    local is_new_line="$2"
+    if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+        # Clear the current line
+        echo -ne "\r\033[K"
+        # Print the message
+        echo -ne "$message"
+        if [ "$is_new_line" = "true" ]; then
+            # Add a newline if requested
+            echo ""
+        fi
+    else
+        # Fallback for non-interactive terminals
+        echo "$message"
+    fi
+}
+
 # Ensure the temporary directory exists
 install_deps() {
-    $DEBUG && echo "Script is running as user: $(whoami), group: $(id -gn)" >&2
-    local packages=("perl-image-exiftool" "jq" "imagemagick" "ffmpeg" "inkscape" "rsvg-convert" "exiftool")
+    debug_log "Script is running as user: $(whoami), group: $(id -gn)"
     local script_dir="/custom-cont-init.d"
     local script_file="$script_dir/lang_flags-install_deps.sh"
-
     mkdir -p "$script_dir"
 
     {
-        echo "#!/bin/bash"
-        echo "apk update && apk add --no-cache ${packages[*]}"
+        echo "#!/bin/bash
+apk update && apk add --no-cache perl-image-exiftool jq imagemagick ffmpeg inkscape rsvg-convert exiftool
+(
+  set -x
+  sleep 120
+  if ls -f /config/radarr* >/dev/null 2>&1; then
+    echo \"Running lang-flags for Radarr\"
+    bash /flags/lang-flags.sh -j 1 -f movies
+  elif ls -f /config/sonarr* >/dev/null 2>&1; then
+    echo \"Running lang-flags for Sonarr\"
+    bash /flags/lang-flags.sh -j 1 -f tvshows &
+  fi
+) &
+"
     } >"$script_file"
 
+    debug_log "Dependency installation script created at $script_file"
     chmod +x "$script_file"
-    $DEBUG && echo "Dependency installation script created at $script_file" >&2
+}
+
+# Function to check if a video file has already been processed
+is_video_processed() {
+    local video_file="$1"
+    
+    # Si FORCE_UPDATE está activo, siempre devolver falso para forzar reprocesamiento
+    if [ "$FORCE_UPDATE" = true ]; then
+        debug_log "Force update enabled, processing video: $video_file"
+        return 1
+    fi
+    
+    if [ ! -f "$video_file" ]; then
+        debug_log "Video file not found: $video_file"
+        return 1
+    fi
+    
+    # Check if the video has our custom flag metadata
+    local metadata=$(ffprobe -v quiet -show_entries format_tags=FLAGS_PROCESSED -of default=noprint_wrappers=1:nokey=1 "$video_file" 2>/dev/null)
+    
+    if [ "$metadata" == "$CUSTOM_CREATOR_TOOL" ]; then
+        debug_log "Video file already processed: $video_file"
+        return 0
+    fi
+    
+    return 1
+}
+
+# Function to mark a video file as processed
+mark_video_processed() {
+    local video_file="$1"
+    
+    if [ ! -f "$video_file" ]; then
+        debug_log "Video file not found: $video_file"
+        return 1
+    fi
+    
+    # Create a temporary file with metadata
+    local temp_file="${TMP_DIR}/$(basename "$video_file").meta"
+    echo ";FFMETADATA1
+FLAGS_PROCESSED=$CUSTOM_CREATOR_TOOL" > "$temp_file"
+    
+    # Apply metadata to the video file
+    ffmpeg -i "$video_file" -i "$temp_file" -map_metadata 1 -codec copy -y "${video_file}.new" 2>/dev/null
+    
+    if [ $? -eq 0 ]; then
+        mv "${video_file}.new" "$video_file"
+        rm -f "$temp_file"
+        debug_log "Video file marked as processed: $video_file"
+        return 0
+    else
+        rm -f "${video_file}.new" "$temp_file"
+        debug_log "Failed to mark video file as processed: $video_file"
+        return 1
+    fi
 }
 
 # Function to extract languages from the movie file using ffprobe
@@ -116,9 +275,10 @@ get_languages() {
     if [ -f "$video_file" ]; then
         mapfile -t langs < <(ffprobe "$video_file" -show_entries stream_tags=language -select_streams a -v 0 -of json | jq --raw-output '.streams[].tags.language // empty' | sort -u)
     else
-        $DEBUG && echo "Error: Video file $video_file not found." >&2
+        debug_log "Error: Video file $video_file not found."
         langs=()
     fi
+    
     declare -A map
     map=(
         ["spa"]="es.svg"
@@ -150,127 +310,176 @@ get_languages() {
 
 # Function to apply the overlay on the image (thumb or folder.jpg)
 add_overlay() {
-    $DEBUG && echo "Starting add_overlay for image: $1, type: $2" >&2
+    debug_log "Starting add_overlay for image: $1, type: $2"
 
     local final_image="$1"
     local type="$2"
+    local video_file="$3"  # New parameter to receive associated video file
+
+    # Verificar si el archivo existe y no está vacío
+    if [ ! -s "$final_image" ]; then
+        log "Error: File is empty or does not exist: $final_image. Skipping."
+        return 1
+    fi
+
+    # Check if the associated video has been processed
+    if [ -n "$video_file" ] && is_video_processed "$video_file"; then
+        debug_log "Video already processed. Skipping overlay for $final_image"
+        return 0
+    fi
 
     # Generate creatortool using exiftool
-    creatortool=$(exiftool -f -s3 -"creatortool" "$final_image")
+    creatortool=$(exiftool -f -s3 -"creatortool" "$final_image" 2>&1 || echo "")
     if [ -z "$creatortool" ]; then
-        $DEBUG && echo "Warning: creatortool has no value for image: $final_image" >&2
+        debug_log "Warning: creatortool has no value for image: $final_image"
     fi
-    $DEBUG && echo "Debug: CUSTOM_CREATOR_TOOL is set to: $CUSTOM_CREATOR_TOOL" >&2
-    $DEBUG && echo "Debug: creatortool is set to: $creatortool" >&2
+    debug_log "Debug: CUSTOM_CREATOR_TOOL is set to: $CUSTOM_CREATOR_TOOL"
+    debug_log "Debug: creatortool is set to: $creatortool"
 
-    $DEBUG && echo "Checking if creatortool matches CUSTOM_CREATOR_TOOL..." >&2
+    debug_log "Checking if creatortool matches CUSTOM_CREATOR_TOOL..."
     if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
-        $DEBUG && echo "creatortool does not match CUSTOM_CREATOR_TOOL. Proceeding with overlay application." >&2
+        debug_log "creatortool does not match CUSTOM_CREATOR_TOOL. Proceeding with overlay application."
         offset_x=0
         offset_y=0
         if [ -f "$final_image" ]; then
-            $DEBUG && echo "Processing image: $final_image" >&2
+            debug_log "Processing image: $final_image"
 
-            dimensions=$(identify -format "%wx%h" "$final_image" 2>/dev/null)
-            if [ -z "$dimensions" ]; then
-                $DEBUG && echo "Error: Unable to retrieve dimensions for $final_image. Skipping." >&2
-                return
+            # Verificar que el archivo tenga un tamaño mínimo para ser procesado
+            local file_size=$(stat -c%s "$final_image" 2>/dev/null || echo "0")
+            if [ "$file_size" -lt 1000 ]; then
+                log "Error: File size too small ($file_size bytes) for $final_image. Skipping."
+                return 1
             fi
 
+            # Capturar la salida de identify para mostrar posibles errores
+            dimensions=$(identify -format "%wx%h" "$final_image" 2>&1)
+            if [[ $dimensions == *"identify:"* ]]; then
+                log "Error processing image $final_image: $dimensions"
+                return 1
+            elif [ -z "$dimensions" ]; then
+                log "Error: Unable to retrieve dimensions for $final_image. Skipping."
+                return 1
+            fi
             width=$(echo $dimensions | cut -d 'x' -f 1)
             height=$(echo $dimensions | cut -d 'x' -f 2)
 
             if ! [[ "$width" =~ ^[0-9]+$ ]] || ! [[ "$height" =~ ^[0-9]+$ ]]; then
-                $DEBUG && echo "Error: Invalid dimensions ($dimensions) for $final_image. Skipping." >&2
-                return
+                log "Error: Invalid dimensions ($dimensions) for $final_image. Skipping."
+                return 1
             fi
-
-            $DEBUG && echo "Image dimensions: ${width}x${height}" >&2
+            debug_log "Image dimensions: ${width}x${height}"
 
             # Check if the image is horizontal or vertical
             if [ "$width" -gt "$height" ]; then
-                $DEBUG && echo "Image is horizontal." >&2
+                debug_log "Image is horizontal."
                 gravity="SouthEast"
                 resize=$poster_resize
                 offset_x=100
             else
-                $DEBUG && echo "Image is vertical." >&2
+                debug_log "Image is vertical."
                 gravity="SouthWest"
                 resize=$vertical_resize
             fi
 
             # Check if it is a thumb or folder.jpg
             if [ "$type" == "thumb" ]; then
-                $DEBUG && echo "Image type is thumb." >&2
+                debug_log "Image type is thumb."
                 gravity="SouthWest"
                 offset_x=150
             fi
 
             # Resize the poster image (without cropping)
-            magick "$final_image" -resize "$resize" "$final_image"
+            resize_output=$(magick "$final_image" -resize "$resize" "$final_image" 2>&1)
+            if [ $? -ne 0 ]; then
+                log "Error resizing image $final_image: $resize_output"
+                return 1
+            fi
 
             for flag_file in "${flag_files[@]}"; do
                 if [ -f "$OVERLAY_DIR/$flag_file" ]; then
-                    $DEBUG && echo "Adding flag: $flag_file to image: $final_image" >&2
+                    debug_log "Adding flag: $flag_file to image: $final_image"
 
-                    magick "$final_image" \
+                    overlay_output=$(magick "$final_image" \
                         \( -density $flag_width "$OVERLAY_DIR/$flag_file" -resize "${flag_width}x${flag_height}" \) \
                         -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
-                        "$final_image"
-
+                        "$final_image" 2>&1)
+                    if [ $? -ne 0 ]; then
+                        log "Error adding flag $flag_file to $final_image: $overlay_output"
+                        continue
+                    fi
                     [ -f folder.jpg_exiftool_tmp ] && rm folder.jpg_exiftool_tmp -f
-                    $DEBUG && echo "-> Added $flag_file to $(pwd)/$final_image" >&2
+                    debug_log "-> Added $flag_file to $(pwd)/$final_image"
 
                     if command -v exiftool >/dev/null 2>&1; then
-                        exiftool -creatortool="$CUSTOM_CREATOR_TOOL" -overwrite_original "$final_image" 1>/dev/null
+                        exiftool_output=$(exiftool -creatortool="$CUSTOM_CREATOR_TOOL" -overwrite_original "$final_image" 2>&1)
+                        if [ $? -ne 0 ]; then
+                            debug_log "Warning: Failed to update metadata for $final_image: $exiftool_output"
+                        fi
                     else
-                        $DEBUG && echo "Error: exiftool not found. Skipping metadata update." >&2
+                        debug_log "Error: exiftool not found. Skipping metadata update."
                     fi
-
                     if [[ "$resize" == "$poster_resize" ]]; then
                         offset_x=$((offset_x + flag_width))
                     else
                         offset_y=$((offset_y + flag_height))
                     fi
                 else
-                    $DEBUG && echo "Flag file $flag_file not found in $OVERLAY_DIR." >&2
+                    debug_log "Flag file $flag_file not found in $OVERLAY_DIR."
                 fi
             done
         else
-            $DEBUG && echo "Image file $final_image not found." >&2
+            log "Image file $final_image not found."
         fi
     else
-        $DEBUG && echo "creatortool matches CUSTOM_CREATOR_TOOL. Skipping overlay application." >&2
+        debug_log "creatortool matches CUSTOM_CREATOR_TOOL. Skipping overlay application."
     fi
-    $DEBUG && echo "Finished add_overlay for image: $1, type: $2" >&2
+
+    # Mark the video as processed after successfully modifying the image
+    if [ -n "$video_file" ]; then
+        mark_video_processed "$video_file"
+    fi
+
+    debug_log "Finished add_overlay for image: $1, type: $2"
 }
 
 # Function to wait for nfo and process the image
 wait_for_nfo_and_process() {
     local content_path="$1"
-    local is_all_mode="$2" # Pass "true" if running in "all" mode
-    local skip_header="$3" # New parameter to skip the header in batch mode
+    local is_all_mode="$2"     # Pass "true" if running in "all" mode
+    local skip_header="$3"     # New parameter to skip the header in batch mode
 
-    $DEBUG && echo "Processing folder: $content_path" >&2
-
-    $DEBUG && echo "Checking for movie.nfo or tvshow.nfo in $content_path..." >&2
+    debug_log "Processing folder: $content_path"
+    debug_log "Checking for movie.nfo or tvshow.nfo in $content_path..."
 
     # Check if there are no .mkv files in the folder
-    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q . && \
-       ! find "$content_path" -mindepth 2 -type f -name '*.mkv' | grep -q .; then
-        echo "WARNING: No .mkv file found in $content_path. Moving to $A_BORRAR_DIR." >&2
+    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q . &&
+        ! find "$content_path" -mindepth 2 -type f -name '*.mkv' | grep -q .; then
+        log "WARNING: No .mkv file found in $content_path. Moving to $A_BORRAR_DIR."
         mkdir -p "$A_BORRAR_DIR"
         mv "$content_path" "$A_BORRAR_DIR/"
         return
     fi
 
+    # Procesamiento directo sin espera en segundo plano
+    _process_content "$content_path" "$is_all_mode" "$skip_header"
+}
+
+# Función interna que realiza el verdadero procesamiento después de esperar los archivos
+_process_content() {
+    local content_path="$1"
+    local is_all_mode="$2"
+    local skip_header="$3"
+
     local timeout=300 # 5 minutes in seconds
     local elapsed=0
+
+    # Esperar por NFO files
+    debug_log "Waiting for NFO files in $content_path..."
     while [ ! -f "$content_path/movie.nfo" ] && [ ! -f "$content_path/tvshow.nfo" ]; do
         sleep 1
         elapsed=$((elapsed + 1))
         if [ "$elapsed" -ge "$timeout" ]; then
-            $DEBUG && echo "Timeout reached while waiting for .nfo files in $content_path." >&2
+            debug_log "Timeout reached while waiting for .nfo files in $content_path."
             return
         fi
     done
@@ -278,12 +487,12 @@ wait_for_nfo_and_process() {
     if [ -f "$content_path/movie.nfo" ]; then
         # Only print the header if not already printed in batch mode
         if [ "$skip_header" != "true" ]; then
-            echo "Processing MOVIE: $(basename "$content_path")" >&2
+            log "Processing MOVIE: $(basename "$content_path")"
         fi
 
         local mkv_file="${radarr_moviefile_path:-$(find "$content_path" -maxdepth 1 -type f -name '*.mkv' | head -n 1)}"
         if [ -z "$mkv_file" ] || [ ! -f "$mkv_file" ]; then
-            $DEBUG && echo "Error: No valid .mkv file found for the movie in $content_path." >&2
+            debug_log "Error: No valid .mkv file found for the movie in $content_path."
             return
         fi
 
@@ -291,37 +500,37 @@ wait_for_nfo_and_process() {
 
         if [ "$is_all_mode" == "true" ]; then
             # Process folder.jpg and backdrop.jpg if they exist, without waiting
-            [ -f "$content_path/folder.jpg" ] && add_overlay "$content_path/folder.jpg" "folder" || $DEBUG && echo "Skipping: folder.jpg not found in $content_path." >&2
-            [ -f "$content_path/backdrop.jpg" ] && add_overlay "$content_path/backdrop.jpg" "backdrop" || $DEBUG && echo "Skipping: backdrop.jpg not found in $content_path." >&2
+            [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ] && add_overlay "$content_path/folder.jpg" "folder" "$mkv_file" || debug_log "Skipping: folder.jpg not found or empty in $content_path."
+            [ -f "$content_path/backdrop.jpg" ] && [ -s "$content_path/backdrop.jpg" ] && add_overlay "$content_path/backdrop.jpg" "backdrop" "$mkv_file" || debug_log "Skipping: backdrop.jpg not found or empty in $content_path."
         else
             # Wait for folder.jpg and backdrop.jpg with a timeout
             elapsed=0
+            debug_log "Waiting for image files for $content_path..."
             while [ ! -f "$content_path/folder.jpg" ] || [ ! -f "$content_path/backdrop.jpg" ]; do
-                $DEBUG && echo "Waiting for folder.jpg and backdrop.jpg in $content_path..." >&2
                 sleep 1
                 elapsed=$((elapsed + 1))
                 if [ "$elapsed" -ge "$timeout" ]; then
-                    $DEBUG && echo "Timeout reached while waiting for folder.jpg or backdrop.jpg in $content_path." >&2
+                    debug_log "Timeout reached while waiting for folder.jpg or backdrop.jpg in $content_path."
                     return
                 fi
             done
 
-            if [ -f "$content_path/folder.jpg" ]; then
-                add_overlay "$content_path/folder.jpg" "folder"
+            if [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ]; then
+                add_overlay "$content_path/folder.jpg" "folder" "$mkv_file"
             else
-                $DEBUG && echo "Error: folder.jpg not found in $content_path." >&2
+                debug_log "Error: folder.jpg not found or is empty in $content_path."
             fi
 
-            if [ -f "$content_path/backdrop.jpg" ]; then
-                add_overlay "$content_path/backdrop.jpg" "backdrop"
+            if [ -f "$content_path/backdrop.jpg" ] && [ -s "$content_path/backdrop.jpg" ]; then
+                add_overlay "$content_path/backdrop.jpg" "backdrop" "$mkv_file"
             else
-                $DEBUG && echo "Error: backdrop.jpg not found in $content_path." >&2
+                debug_log "Error: backdrop.jpg not found or is empty in $content_path."
             fi
         fi
     elif [ -f "$content_path/tvshow.nfo" ]; then
         # Only print the header if not already printed in batch mode
         if [ "$skip_header" != "true" ]; then
-            echo "Processing SERIES: $(basename "$content_path")" >&2
+            log "Processing SERIES: $(basename "$content_path")"
         fi
 
         # Process series main images (folder.jpg and backdrop.jpg)
@@ -330,13 +539,12 @@ wait_for_nfo_and_process() {
             local any_mkv_file=$(find "$content_path" -type f -name "*.mkv" | head -n 1)
             if [ -n "$any_mkv_file" ] && [ -f "$any_mkv_file" ]; then
                 get_languages "$any_mkv_file"
-                add_overlay "$content_path/folder.jpg" "folder"
-
+                add_overlay "$content_path/folder.jpg" "folder" "$any_mkv_file"
                 if [ -f "$content_path/backdrop.jpg" ]; then
-                    add_overlay "$content_path/backdrop.jpg" "backdrop"
+                    add_overlay "$content_path/backdrop.jpg" "backdrop" "$any_mkv_file"
                 fi
             else
-                $DEBUG && echo "No MKV files found in series directory or subdirectories. Skipping series main images." >&2
+                debug_log "No MKV files found in series directory or subdirectories. Skipping series main images."
             fi
         fi
 
@@ -354,7 +562,11 @@ wait_for_nfo_and_process() {
         for season_dir in "${season_dirs[@]}"; do
             season_count=$((season_count + 1))
             season_name=$(basename "$season_dir")
-            echo "  • Processing season $season_count/$total_seasons: $season_name in $(basename "$content_path")" >&2
+            series_name=$(basename "$content_path")
+            # Extract season number (assuming format "Season XX")
+            season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
+            season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
+            log "  • ${series_name}-S${season_num} ($season_count/$total_seasons)"
 
             # Process each episode's thumb image
             episode_thumbs=()
@@ -375,11 +587,14 @@ wait_for_nfo_and_process() {
 
                 if [ -f "$mkv_file" ]; then
                     episode_count=$((episode_count + 1))
-                    echo "    ◦ Processing episode $episode_count/$total_episodes: $episode_name in $season_name" >&2
+                    # Extract episode number from filename (assuming SxxExx format)
+                    episode_num=$(echo "$episode_name" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
+                    episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
+                    log "    ◦ ${series_name}-S${season_num}E${episode_num} ($episode_count/$total_episodes)"
                     get_languages "$mkv_file"
-                    add_overlay "$thumb_file" "thumb"
+                    add_overlay "$thumb_file" "thumb" "$mkv_file"
                 else
-                    $DEBUG && echo "Warning: MKV file not found for thumb: $thumb_file" >&2
+                    debug_log "Warning: MKV file not found for thumb: $thumb_file"
                 fi
             done
         done
@@ -393,160 +608,116 @@ wait_for_nfo_and_process() {
 
             elapsed=0
             while [ ! -f "$thumb_file" ]; do
-                $DEBUG && echo "Waiting for thumb file: $thumb_file" >&2
+                debug_log "Waiting for thumb file: $thumb_file"
                 sleep 1
                 elapsed=$((elapsed + 1))
                 if [ "$elapsed" -ge "$timeout" ]; then
-                    $DEBUG && echo "Timeout reached while waiting for thumb file." >&2
+                    debug_log "Timeout reached while waiting for thumb file."
                     return
                 fi
             done
 
             if [ -f "$thumb_file" ]; then
                 get_languages "$sonarr_episodefile_path"
-                add_overlay "$thumb_file" "thumb"
-                echo "  • Processing event episode: $episode_basename in $season_name" >&2
+                add_overlay "$thumb_file" "thumb" "$sonarr_episodefile_path"
+
+                # Extract season and episode numbers for event episode
+                series_name=$(basename "$content_path")
+                season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
+                season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
+                episode_num=$(echo "$episode_basename" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
+                episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
+
+                log "  • Event: ${series_name}-S${season_num}E${episode_num}"
             else
-                $DEBUG && echo "Error: Thumb file not found for episode: $sonarr_episodefile_path" >&2
+                debug_log "Error: Thumb file not found for episode: $sonarr_episodefile_path"
             fi
         fi
     else
-        $DEBUG && echo "No movie.nfo or tvshow.nfo found in $content_path. Skipping." >&2
+        debug_log "No movie.nfo or tvshow.nfo found in $content_path. Skipping."
     fi
 }
 
 # Function to process all movies or series in a base directory
 process_all() {
-    echo "Processing all movies in $MOVIES_DIR and all series in $SERIES_DIR..." >&2
-    $DEBUG && echo "Starting batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
+    log "Processing all movies in $MOVIES_DIR and all series in $SERIES_DIR..."
+    debug_log "Starting batch processing..."
 
-    # Función para controlar procesos paralelos
-    process_item() {
-        local dir="$1"
-        local is_dir_valid="$2"
-        local skip_header="$3"
-
-        if [ "$is_dir_valid" == "true" ]; then
-            wait_for_nfo_and_process "$dir" "true" "$skip_header"
-        fi
-    }
-
-    # Crear array para almacenar PIDs
-    pids=()
-    job_count=0
-
-    # Procesar películas en paralelo
-    echo "Collecting movie directories to process..." >&2
+    # Procesar películas secuencialmente
+    log "Collecting movie directories to process..."
     movie_dirs=()
     for dir in "$MOVIES_DIR"/*/; do
         if [ -d "$dir" ]; then
             movie_dirs+=("$dir")
         fi
     done
-
     total_movies=${#movie_dirs[@]}
-    echo "Found $total_movies movie directories to process" >&2
-
+    log "Found $total_movies movie directories to process"
+    
+    movie_count=0
     for dir in "${movie_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    new_pids+=($pid)
-                fi
-            done
-            pids=("${new_pids[@]}")
-        fi
-
-        echo "Processing MOVIE $((job_count + 1))/$total_movies: $(basename "$dir")" >&2
-        # Lanzar proceso en segundo plano
-        process_item "$dir" "true" "true" &
-        pids+=($!)
-        job_count=$((job_count + 1))
+        movie_count=$((movie_count + 1))
+        log "Processing MOVIE $movie_count/$total_movies: $(basename "$dir")"
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
 
-    # Esperar a que terminen todos los procesos de películas
-    for pid in "${pids[@]}"; do
-        wait $pid
-    done
-
-    # Resetear contadores para series
-    pids=()
-    job_count=0
-
-    # Procesar series en paralelo
-    echo "Collecting TV series directories to process..." >&2
+    # Procesar series secuencialmente
+    log "Collecting TV series directories to process..."
     series_dirs=()
     for dir in "$SERIES_DIR"/*/; do
         if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ] && [[ "$(basename "$dir")" != "trailers" ]]; then
             series_dirs+=("$dir")
         fi
     done
-
     total_series=${#series_dirs[@]}
-    echo "Found $total_series series directories to process" >&2
-
+    log "Found $total_series series directories to process"
+    
+    series_count=0
     for dir in "${series_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    new_pids+=($pid)
-                fi
-            done
-            pids=("${new_pids[@]}")
+        series_count=$((series_count + 1))
+        series_name=$(basename "$dir")
+        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+            update_status "Processing SERIES $series_count/$total_series: $series_name" "true"
+        else
+            log "Processing SERIES $series_count/$total_series: $series_name"
         fi
-
-        echo "Processing SERIES $((job_count + 1))/$total_series: $(basename "$dir")" >&2
-        # Lanzar proceso en segundo plano
-        process_item "$dir" "true" "true" &
-        pids+=($!)
-        job_count=$((job_count + 1))
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
 
-    # Esperar a que terminen todos los procesos
-    echo "Waiting for all processes to complete..." >&2
-    for pid in "${pids[@]}"; do
-        wait $pid
-    done
-
-    $DEBUG && echo "Finished batch processing." >&2
+    debug_log "Finished batch processing."
 }
 
 # Function to handle Radarr or Sonarr events
 process_radarr_sonarr_event() {
+    # IMPORTANTE: Comprobar eventos de prueba al principio, antes de cualquier log u otra operación
+    # Esto asegura que con eventos de prueba retornamos éxito inmediatamente
+    [ "$radarr_eventtype" == "Test" ] && exit 0
+    [ "$sonarr_eventtype" == "Test" ] && exit 0
+
     if [ -n "$radarr_eventtype" ]; then
-        echo "Processing Radarr event: $radarr_eventtype" >&2
-        $DEBUG && echo "Radarr Movie Path: $radarr_movie_path" >&2
-        $DEBUG && echo "Radarr Movie File Path: $radarr_moviefile_path" >&2
+        log "Processing Radarr event: $radarr_eventtype"
+        debug_log "Radarr Movie Path: $radarr_movie_path"
+        debug_log "Radarr Movie File Path: $radarr_moviefile_path"
 
         if [ -n "$radarr_movie_path" ]; then
-            echo "Processing MOVIE: $(basename "$radarr_movie_path")" >&2
+            log "Processing MOVIE: $(basename "$radarr_movie_path")"
             wait_for_nfo_and_process "$radarr_movie_path" "false" "false"
         else
-            echo "Error: radarr_movie_path is empty" >&2
+            log "Error: radarr_movie_path is empty"
         fi
     elif [ -n "$sonarr_eventtype" ]; then
-        echo "Processing Sonarr event: $sonarr_eventtype" >&2
-        $DEBUG && echo "Sonarr Series Path: $sonarr_series_path" >&2
-        $DEBUG && echo "Sonarr Episode File Path: $sonarr_episodefile_path" >&2
+        log "Processing Sonarr event: $sonarr_eventtype"
+        debug_log "Sonarr Series Path: $sonarr_series_path"
+        debug_log "Sonarr Episode File Path: $sonarr_episodefile_path"
 
         if [ -n "$sonarr_series_path" ]; then
-            echo "Processing SERIES: $(basename "$sonarr_series_path")" >&2
+            log "Processing SERIES: $(basename "$sonarr_series_path")"
             wait_for_nfo_and_process "$sonarr_series_path" "false" "false"
         else
-            echo "Error: sonarr_series_path is empty" >&2
+            log "Error: sonarr_series_path is empty"
         fi
     else
-        echo "Error: Neither Radarr nor Sonarr event detected." >&2
+        log "Error: Neither Radarr nor Sonarr event detected."
         exit 1
     fi
 }
@@ -556,12 +727,12 @@ cleanup_jellyfin_cache() {
     local cache_dirs=("/jellyfin-config/cache" "/jellyfin-config/.cache")
     for dir in "${cache_dirs[@]}"; do
         if [ -d "$dir" ]; then
-            $DEBUG && echo "Deleting cache directory: $dir" >&2
+            debug_log "Deleting cache directory: $dir"
             rm -rf "$dir"
-            $DEBUG && echo "Cache directory $dir deleted." >&2
+            debug_log "Cache directory $dir deleted."
         else
-            $DEBUG && echo "Cache directory $dir does not exist. Skipping." >&2
-    fi
+            debug_log "Cache directory $dir does not exist. Skipping."
+        fi
     done
 }
 
@@ -578,109 +749,60 @@ install_deps
 # Print the number of instances of this script currently running
 script_name=$(basename "$0")
 instance_count=$(pgrep -fc "$script_name")
-$DEBUG && echo "Number of instances of $script_name running: $instance_count" >&2
+debug_log "Number of instances of $script_name running: $instance_count"
 
 # Main logic
 if [ "$MODE" == "all" ]; then
     process_all "$MOVIES_DIR" "$SERIES_DIR"
     cleanup_jellyfin_cache
 elif [ "$MODE" == "movies" ]; then
-    echo "Processing all movies in $MOVIES_DIR..." >&2
-    $DEBUG && echo "Starting movies batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
-
-    # Crear array para almacenar PIDs
-    pids=()
-    job_count=0
-
+    log "Processing all movies in $MOVIES_DIR..."
+    debug_log "Starting movies batch processing..."
     # Recopilar todas las carpetas de películas
-    echo "Collecting movie directories to process..." >&2
+    log "Collecting movie directories to process..."
     movie_dirs=()
     for dir in "$MOVIES_DIR"/*/; do
         if [ -d "$dir" ]; then
             movie_dirs+=("$dir")
         fi
     done
-
     total_movies=${#movie_dirs[@]}
-    echo "Found $total_movies movie directories to process" >&2
+    log "Found $total_movies movie directories to process"
 
-    # Procesar películas en paralelo
+    # Procesar películas secuencialmente
+    movie_count=0
     for dir in "${movie_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    new_pids+=($pid)
-                fi
-            done
-            pids=("${new_pids[@]}")
-        fi
-
-        echo "Processing MOVIE $((job_count + 1))/$total_movies: $(basename "$dir")" >&2
-        # Lanzar proceso en segundo plano
-        wait_for_nfo_and_process "$dir" "true" "true" &
-        pids+=($!)
-        job_count=$((job_count + 1))
-    done
-
-    # Esperar a que terminen todos los procesos
-    echo "Waiting for all movie processes to complete..." >&2
-    for pid in "${pids[@]}"; do
-        wait $pid
+        movie_count=$((movie_count + 1))
+        log "Processing MOVIE $movie_count/$total_movies: $(basename "$dir")"
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
 
     cleanup_jellyfin_cache
 elif [ "$MODE" == "tvshows" ]; then
-    echo "Processing all TV series in $SERIES_DIR..." >&2
-    $DEBUG && echo "Starting TV series batch processing with max $MAX_PARALLEL_JOBS parallel jobs..." >&2
-
-    # Crear array para almacenar PIDs
-    pids=()
-    job_count=0
-
+    log "Processing all TV series in $SERIES_DIR..."
+    debug_log "Starting TV series batch processing..."
     # Recopilar todas las carpetas de series
-    echo "Collecting TV series directories to process..." >&2
+    log "Collecting TV series directories to process..."
     series_dirs=()
     for dir in "$SERIES_DIR"/*/; do
         if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ] && [[ "$(basename "$dir")" != "trailers" ]]; then
             series_dirs+=("$dir")
         fi
     done
-
     total_series=${#series_dirs[@]}
-    echo "Found $total_series series directories to process" >&2
+    log "Found $total_series series directories to process"
 
-    # Procesar series en paralelo
+    # Procesar series secuencialmente
+    series_count=0
     for dir in "${series_dirs[@]}"; do
-        # Controlar número de trabajos en paralelo
-        if [ ${#pids[@]} -ge $MAX_PARALLEL_JOBS ]; then
-            # Esperar a que termine un proceso
-            wait -n
-            # Limpiar PIDs que ya han terminado
-            new_pids=()
-            for pid in "${pids[@]}"; do
-                if kill -0 $pid 2>/dev/null; then
-                    new_pids+=($pid)
-                fi
-            done
-            pids=("${new_pids[@]}")
+        series_count=$((series_count + 1))
+        series_name=$(basename "$dir")
+        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
+            update_status "Processing SERIES $series_count/$total_series: $series_name" "true"
+        else
+            log "Processing SERIES $series_count/$total_series: $series_name"
         fi
-
-        echo "Processing SERIES $((job_count + 1))/$total_series: $(basename "$dir")" >&2
-        # Lanzar proceso en segundo plano
-        wait_for_nfo_and_process "$dir" "true" "true" &
-        pids+=($!)
-        job_count=$((job_count + 1))
-    done
-
-    # Esperar a que terminen todos los procesos
-    echo "Waiting for all series processes to complete..." >&2
-    for pid in "${pids[@]}"; do
-        wait $pid
+        wait_for_nfo_and_process "$dir" "true" "true"
     done
 
     cleanup_jellyfin_cache
@@ -690,5 +812,5 @@ else
 fi
 
 # Log successful execution to stdout
-echo "Script executed successfully." >&1
+log "Script executed successfully."
 echo $SECONDS

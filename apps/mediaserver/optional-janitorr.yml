@@ -1,0 +1,22 @@
+services:
+  # OTROS SERVICIOS
+  # https://github.com/Schaka/janitorr
+  janitorr:
+    container_name: janitorr
+    restart: always
+    user: ${PUID}:${PGID}
+    volumes:
+      - ./volumes/janitorr-config/:/config
+      - ./volumes/janitorr-logs:/logs
+      - ${RASPIMEDIA}:/BibliotecaMultimedia
+    environment:
+      - LANG=es_ES.UTF-8
+      - LANGUAGE=es_ES:es
+      # - LC_ALL=es_ES.UTF-8
+    # modo 1
+    image: ghcr.io/schaka/janitorr:develop
+    healthcheck:
+      test: "wget -T5 -qO- http://localhost:8081/health | grep UP || exit 1"
+      start_period: 30s
+      interval: 5s
+      retries: 3
