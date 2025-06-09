@@ -93,8 +93,21 @@ logfileSetup() {
     fi
 }
 
+# Configuración de archivos de cola para eventos
+QUEUE_DIR="/flags/queue"
+RADARR_QUEUE_FILE="$QUEUE_DIR/radarr_queue.txt"
+SONARR_QUEUE_FILE="$QUEUE_DIR/sonarr_queue.txt"
+
+# Setup queue directory and files
+setup_queue_files() {
+    mkdir -p "$QUEUE_DIR" 2>/dev/null || true
+    touch "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || true
+    chmod 666 "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || true
+}
+
 # Verificar eventos de prueba inmediatamente al inicio del script, antes de cualquier otra operación
 logfileSetup
+setup_queue_files
 # Handle event type test at beginning of script, with proper logging message
 if [ "$radarr_eventtype" == "Test" ]; then
     log "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: Tested Successfully"
@@ -135,6 +148,7 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
     -v | --verbose) DEBUG=true ;;
     -f | --force) FORCE_UPDATE=true ;;  # Nueva opción para forzar actualización
+    -q | --queue) MODE="queue" ;;       # Nueva opción para procesar cola
     all) MODE="all" ;;
     movies) MODE="movies" ;;
     tvshows) MODE="tvshows" ;;
@@ -464,25 +478,18 @@ wait_for_nfo_and_process() {
     _process_content "$content_path" "$is_all_mode" "$skip_header"
 }
 
-# Función interna que realiza el verdadero procesamiento después de esperar los archivos
+# Función interna que realiza el verdadero procesamiento sin esperas
 _process_content() {
     local content_path="$1"
     local is_all_mode="$2"
     local skip_header="$3"
 
-    local timeout=300 # 5 minutes in seconds
-    local elapsed=0
-
-    # Esperar por NFO files
-    debug_log "Waiting for NFO files in $content_path..."
-    while [ ! -f "$content_path/movie.nfo" ] && [ ! -f "$content_path/tvshow.nfo" ]; do
-        sleep 1
-        elapsed=$((elapsed + 1))
-        if [ "$elapsed" -ge "$timeout" ]; then
-            debug_log "Timeout reached while waiting for .nfo files in $content_path."
-            return
-        fi
-    done
+    # Verificar si existen archivos NFO, si no existen, saltar este elemento
+    debug_log "Checking for NFO files in $content_path..."
+    if [ ! -f "$content_path/movie.nfo" ] && [ ! -f "$content_path/tvshow.nfo" ]; then
+        debug_log "No NFO files found in $content_path. Skipping for now."
+        return
+    fi
 
     if [ -f "$content_path/movie.nfo" ]; then
         # Only print the header if not already printed in batch mode
@@ -503,17 +510,12 @@ _process_content() {
             [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ] && add_overlay "$content_path/folder.jpg" "folder" "$mkv_file" || debug_log "Skipping: folder.jpg not found or empty in $content_path."
             [ -f "$content_path/backdrop.jpg" ] && [ -s "$content_path/backdrop.jpg" ] && add_overlay "$content_path/backdrop.jpg" "backdrop" "$mkv_file" || debug_log "Skipping: backdrop.jpg not found or empty in $content_path."
         else
-            # Wait for folder.jpg and backdrop.jpg with a timeout
-            elapsed=0
-            debug_log "Waiting for image files for $content_path..."
-            while [ ! -f "$content_path/folder.jpg" ] || [ ! -f "$content_path/backdrop.jpg" ]; do
-                sleep 1
-                elapsed=$((elapsed + 1))
-                if [ "$elapsed" -ge "$timeout" ]; then
-                    debug_log "Timeout reached while waiting for folder.jpg or backdrop.jpg in $content_path."
-                    return
-                fi
-            done
+            # Check for image files existence, skip if not found
+            debug_log "Checking for image files in $content_path..."
+            if [ ! -f "$content_path/folder.jpg" ] || [ ! -f "$content_path/backdrop.jpg" ]; then
+                debug_log "Image files not ready in $content_path. Skipping for now."
+                return
+            fi
 
             if [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ]; then
                 add_overlay "$content_path/folder.jpg" "folder" "$mkv_file"
@@ -606,16 +608,11 @@ _process_content() {
             local season_name=$(basename "$episode_dir")
             local thumb_file="${episode_dir}/${episode_basename}-thumb.jpg"
 
-            elapsed=0
-            while [ ! -f "$thumb_file" ]; do
-                debug_log "Waiting for thumb file: $thumb_file"
-                sleep 1
-                elapsed=$((elapsed + 1))
-                if [ "$elapsed" -ge "$timeout" ]; then
-                    debug_log "Timeout reached while waiting for thumb file."
-                    return
-                fi
-            done
+            # Check if thumb file exists, skip if not
+            if [ ! -f "$thumb_file" ]; then
+                debug_log "Thumb file not ready: $thumb_file. Skipping for now."
+                return
+            fi
 
             if [ -f "$thumb_file" ]; then
                 get_languages "$sonarr_episodefile_path"
@@ -695,30 +692,105 @@ process_radarr_sonarr_event() {
     [ "$sonarr_eventtype" == "Test" ] && exit 0
 
     if [ -n "$radarr_eventtype" ]; then
-        log "Processing Radarr event: $radarr_eventtype"
+        log "Received Radarr event: $radarr_eventtype"
         debug_log "Radarr Movie Path: $radarr_movie_path"
         debug_log "Radarr Movie File Path: $radarr_moviefile_path"
 
         if [ -n "$radarr_movie_path" ]; then
-            log "Processing MOVIE: $(basename "$radarr_movie_path")"
-            wait_for_nfo_and_process "$radarr_movie_path" "false" "false"
+            # En lugar de procesar inmediatamente, agregar a la cola
+            add_to_radarr_queue "$radarr_movie_path" "$radarr_moviefile_path"
+            log "Movie added to processing queue: $(basename "$radarr_movie_path")"
         else
             log "Error: radarr_movie_path is empty"
         fi
     elif [ -n "$sonarr_eventtype" ]; then
-        log "Processing Sonarr event: $sonarr_eventtype"
+        log "Received Sonarr event: $sonarr_eventtype"
         debug_log "Sonarr Series Path: $sonarr_series_path"
         debug_log "Sonarr Episode File Path: $sonarr_episodefile_path"
 
         if [ -n "$sonarr_series_path" ]; then
-            log "Processing SERIES: $(basename "$sonarr_series_path")"
-            wait_for_nfo_and_process "$sonarr_series_path" "false" "false"
+            # En lugar de procesar inmediatamente, agregar a la cola
+            add_to_sonarr_queue "$sonarr_series_path" "$sonarr_episodefile_path"
+            log "Series added to processing queue: $(basename "$sonarr_series_path")"
         else
             log "Error: sonarr_series_path is empty"
         fi
     else
         log "Error: Neither Radarr nor Sonarr event detected."
         exit 1
+    fi
+}
+
+# Function to add Radarr event to queue
+add_to_radarr_queue() {
+    local movie_path="$1"
+    local movie_file_path="$2"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    # Formato: timestamp|movie_path|movie_file_path
+    echo "$timestamp|$movie_path|$movie_file_path" >> "$RADARR_QUEUE_FILE"
+    debug_log "Added to Radarr queue: $movie_path"
+}
+
+# Function to add Sonarr event to queue
+add_to_sonarr_queue() {
+    local series_path="$1"
+    local episode_file_path="$2"
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    
+    # Formato: timestamp|series_path|episode_file_path
+    echo "$timestamp|$series_path|$episode_file_path" >> "$SONARR_QUEUE_FILE"
+    debug_log "Added to Sonarr queue: $series_path"
+}
+
+# Function to process queue files
+process_queue() {
+    log "Processing queued items..."
+    
+    # Procesar cola de Radarr
+    if [ -f "$RADARR_QUEUE_FILE" ] && [ -s "$RADARR_QUEUE_FILE" ]; then
+        log "Processing Radarr queue..."
+        while IFS='|' read -r timestamp movie_path movie_file_path; do
+            if [ -n "$movie_path" ] && [ -d "$movie_path" ]; then
+                log "Processing queued MOVIE: $(basename "$movie_path") (queued at $timestamp)"
+                # Establecer variables temporales para simular evento Radarr
+                radarr_movie_path="$movie_path"
+                radarr_moviefile_path="$movie_file_path"
+                wait_for_nfo_and_process "$movie_path" "false" "false"
+                unset radarr_movie_path radarr_moviefile_path
+            else
+                debug_log "Skipping invalid movie path: $movie_path"
+            fi
+        done < "$RADARR_QUEUE_FILE"
+        
+        # Limpiar archivo de cola después del procesamiento
+        > "$RADARR_QUEUE_FILE"
+        log "Radarr queue processed and cleared"
+    fi
+    
+    # Procesar cola de Sonarr
+    if [ -f "$SONARR_QUEUE_FILE" ] && [ -s "$SONARR_QUEUE_FILE" ]; then
+        log "Processing Sonarr queue..."
+        while IFS='|' read -r timestamp series_path episode_file_path; do
+            if [ -n "$series_path" ] && [ -d "$series_path" ]; then
+                log "Processing queued SERIES: $(basename "$series_path") (queued at $timestamp)"
+                # Establecer variables temporales para simular evento Sonarr
+                sonarr_series_path="$series_path"
+                sonarr_episodefile_path="$episode_file_path"
+                wait_for_nfo_and_process "$series_path" "false" "false"
+                unset sonarr_series_path sonarr_episodefile_path
+            else
+                debug_log "Skipping invalid series path: $series_path"
+            fi
+        done < "$SONARR_QUEUE_FILE"
+        
+        # Limpiar archivo de cola después del procesamiento
+        > "$SONARR_QUEUE_FILE"
+        log "Sonarr queue processed and cleared"
+    fi
+    
+    if [ ! -s "$RADARR_QUEUE_FILE" ] && [ ! -s "$SONARR_QUEUE_FILE" ]; then
+        log "No items in queue to process"
     fi
 }
 
@@ -805,6 +877,9 @@ elif [ "$MODE" == "tvshows" ]; then
         wait_for_nfo_and_process "$dir" "true" "true"
     done
 
+    cleanup_jellyfin_cache
+elif [ "$MODE" == "queue" ]; then
+    process_queue
     cleanup_jellyfin_cache
 else
     process_radarr_sonarr_event

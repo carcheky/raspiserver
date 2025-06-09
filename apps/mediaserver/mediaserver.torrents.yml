@@ -44,7 +44,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.80'
+          cpus: '1'
           memory: 1G
   
   # BUSCADOR SERIES
@@ -70,7 +70,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.80'
+          cpus: '1'
           memory: 1G
 
   # SUBTÍTULOS

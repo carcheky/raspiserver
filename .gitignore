@@ -21,3 +21,4 @@ apps/all
 apps/mediaserver/tdarr/.env
 apps/experiments/.env
 resized
+apps/mediaserver/flags/queue/
