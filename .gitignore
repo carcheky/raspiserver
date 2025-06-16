@@ -22,3 +22,9 @@ apps/mediaserver/tdarr/.env
 apps/experiments/.env
 resized
 apps/mediaserver/flags/queue/
+apps/mediaserver/flags/lang-flags.bash
+apps/mediaserver/flags/tmp/
+apps/mediaserver/flags/cache
+apps/mediaserver/flags/sonarr_queue_process_603.txt
+apps/mediaserver/radarr-arr-scripts/lang_flags-install_deps.sh
+apps/mediaserver/sonarr-arr-scripts/lang_flags-install_deps.sh

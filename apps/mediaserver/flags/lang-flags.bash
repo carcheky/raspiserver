@@ -53,7 +53,7 @@ log_debug() {
 logfileSetup() {
     local log_dir="/config/logs"
     if [ ! -d "$log_dir" ]; then
-        mkdir -p "$log_dir" 2>/dev/null || log_dir="/tmp"
+        mkdir -p "$log_dir" 2>/dev/null || log_dir="/config"
     fi
 
     LOG_FILE="$log_dir/$scriptName-$(date +"%Y_%m_%d_%H_%M").log"
@@ -215,7 +215,7 @@ SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # Procesar cola cada minuto
-* * * * * root /flags/lang-flags.bash --process-queue >/dev/null 2>&1
+* * * * * root bash /flags/lang-flags.bash --process-queue >/dev/null 2>&1
 EOF
         chmod 644 "$cron_file" 2>/dev/null || true
         log_info "Cron job configurado en: $cron_file"
@@ -514,11 +514,148 @@ parse_arguments() {
 }
 
 # ========================
+# Generar script de inicialización del contenedor (LO PRIMERO)
+generate_container_init_script() {
+    local init_script="/custom-cont-init.d/lang_flags-install_deps.sh"
+
+    log_debug "Generando script de inicialización del contenedor..."
+
+    # Crear directorio si no existe
+    mkdir -p "/custom-cont-init.d" 2>/dev/null || {
+        log_debug "No se pudo crear /custom-cont-init.d"
+        return 1
+    }
+
+    # Borrar archivo existente si existe
+    rm -f "$init_script" 2>/dev/null || true
+
+    # Generar el script simple y efectivo
+    cat > "$init_script" << 'EOF'
+#!/bin/bash
+
+echo "[$(date)] Lang-Flags: Instalando dependencias..."
+
+# Instalar dependencias de forma desatendida
+export DEBIAN_FRONTEND=noninteractive
+
+if command -v apt-get >/dev/null 2>&1; then
+    apt-get update -qq >/dev/null 2>&1
+    apt-get install -y -qq \
+        imagemagick \
+        libimage-exiftool-perl \
+        jq \
+        ffmpeg \
+        curl \
+        wget \
+        bc \
+        >/dev/null 2>&1
+elif command -v apk >/dev/null 2>&1; then
+    apk add --no-cache \
+        imagemagick \
+        exiftool \
+        jq \
+        ffmpeg \
+        curl \
+        wget \
+        bc \
+        bash \
+        >/dev/null 2>&1
+fi
+
+echo "[$(date)] Lang-Flags: Estableciendo permisos de cron..."
+
+# Establecer permisos para poder crear cron después
+if [[ -d "/etc/cron.d" ]]; then
+    chmod 777 "/etc/cron.d" 2>/dev/null
+elif mkdir -p "/etc/cron.d" 2>/dev/null; then
+    chmod 777 "/etc/cron.d" 2>/dev/null
+fi
+
+echo "[$(date)] Lang-Flags: Configurando cron para procesamiento de colas..."
+
+# Configurar cron job para procesar colas automáticamente
+cat > /etc/cron.d/lang-flags-queue << 'CRONEOF'
+# Lang-Flags Queue Processor - Se autodesactiva cuando las colas están vacías
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Procesar cola cada minuto
+* * * * * root bash /flags/lang-flags.bash --process-queue >/dev/null 2>&1
+CRONEOF
+
+chmod 644 /etc/cron.d/lang-flags-queue 2>/dev/null
+
+# Recargar cron para aplicar cambios
+if command -v crond >/dev/null; then
+    pkill -HUP crond 2>/dev/null || true
+fi
+
+echo "[$(date)] Lang-Flags: Cron job configurado - se autodesactivará cuando las colas estén vacías"
+
+echo "[$(date)] Lang-Flags: Inicialización completada"
+EOF
+
+    chmod +x "$init_script" 2>/dev/null || true
+
+    if [[ -f "$init_script" ]]; then
+        log_info "✓ Script de inicialización generado: $init_script"
+        return 0
+    else
+        log_error "✗ Error generando script de inicialización"
+        return 1
+    fi
+}
+
+# ========================
+# Verificar si las colas están vacías
+are_queues_empty() {
+    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
+    
+    for queue_file in "${queue_files[@]}"; do
+        if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
+            return 1  # No están vacías
+        fi
+    done
+    
+    return 0  # Están vacías
+}
+
+# Quitar procesador de cola cuando no hay elementos (autodesactivar cron)
+remove_queue_processor() {
+    local cron_locations=(
+        "/etc/cron.d/lang-flags-queue"
+        "/tmp/lang-flags-queue"
+        "$FLAGS_DIR/cron/lang-flags-queue"
+    )
+
+    local removed=false
+    for cron_file in "${cron_locations[@]}"; do
+        if [[ -f "$cron_file" ]]; then
+            rm -f "$cron_file" 2>/dev/null && {
+                log_info "✓ Cron job removido: $cron_file (colas vacías)"
+                removed=true
+            }
+        fi
+    done
+
+    if [[ "$removed" == true ]]; then
+        # Recargar cron para aplicar cambios
+        if command -v crond >/dev/null; then
+            pkill -HUP crond 2>/dev/null || true
+        fi
+        log_info "🔴 Procesador de cola desactivado - todas las colas vacías"
+    fi
+}
+
+# ========================
 # Main Execution
 # ========================
 
 # Función principal
 main() {
+    # LO PRIMERO: Generar script de inicialización
+    generate_container_init_script
+    
     # Configuración inicial
     logfileSetup
     ensure_directories_exist
@@ -556,6 +693,10 @@ main() {
     case "$MODE" in
     "process_queue")
         process_queue_files
+        # Verificar si las colas están vacías y autodesactivar cron
+        if are_queues_empty; then
+            remove_queue_processor
+        fi
         ;;
     "monitor")
         setup_queue_processor
@@ -566,7 +707,10 @@ main() {
         done
         ;;
     "queue_only")
-        log_info "Modo solo cola - evento ya procesado"
+        log_info "Modo solo cola - procesando automáticamente"
+        # Simplemente procesar las colas y activar procesador en background si hay elementos
+        process_queue_files
+        start_simple_queue_processor
         ;;
     "all" | "movies" | "tvshows")
         log_info "Procesando todo el contenido disponible"
@@ -605,3 +749,72 @@ trap 'log_info "Script interrumpido - limpiando..."; exit 1' INT TERM
 
 # Ejecutar función principal con todos los argumentos
 main "$@"
+
+# Iniciar procesador simple de cola en background
+start_simple_queue_processor() {
+    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
+    local has_items=false
+    
+    # Verificar si hay elementos en alguna cola
+    for queue_file in "${queue_files[@]}"; do
+        if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
+            has_items=true
+            break
+        fi
+    done
+    
+    if [[ "$has_items" == false ]]; then
+        log_debug "No hay elementos en cola, no se inicia procesador"
+        return 0
+    fi
+    
+    log_info "Iniciando procesador simple de cola en background..."
+    
+    # Proceso en background que procesa hasta que las colas estén vacías
+    (
+        while true; do
+            local processed_any=false
+            
+            for queue_file in "${queue_files[@]}"; do
+                if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
+                    while IFS='|' read -r timestamp event_type file_path; do
+                        if [[ -n "$file_path" ]] && [[ -f "$file_path" ]]; then
+                            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Procesando desde cola: $file_path" >> "${LOG_FILE:-/tmp/lang-flags.log}"
+                            process_single_item "$file_path"
+                            processed_any=true
+                        fi
+                    done < "$queue_file"
+                    
+                    # Limpiar cola después de procesar
+                    > "$queue_file"
+                fi
+            done
+            
+            # Si no procesamos nada, verificar si quedan elementos
+            if [[ "$processed_any" == false ]]; then
+                local still_has_items=false
+                for queue_file in "${queue_files[@]}"; do
+                    if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
+                        still_has_items=true
+                        break
+                    fi
+                done
+                
+                if [[ "$still_has_items" == false ]]; then
+                    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Todas las colas vacías - finalizando procesador" >> "${LOG_FILE:-/tmp/lang-flags.log}"
+                    break
+                fi
+            fi
+            
+            # Esperar un poco antes del siguiente ciclo
+            sleep 10
+        done
+    ) &
+    
+    local pid=$!
+    log_info "✓ Procesador de cola iniciado (PID: $pid)"
+    return 0
+}
+
+
+
