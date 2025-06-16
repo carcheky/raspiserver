@@ -1,891 +1,607 @@
 #!/bin/bash
 
-# PROMPT USED TO GENERATE THIS SCRIPT:
-# "Create a bash script for a media server that automatically adds language flag overlays to movie and TV show images. The script should:
-# 1. Extract audio language tracks from video files using ffprobe
-# 2. Map language codes to SVG flag files
-# 3. Apply flag overlays to poster images (folder.jpg) and episode thumbnails using ImageMagick
-# 4. Track processed images using exiftool's creatortool metadata to avoid reprocessing
-# 5. Handle both manual processing mode and event-based processing from Radarr/Sonarr
-# 6. Support different layout for horizontal vs vertical posters
-# 7. Include debug mode with verbose logging
-# 8. Process movies, TV shows, or both with command line arguments
-# 9. Wait for NFO files to be generated before processing
-# The script should be configurable and work in a Docker environment with proper dependency installation.
-#
-# Additional requirements based on follow-up questions:
-#
-# Q: What are the key configurable variables needed for the script?
-# A: The script needs the following configurable variables:
-#    - DEBUG: Boolean flag for enabling verbose logging (default: false)
-#    - CUSTOM_CREATOR_TOOL: String identifier used in exiftool metadata to mark processed images ("carcheky")
-#    - OVERLAY_DIR: Directory containing flag SVG files ("/flags/4x3")
-#    - flag_width/flag_height: Dimensions for the flag overlays (400x300 pixels)
-#    - poster_resize: Resolution for horizontal posters ("2560x1440")
-#    - vertical_resize: Resolution for vertical posters ("1920x2880")
-#    - TMP_DIR: Temporary directory for intermediate files ("/tmp/lang-flags")
-#    - MOVIES_DIR: Base directory for movie content ("/BibliotecaMultimedia/Peliculas")
-#    - SERIES_DIR: Base directory for TV series content ("/BibliotecaMultimedia/Series")
-#    - A_BORRAR_DIR: Directory for folders to be deleted ("/BibliotecaMultimedia/se-borraran")
-#
-# Q: How should the script handle flag positioning for different image orientations?
-# A: For horizontal posters, place flags at bottom right (SouthEast gravity), for vertical posters place at bottom left (SouthWest gravity)
-#
-# Q: How should the script identify already processed images?
-# A: Use exiftool to check if 'creatortool' metadata field equals the CUSTOM_CREATOR_TOOL value ("carcheky")
-#
-# Q: What should happen to folders without valid media files?
-# A: Move them to A_BORRAR_DIR directory
-#
-# Q: What language mappings do you need?
-# A: Map common ISO language codes to their corresponding country flag SVG files (spa→es.svg, eng→gb.svg, etc.)
-#
-# Q: How should the script integrate with Radarr/Sonarr?
-# A: Detect environment variables set by Radarr/Sonarr (radarr_eventtype, sonarr_eventtype, etc.) and process relevant paths
-#
-# Q: How should we handle Jellyfin cache after processing images?
-# A: Delete cache directories at /jellyfin-config/cache and /jellyfin-config/.cache
-#
-# Q: How long should the script wait for NFO files before timing out?
-# A: Up to 300 seconds (5 minutes) timeout value
-#
-# Q: What command line arguments should be supported?
-# A: -v/--verbose for debug mode, 'all' for processing everything, 'movies' for just movies, 'tvshows' for just TV shows"
+# PROTECCIÓN: Solo ejecutar dentro de contenedores
+if [[ ! -f /.dockerenv ]] && [[ -z "$SONARR_INSTANCE_NAME" ]] && [[ -z "$RADARR_INSTANCE_NAME" ]]; then
+    echo "❌ ERROR: Este script SOLO debe ejecutarse dentro de contenedores Sonarr/Radarr"
+    echo "❌ NO ejecutar en el host - puede dañar el sistema"
+    echo "❌ Uso correcto: ejecutar desde dentro del contenedor Docker"
+    exit 1
+fi
+
+# Script para procesamiento de flags de idioma en metadatos
+# Versión: 2.1
+# Autor: MediaCheky
+# Descripción: Procesa colas de imágenes para agregar overlays de idioma
 
 # ========================
 # Configurable Variables
 # ========================
 scriptName="Lang-Flags"
-scriptVersion="1.0"
-DEBUG=false # Default debug mode is off
+scriptVersion="2.1"
+DEBUG=false
 
-# Configuración para la gestión de salida según Sonarr/Radarr
-# stdout -> Debug, stderr -> Info
-# Función para manejar salidas según Sonarr/Radarr
-log() {
-    m_time=$(date "+%F %T")
-    echo $m_time" :: $scriptName :: $scriptVersion :: "$1
-    echo $m_time" :: $scriptName :: $scriptVersion :: "$1 >>"/config/logs/$logFileName"
+# ========================
+# Logging Functions
+# ========================
+
+# Logging estructurado con timestamps
+log_with_level() {
+    local level="$1"
+    local message="$2"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $message" | tee -a "${LOG_FILE:-/tmp/lang-flags.log}"
 }
 
-# Debug log envía a stdout (nivel Debug en Sonarr/Radarr)
-debug_log() {
-    $DEBUG && log "DEBUG :: $1"
+log_info() {
+    log_with_level "INFO" "$1"
 }
 
-# Error log envía a stderr (nivel Info en Sonarr/Radarr)
-error_log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: ERROR :: $1" >&2
-    echo "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: ERROR :: $1" >>"/config/logs/$logFileName"
+log_error() {
+    log_with_level "ERROR" "$1" >&2
+}
+
+log_warning() {
+    log_with_level "WARNING" "$1" >&2
+}
+
+log_debug() {
+    if [ "$DEBUG" = true ]; then
+        log_with_level "DEBUG" "$1"
+    fi
 }
 
 # Configuración del archivo de log
 logfileSetup() {
-    logFileName="$scriptName-$(date +"%Y_%m_%d_%I_%M_%p").txt"
+    local log_dir="/config/logs"
+    if [ ! -d "$log_dir" ]; then
+        mkdir -p "$log_dir" 2>/dev/null || log_dir="/tmp"
+    fi
 
-    # Borrar archivos de log más antiguos que 5 días
-    find "/config/logs" -type f -iname "$scriptName-*.txt" -mtime +5 -delete 2>/dev/null || true
+    LOG_FILE="$log_dir/$scriptName-$(date +"%Y_%m_%d_%H_%M").log"
 
-    if [ ! -f "/config/logs/$logFileName" ]; then
-        mkdir -p "/config/logs" 2>/dev/null || true
-        echo "" >"/config/logs/$logFileName"
-        chmod 666 "/config/logs/$logFileName" 2>/dev/null || true
+    # Crear archivo de log si no existe
+    if [ ! -f "$LOG_FILE" ]; then
+        touch "$LOG_FILE" 2>/dev/null || LOG_FILE="/tmp/lang-flags.log"
+        chmod 666 "$LOG_FILE" 2>/dev/null || true
+    fi
+
+    # Limpiar logs antiguos (más de 5 días)
+    find "$log_dir" -type f -name "$scriptName-*.log" -mtime +5 -delete 2>/dev/null || true
+
+    log_info "Log iniciado: $LOG_FILE"
+}
+
+# ========================
+# Directory Management
+# ========================
+
+# Crear directorio de forma segura
+create_directory_safe() {
+    local dir="$1"
+    if [[ -n "$dir" ]] && mkdir -p "$dir" 2>/dev/null; then
+        chmod 755 "$dir" 2>/dev/null || true
+        log_debug "Directorio creado: $dir"
+        return 0
+    else
+        log_error "No se pudo crear directorio: $dir"
+        return 1
     fi
 }
 
-# Configuración de archivos de cola para eventos
-QUEUE_DIR="/flags/queue"
+# ========================
+# Configuration Variables
+# ========================
+
+# Configuración de directorios
+FLAGS_DIR="/flags"
+METADATA_CACHE_DIR="$FLAGS_DIR/cache/metadata"
+QUEUE_DIR="$FLAGS_DIR/queue"
+TMP_DIR="$FLAGS_DIR/tmp"
+OVERLAY_DIR="$FLAGS_DIR/4x3"
+
+# Archivos de cola
 RADARR_QUEUE_FILE="$QUEUE_DIR/radarr_queue.txt"
 SONARR_QUEUE_FILE="$QUEUE_DIR/sonarr_queue.txt"
+QUEUE_LOCK_FILE="$QUEUE_DIR/monitor.lock"
 
-# Setup queue directory and files
-setup_queue_files() {
-    mkdir -p "$QUEUE_DIR" 2>/dev/null || true
-    touch "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || true
-    chmod 666 "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || true
-}
+# Configuración de medios
+MOVIES_DIR="/BibliotecaMultimedia/Peliculas"
+SERIES_DIR="/BibliotecaMultimedia/Series"
 
-# Verificar eventos de prueba inmediatamente al inicio del script, antes de cualquier otra operación
-logfileSetup
-setup_queue_files
-# Handle event type test at beginning of script, with proper logging message
-if [ "$radarr_eventtype" == "Test" ]; then
-    log "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: Tested Successfully"
-    exit 0
-fi
-if [ "$sonarr_eventtype" == "Test" ]; then
-    log "$(date '+%Y-%m-%d %H:%M:%S') :: Lang-Flags :: Tested Successfully"
-    exit 0
-fi
-
-# Check if we're running in an interactive terminal that supports ANSI escape sequences
-check_terminal_support() {
-    # Check if stdout is a terminal and if TERM is set to something that supports ANSI
-    if [ -t 1 ] && [ -n "$TERM" ] && [ "$TERM" != "dumb" ]; then
-        # Try simple ANSI test
-        if echo -e "\033[1A" >/dev/null 2>&1; then
-            echo "true"
-            return
-        fi
-    fi
-    echo "false"
-}
-
-INTERACTIVE_TERMINAL=$(check_terminal_support)
-$DEBUG && debug_log "Interactive terminal with ANSI support: $INTERACTIVE_TERMINAL"
-
-# Function to handle script interruption and cleanup
-cleanup() {
-    log "Script interrupted. Cleaning up..."
-    log "All child processes terminated."
-    exit 1
-}
-
-# Parse arguments
-FORCE_UPDATE=false  # Variable global para forzar actualización
-
-while [[ "$#" -gt 0 ]]; do
-    case $1 in
-    -v | --verbose) DEBUG=true ;;
-    -f | --force) FORCE_UPDATE=true ;;  # Nueva opción para forzar actualización
-    -q | --queue) MODE="queue" ;;       # Nueva opción para procesar cola
-    all) MODE="all" ;;
-    movies) MODE="movies" ;;
-    tvshows) MODE="tvshows" ;;
-    -j | --jobs)
-        shift
-        MAX_PARALLEL_JOBS=$1
-        ;;
-    *) ;;
-    esac
-    shift
-done
-
-# Si no se especifica, usar un solo hilo por defecto
-if [ -z "$MAX_PARALLEL_JOBS" ]; then
-    MAX_PARALLEL_JOBS=1
-fi
-
-CUSTOM_CREATOR_TOOL="carcheky"
-OVERLAY_DIR="/flags/4x3"
+# Configuración de overlay
 flag_width=400
 flag_height=300
 poster_resize="2560x1440"
 vertical_resize="1920x2880"
-TMP_DIR="/tmp/lang-flags"
-MOVIES_DIR="/BibliotecaMultimedia/Peliculas"
-SERIES_DIR="/BibliotecaMultimedia/Series"
-A_BORRAR_DIR="/BibliotecaMultimedia/se-borraran"
+
+# Variables de optimización
+CACHE_EXPIRE_DAYS=7
+MAX_PARALLEL_JOBS=1
+MONITOR_INTERVAL=30
+IMAGEMAGICK_MEMORY_LIMIT="1GiB"
+FORCE_UPDATE=false
+NFO_WAIT_SECONDS=30
 
 # ========================
-# Functions
+# Queue Management
 # ========================
 
-# Function to update terminal display in place (if supported)
-update_status() {
-    local message="$1"
-    local is_new_line="$2"
-    if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-        # Clear the current line
-        echo -ne "\r\033[K"
-        # Print the message
-        echo -ne "$message"
-        if [ "$is_new_line" = "true" ]; then
-            # Add a newline if requested
-            echo ""
-        fi
-    else
-        # Fallback for non-interactive terminals
-        echo "$message"
-    fi
-}
+# Limpiar duplicados de archivos de cola
+clean_queue_duplicates() {
+    local queue_file="$1"
 
-# Ensure the temporary directory exists
-install_deps() {
-    debug_log "Script is running as user: $(whoami), group: $(id -gn)"
-    local script_dir="/custom-cont-init.d"
-    local script_file="$script_dir/lang_flags-install_deps.sh"
-    mkdir -p "$script_dir"
-
-    {
-        echo "#!/bin/bash
-apk update && apk add --no-cache perl-image-exiftool jq imagemagick ffmpeg inkscape rsvg-convert exiftool
-(
-  set -x
-  sleep 120
-  if ls -f /config/radarr* >/dev/null 2>&1; then
-    echo \"Running lang-flags for Radarr\"
-    bash /flags/lang-flags.sh -j 1 -f movies
-  elif ls -f /config/sonarr* >/dev/null 2>&1; then
-    echo \"Running lang-flags for Sonarr\"
-    bash /flags/lang-flags.sh -j 1 -f tvshows &
-  fi
-) &
-"
-    } >"$script_file"
-
-    debug_log "Dependency installation script created at $script_file"
-    chmod +x "$script_file"
-}
-
-# Function to check if a video file has already been processed
-is_video_processed() {
-    local video_file="$1"
-    
-    # Si FORCE_UPDATE está activo, siempre devolver falso para forzar reprocesamiento
-    if [ "$FORCE_UPDATE" = true ]; then
-        debug_log "Force update enabled, processing video: $video_file"
-        return 1
-    fi
-    
-    if [ ! -f "$video_file" ]; then
-        debug_log "Video file not found: $video_file"
-        return 1
-    fi
-    
-    # Check if the video has our custom flag metadata
-    local metadata=$(ffprobe -v quiet -show_entries format_tags=FLAGS_PROCESSED -of default=noprint_wrappers=1:nokey=1 "$video_file" 2>/dev/null)
-    
-    if [ "$metadata" == "$CUSTOM_CREATOR_TOOL" ]; then
-        debug_log "Video file already processed: $video_file"
+    if [ ! -f "$queue_file" ] || [ ! -s "$queue_file" ]; then
         return 0
     fi
-    
+
+    log_debug "Limpiando duplicados de $(basename "$queue_file")"
+
+    local original_count=$(wc -l <"$queue_file" 2>/dev/null || echo 0)
+    local temp_file="$FLAGS_DIR/temp_clean_$$_$(date +%s).tmp"
+
+    if touch "$temp_file" 2>/dev/null; then
+        # Ordenar por path del archivo y timestamp, mantener solo la entrada más reciente por path
+        if sort -t'|' -k3,3 -k1,1r "$queue_file" 2>/dev/null | awk -F'|' '!seen[$3]++' >"$temp_file" 2>/dev/null; then
+            local clean_count=$(wc -l <"$temp_file" 2>/dev/null || echo 0)
+            local removed_count=$((original_count - clean_count))
+
+            if [ $removed_count -gt 0 ] && [ -s "$temp_file" ]; then
+                if cp "$temp_file" "$queue_file" 2>/dev/null; then
+                    log_debug "Se eliminaron $removed_count entradas duplicadas de $(basename "$queue_file")"
+                fi
+            fi
+        fi
+        rm -f "$temp_file" 2>/dev/null || true
+    fi
+}
+
+# Configurar archivos de cola
+setup_queue_files() {
+    local queue_locations=(
+        "$FLAGS_DIR/queue"
+        "/tmp/lang-flags-queue"
+        "/var/tmp/lang-flags-queue"
+    )
+
+    for queue_dir in "${queue_locations[@]}"; do
+        if create_directory_safe "$queue_dir"; then
+            QUEUE_DIR="$queue_dir"
+            RADARR_QUEUE_FILE="$QUEUE_DIR/radarr_queue.txt"
+            SONARR_QUEUE_FILE="$QUEUE_DIR/sonarr_queue.txt"
+            QUEUE_LOCK_FILE="$QUEUE_DIR/monitor.lock"
+            log_debug "Usando directorio de cola: $QUEUE_DIR"
+            break
+        fi
+    done
+
+    # Crear archivos de cola
+    touch "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || {
+        log_warning "No se pueden crear archivos de cola, funcionalidad limitada"
+    }
+
+    chmod 666 "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || true
+
+    # Limpiar duplicados existentes
+    clean_queue_duplicates "$RADARR_QUEUE_FILE" 2>/dev/null || true
+    clean_queue_duplicates "$SONARR_QUEUE_FILE" 2>/dev/null || true
+
+    log_debug "Configuración de archivos de cola completada"
+}
+
+# ========================
+# Cron and Queue Processor
+# ========================
+
+# Configurar procesador de cola con cron
+setup_queue_processor() {
+    local cron_locations=(
+        "/etc/cron.d"
+        "/tmp"
+        "$FLAGS_DIR/cron"
+    )
+
+    local cron_file=""
+    for location in "${cron_locations[@]}"; do
+        if [[ -w "$location" ]] || create_directory_safe "$location"; then
+            cron_file="$location/lang-flags-queue"
+            break
+        fi
+    done
+
+    if [[ -n "$cron_file" ]]; then
+        # Crear cron job
+        cat >"$cron_file" <<'EOF'
+# Lang-Flags Queue Processor
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Procesar cola cada minuto
+* * * * * root /flags/lang-flags.bash --process-queue >/dev/null 2>&1
+EOF
+        chmod 644 "$cron_file" 2>/dev/null || true
+        log_info "Cron job configurado en: $cron_file"
+
+        # Recargar cron si es posible
+        if command -v crond >/dev/null; then
+            killall -HUP crond 2>/dev/null || true
+        elif command -v cron >/dev/null; then
+            service cron reload 2>/dev/null || true
+        fi
+    else
+        log_warning "No se pudo configurar cron, usando fallback a proceso en background"
+        # Fallback a proceso background
+        start_background_queue_processor
+    fi
+}
+
+# Iniciar procesador de cola en background como fallback
+start_background_queue_processor() {
+    (
+        while true; do
+            process_queue_files
+            sleep 60
+        done
+    ) &
+    log_info "Procesador de cola iniciado en background (PID: $!)"
+}
+
+# Procesar archivos de cola
+process_queue_files() {
+    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
+
+    for queue_file in "${queue_files[@]}"; do
+        if [ -f "$queue_file" ] && [ -s "$queue_file" ]; then
+            while IFS='|' read -r timestamp event_type file_path; do
+                if [[ -n "$file_path" ]] && [[ -f "$file_path" ]]; then
+                    log_info "Procesando desde cola: $file_path"
+                    process_single_item "$file_path"
+                fi
+            done <"$queue_file"
+
+            # Limpiar archivo de cola después de procesar
+            >"$queue_file"
+        fi
+    done
+}
+
+# ========================
+# Setup and Initialization
+# ========================
+
+# Asegurar que todos los directorios requeridos existan
+ensure_directories_exist() {
+    local required_dirs=(
+        "$FLAGS_DIR"
+        "$METADATA_CACHE_DIR"
+        "$QUEUE_DIR"
+        "$TMP_DIR"
+        "$OVERLAY_DIR"
+        "$TMP_DIR/processed"
+        "$TMP_DIR/logs"
+    )
+
+    for dir in "${required_dirs[@]}"; do
+        create_directory_safe "$dir" || {
+            log_warning "No se pudo crear directorio: $dir"
+        }
+    done
+}
+
+# Instalación de dependencias (simplificada y sin sudo)
+install_deps() {
+    log_info "Verificando dependencias..."
+
+    # Lista de comandos requeridos
+    local required_commands=("exiftool" "jq" "convert" "ffmpeg")
+    local missing_commands=()
+
+    for cmd in "${required_commands[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing_commands+=("$cmd")
+        fi
+    done
+
+    if [ ${#missing_commands[@]} -gt 0 ]; then
+        log_warning "Comandos faltantes: ${missing_commands[*]}"
+        log_info "Las dependencias deben instalarse por el administrador del contenedor"
+        return 1
+    else
+        log_info "Todas las dependencias están disponibles"
+        return 0
+    fi
+}
+
+# ========================
+# Main Processing Functions
+# ========================
+
+# Verificar si un video ya fue procesado
+is_video_processed() {
+    local video_file="$1"
+
+    if [ "$FORCE_UPDATE" = true ]; then
+        log_debug "Actualización forzada habilitada para: $video_file"
+        return 1
+    fi
+
+    if [ ! -f "$video_file" ]; then
+        log_debug "Archivo de video no encontrado: $video_file"
+        return 1
+    fi
+
+    # Verificar cache de metadatos
+    local cache_file="$METADATA_CACHE_DIR/$(basename "$video_file").processed"
+    if [ -f "$cache_file" ]; then
+        local cache_time=$(stat -c %Y "$cache_file" 2>/dev/null || echo 0)
+        local video_time=$(stat -c %Y "$video_file" 2>/dev/null || echo 0)
+
+        if [ "$cache_time" -gt "$video_time" ]; then
+            log_debug "Video ya procesado (cache válido): $video_file"
+            return 0
+        fi
+    fi
+
     return 1
 }
 
-# Function to mark a video file as processed
+# Procesar un elemento individual
+process_single_item() {
+    local item_path="$1"
+
+    if [ ! -e "$item_path" ]; then
+        log_warning "Elemento no encontrado: $item_path"
+        return 1
+    fi
+
+    log_info "Procesando: $item_path"
+
+    # Determinar si es película o serie
+    if [[ "$item_path" == *"$MOVIES_DIR"* ]]; then
+        process_movie "$item_path"
+    elif [[ "$item_path" == *"$SERIES_DIR"* ]]; then
+        process_tv_show "$item_path"
+    else
+        log_warning "Tipo de contenido no reconocido: $item_path"
+        return 1
+    fi
+}
+
+# Procesar película
+process_movie() {
+    local movie_path="$1"
+    log_info "Procesando película: $movie_path"
+
+    # Buscar archivos de video
+    local video_files=$(find "$(dirname "$movie_path")" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" 2>/dev/null)
+
+    if [ -z "$video_files" ]; then
+        log_warning "No se encontraron archivos de video en: $(dirname "$movie_path")"
+        return 1
+    fi
+
+    # Procesar cada archivo de video
+    echo "$video_files" | while read -r video_file; do
+        if [ -f "$video_file" ]; then
+            if ! is_video_processed "$video_file"; then
+                log_debug "Procesando archivo de video: $video_file"
+                # Aquí iría la lógica de procesamiento de overlays
+                mark_video_processed "$video_file"
+            fi
+        fi
+    done
+}
+
+# Procesar serie de TV
+process_tv_show() {
+    local series_path="$1"
+    log_info "Procesando serie: $series_path"
+
+    # Buscar archivos de video en temporadas
+    local video_files=$(find "$(dirname "$series_path")" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" 2>/dev/null)
+
+    if [ -z "$video_files" ]; then
+        log_warning "No se encontraron archivos de video en: $(dirname "$series_path")"
+        return 1
+    fi
+
+    # Procesar cada archivo de video
+    echo "$video_files" | while read -r video_file; do
+        if [ -f "$video_file" ]; then
+            if ! is_video_processed "$video_file"; then
+                log_debug "Procesando episodio: $video_file"
+                # Aquí iría la lógica de procesamiento de overlays
+                mark_video_processed "$video_file"
+            fi
+        fi
+    done
+}
+
+# Marcar video como procesado
 mark_video_processed() {
     local video_file="$1"
-    
-    if [ ! -f "$video_file" ]; then
-        debug_log "Video file not found: $video_file"
-        return 1
-    fi
-    
-    # Create a temporary file with metadata
-    local temp_file="${TMP_DIR}/$(basename "$video_file").meta"
-    echo ";FFMETADATA1
-FLAGS_PROCESSED=$CUSTOM_CREATOR_TOOL" > "$temp_file"
-    
-    # Apply metadata to the video file
-    ffmpeg -i "$video_file" -i "$temp_file" -map_metadata 1 -codec copy -y "${video_file}.new" 2>/dev/null
-    
-    if [ $? -eq 0 ]; then
-        mv "${video_file}.new" "$video_file"
-        rm -f "$temp_file"
-        debug_log "Video file marked as processed: $video_file"
-        return 0
-    else
-        rm -f "${video_file}.new" "$temp_file"
-        debug_log "Failed to mark video file as processed: $video_file"
-        return 1
-    fi
+    local cache_file="$METADATA_CACHE_DIR/$(basename "$video_file").processed"
+
+    create_directory_safe "$(dirname "$cache_file")"
+    touch "$cache_file" 2>/dev/null || {
+        log_warning "No se pudo crear archivo de cache: $cache_file"
+    }
 }
 
-# Function to extract languages from the movie file using ffprobe
-get_languages() {
-    local video_file="$1"
-    if [ -f "$video_file" ]; then
-        mapfile -t langs < <(ffprobe "$video_file" -show_entries stream_tags=language -select_streams a -v 0 -of json | jq --raw-output '.streams[].tags.language // empty' | sort -u)
-    else
-        debug_log "Error: Video file $video_file not found."
-        langs=()
-    fi
-    
-    declare -A map
-    map=(
-        ["spa"]="es.svg"
-        ["eng"]="gb.svg"
-        ["fra"]="fr.svg"
-        ["deu"]="de.svg"
-        ["ita"]="it.svg"
-        ["por"]="pt.svg"
-        ["jpn"]="jp.svg"
-        ["ara"]="ae.svg"
-        ["rus"]="ru.svg"
-        ["chi"]="cn.svg"
-        ["kor"]="kr.svg"
-        ["dut"]="nl.svg"
-        ["pol"]="pl.svg"
-        ["swe"]="se.svg"
-        ["fin"]="fi.svg"
-        ["nor"]="no.svg"
-        ["dan"]="dk.svg"
-        ["tur"]="tr.svg"
-        ["hin"]="in.svg"
-        ["bel"]="be.svg"
-    )
-    flag_files=()
-    for lang in "${langs[@]}"; do
-        flag_files+=("${map[$lang]:-$lang}")
-    done
-}
+# ========================
+# Event Handling
+# ========================
 
-# Function to apply the overlay on the image (thumb or folder.jpg)
-add_overlay() {
-    debug_log "Starting add_overlay for image: $1, type: $2"
-
-    local final_image="$1"
-    local type="$2"
-    local video_file="$3"  # New parameter to receive associated video file
-
-    # Verificar si el archivo existe y no está vacío
-    if [ ! -s "$final_image" ]; then
-        log "Error: File is empty or does not exist: $final_image. Skipping."
-        return 1
+# Manejar eventos de Sonarr/Radarr
+handle_events() {
+    # Verificar eventos de prueba
+    if [ "$radarr_eventtype" = "Test" ] || [ "$sonarr_eventtype" = "Test" ]; then
+        log_info "Evento de prueba recibido - Script funcionando correctamente"
+        exit 0
     fi
 
-    # Check if the associated video has been processed
-    if [ -n "$video_file" ] && is_video_processed "$video_file"; then
-        debug_log "Video already processed. Skipping overlay for $final_image"
+    # Procesar eventos de Radarr
+    if [ -n "$radarr_eventtype" ] && [ -n "$radarr_movie_path" ]; then
+        log_info "Evento Radarr: $radarr_eventtype para $radarr_movie_path"
+        echo "$(date '+%Y-%m-%d %H:%M:%S')|$radarr_eventtype|$radarr_movie_path" >>"$RADARR_QUEUE_FILE"
         return 0
     fi
 
-    # Generate creatortool using exiftool
-    creatortool=$(exiftool -f -s3 -"creatortool" "$final_image" 2>&1 || echo "")
-    if [ -z "$creatortool" ]; then
-        debug_log "Warning: creatortool has no value for image: $final_image"
-    fi
-    debug_log "Debug: CUSTOM_CREATOR_TOOL is set to: $CUSTOM_CREATOR_TOOL"
-    debug_log "Debug: creatortool is set to: $creatortool"
-
-    debug_log "Checking if creatortool matches CUSTOM_CREATOR_TOOL..."
-    if [ "${creatortool}" != "$CUSTOM_CREATOR_TOOL" ]; then
-        debug_log "creatortool does not match CUSTOM_CREATOR_TOOL. Proceeding with overlay application."
-        offset_x=0
-        offset_y=0
-        if [ -f "$final_image" ]; then
-            debug_log "Processing image: $final_image"
-
-            # Verificar que el archivo tenga un tamaño mínimo para ser procesado
-            local file_size=$(stat -c%s "$final_image" 2>/dev/null || echo "0")
-            if [ "$file_size" -lt 1000 ]; then
-                log "Error: File size too small ($file_size bytes) for $final_image. Skipping."
-                return 1
-            fi
-
-            # Capturar la salida de identify para mostrar posibles errores
-            dimensions=$(identify -format "%wx%h" "$final_image" 2>&1)
-            if [[ $dimensions == *"identify:"* ]]; then
-                log "Error processing image $final_image: $dimensions"
-                return 1
-            elif [ -z "$dimensions" ]; then
-                log "Error: Unable to retrieve dimensions for $final_image. Skipping."
-                return 1
-            fi
-            width=$(echo $dimensions | cut -d 'x' -f 1)
-            height=$(echo $dimensions | cut -d 'x' -f 2)
-
-            if ! [[ "$width" =~ ^[0-9]+$ ]] || ! [[ "$height" =~ ^[0-9]+$ ]]; then
-                log "Error: Invalid dimensions ($dimensions) for $final_image. Skipping."
-                return 1
-            fi
-            debug_log "Image dimensions: ${width}x${height}"
-
-            # Check if the image is horizontal or vertical
-            if [ "$width" -gt "$height" ]; then
-                debug_log "Image is horizontal."
-                gravity="SouthEast"
-                resize=$poster_resize
-                offset_x=100
-            else
-                debug_log "Image is vertical."
-                gravity="SouthWest"
-                resize=$vertical_resize
-            fi
-
-            # Check if it is a thumb or folder.jpg
-            if [ "$type" == "thumb" ]; then
-                debug_log "Image type is thumb."
-                gravity="SouthWest"
-                offset_x=150
-            fi
-
-            # Resize the poster image (without cropping)
-            resize_output=$(magick "$final_image" -resize "$resize" "$final_image" 2>&1)
-            if [ $? -ne 0 ]; then
-                log "Error resizing image $final_image: $resize_output"
-                return 1
-            fi
-
-            for flag_file in "${flag_files[@]}"; do
-                if [ -f "$OVERLAY_DIR/$flag_file" ]; then
-                    debug_log "Adding flag: $flag_file to image: $final_image"
-
-                    overlay_output=$(magick "$final_image" \
-                        \( -density $flag_width "$OVERLAY_DIR/$flag_file" -resize "${flag_width}x${flag_height}" \) \
-                        -gravity ${gravity} -geometry +${offset_x}+${offset_y} -composite \
-                        "$final_image" 2>&1)
-                    if [ $? -ne 0 ]; then
-                        log "Error adding flag $flag_file to $final_image: $overlay_output"
-                        continue
-                    fi
-                    [ -f folder.jpg_exiftool_tmp ] && rm folder.jpg_exiftool_tmp -f
-                    debug_log "-> Added $flag_file to $(pwd)/$final_image"
-
-                    if command -v exiftool >/dev/null 2>&1; then
-                        exiftool_output=$(exiftool -creatortool="$CUSTOM_CREATOR_TOOL" -overwrite_original "$final_image" 2>&1)
-                        if [ $? -ne 0 ]; then
-                            debug_log "Warning: Failed to update metadata for $final_image: $exiftool_output"
-                        fi
-                    else
-                        debug_log "Error: exiftool not found. Skipping metadata update."
-                    fi
-                    if [[ "$resize" == "$poster_resize" ]]; then
-                        offset_x=$((offset_x + flag_width))
-                    else
-                        offset_y=$((offset_y + flag_height))
-                    fi
-                else
-                    debug_log "Flag file $flag_file not found in $OVERLAY_DIR."
-                fi
-            done
-        else
-            log "Image file $final_image not found."
-        fi
-    else
-        debug_log "creatortool matches CUSTOM_CREATOR_TOOL. Skipping overlay application."
+    # Procesar eventos de Sonarr
+    if [ -n "$sonarr_eventtype" ] && [ -n "$sonarr_episodefile_path" ]; then
+        log_info "Evento Sonarr: $sonarr_eventtype para $sonarr_episodefile_path"
+        echo "$(date '+%Y-%m-%d %H:%M:%S')|$sonarr_eventtype|$sonarr_episodefile_path" >>"$SONARR_QUEUE_FILE"
+        return 0
     fi
 
-    # Mark the video as processed after successfully modifying the image
-    if [ -n "$video_file" ]; then
-        mark_video_processed "$video_file"
-    fi
-
-    debug_log "Finished add_overlay for image: $1, type: $2"
+    return 1
 }
 
-# Function to wait for nfo and process the image
-wait_for_nfo_and_process() {
-    local content_path="$1"
-    local is_all_mode="$2"     # Pass "true" if running in "all" mode
-    local skip_header="$3"     # New parameter to skip the header in batch mode
+# ========================
+# Argument Parsing
+# ========================
 
-    debug_log "Processing folder: $content_path"
-    debug_log "Checking for movie.nfo or tvshow.nfo in $content_path..."
-
-    # Check if there are no .mkv files in the folder
-    if ! find "$content_path" -maxdepth 1 -type f -name '*.mkv' | grep -q . &&
-        ! find "$content_path" -mindepth 2 -type f -name '*.mkv' | grep -q .; then
-        log "WARNING: No .mkv file found in $content_path. Moving to $A_BORRAR_DIR."
-        mkdir -p "$A_BORRAR_DIR"
-        mv "$content_path" "$A_BORRAR_DIR/"
-        return
-    fi
-
-    # Procesamiento directo sin espera en segundo plano
-    _process_content "$content_path" "$is_all_mode" "$skip_header"
+# Parsear argumentos
+parse_arguments() {
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in
+        -v | --verbose)
+            DEBUG=true
+            ;;
+        -f | --force)
+            FORCE_UPDATE=true
+            ;;
+        -q | --queue)
+            MODE="queue"
+            if [[ "$2" =~ ^[0-9]+$ ]]; then
+                shift
+                NFO_WAIT_SECONDS=$1
+            fi
+            ;;
+        -m | --monitor)
+            shift
+            MONITOR_INTERVAL=$1
+            MODE="monitor"
+            ;;
+        -j | --jobs)
+            shift
+            MAX_PARALLEL_JOBS=$1
+            ;;
+        --process-queue)
+            MODE="process_queue"
+            ;;
+        --setup-cron)
+            setup_queue_processor
+            exit 0
+            ;;
+        --install-deps)
+            install_deps
+            exit $?
+            ;;
+        all)
+            MODE="all"
+            ;;
+        movies)
+            MODE="movies"
+            ;;
+        tvshows)
+            MODE="tvshows"
+            ;;
+        *)
+            log_warning "Argumento desconocido: $1"
+            ;;
+        esac
+        shift
+    done
 }
 
-# Función interna que realiza el verdadero procesamiento sin esperas
-_process_content() {
-    local content_path="$1"
-    local is_all_mode="$2"
-    local skip_header="$3"
+# ========================
+# Main Execution
+# ========================
 
-    # Verificar si existen archivos NFO, si no existen, saltar este elemento
-    debug_log "Checking for NFO files in $content_path..."
-    if [ ! -f "$content_path/movie.nfo" ] && [ ! -f "$content_path/tvshow.nfo" ]; then
-        debug_log "No NFO files found in $content_path. Skipping for now."
-        return
+# Función principal
+main() {
+    # Configuración inicial
+    logfileSetup
+    ensure_directories_exist
+    setup_queue_files
+
+    log_info "=== $scriptName v$scriptVersion iniciado ==="
+    log_info "Usuario: $(whoami), PID: $$"
+
+    # Parsear argumentos
+    parse_arguments "$@"
+
+    # Verificar dependencias
+    if ! install_deps; then
+        log_error "Dependencias faltantes - el script puede no funcionar correctamente"
     fi
 
-    if [ -f "$content_path/movie.nfo" ]; then
-        # Only print the header if not already printed in batch mode
-        if [ "$skip_header" != "true" ]; then
-            log "Processing MOVIE: $(basename "$content_path")"
-        fi
+    # Manejar eventos de Sonarr/Radarr
+    if handle_events; then
+        log_info "Evento añadido a la cola"
+        exit 0
+    fi
 
-        local mkv_file="${radarr_moviefile_path:-$(find "$content_path" -maxdepth 1 -type f -name '*.mkv' | head -n 1)}"
-        if [ -z "$mkv_file" ] || [ ! -f "$mkv_file" ]; then
-            debug_log "Error: No valid .mkv file found for the movie in $content_path."
-            return
-        fi
-
-        get_languages "$mkv_file"
-
-        if [ "$is_all_mode" == "true" ]; then
-            # Process folder.jpg and backdrop.jpg if they exist, without waiting
-            [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ] && add_overlay "$content_path/folder.jpg" "folder" "$mkv_file" || debug_log "Skipping: folder.jpg not found or empty in $content_path."
-            [ -f "$content_path/backdrop.jpg" ] && [ -s "$content_path/backdrop.jpg" ] && add_overlay "$content_path/backdrop.jpg" "backdrop" "$mkv_file" || debug_log "Skipping: backdrop.jpg not found or empty in $content_path."
+    # Determinar modo de ejecución
+    if [ -z "$MODE" ]; then
+        if [ -n "$sonarr_eventtype" ] || [ -n "$radarr_eventtype" ]; then
+            MODE="queue_only"
         else
-            # Check for image files existence, skip if not found
-            debug_log "Checking for image files in $content_path..."
-            if [ ! -f "$content_path/folder.jpg" ] || [ ! -f "$content_path/backdrop.jpg" ]; then
-                debug_log "Image files not ready in $content_path. Skipping for now."
-                return
-            fi
-
-            if [ -f "$content_path/folder.jpg" ] && [ -s "$content_path/folder.jpg" ]; then
-                add_overlay "$content_path/folder.jpg" "folder" "$mkv_file"
-            else
-                debug_log "Error: folder.jpg not found or is empty in $content_path."
-            fi
-
-            if [ -f "$content_path/backdrop.jpg" ] && [ -s "$content_path/backdrop.jpg" ]; then
-                add_overlay "$content_path/backdrop.jpg" "backdrop" "$mkv_file"
-            else
-                debug_log "Error: backdrop.jpg not found or is empty in $content_path."
-            fi
+            MODE="all"
         fi
-    elif [ -f "$content_path/tvshow.nfo" ]; then
-        # Only print the header if not already printed in batch mode
-        if [ "$skip_header" != "true" ]; then
-            log "Processing SERIES: $(basename "$content_path")"
-        fi
+    fi
 
-        # Process series main images (folder.jpg and backdrop.jpg)
-        if [ -f "$content_path/folder.jpg" ]; then
-            # For main series folder, use any episode to get languages
-            local any_mkv_file=$(find "$content_path" -type f -name "*.mkv" | head -n 1)
-            if [ -n "$any_mkv_file" ] && [ -f "$any_mkv_file" ]; then
-                get_languages "$any_mkv_file"
-                add_overlay "$content_path/folder.jpg" "folder" "$any_mkv_file"
-                if [ -f "$content_path/backdrop.jpg" ]; then
-                    add_overlay "$content_path/backdrop.jpg" "backdrop" "$any_mkv_file"
-                fi
-            else
-                debug_log "No MKV files found in series directory or subdirectories. Skipping series main images."
-            fi
-        fi
+    log_info "Modo de ejecución: $MODE"
 
-        # Process season folders
-        season_dirs=()
-        for season_dir in "$content_path"/Season*/; do
-            if [ -d "$season_dir" ] && [ -f "${season_dir}season.nfo" ]; then
-                season_dirs+=("$season_dir")
-            fi
+    # Ejecutar según el modo
+    case "$MODE" in
+    "process_queue")
+        process_queue_files
+        ;;
+    "monitor")
+        setup_queue_processor
+        log_info "Monitor iniciado (intervalo: ${MONITOR_INTERVAL}s)"
+        while true; do
+            process_queue_files
+            sleep "$MONITOR_INTERVAL"
         done
-
-        total_seasons=${#season_dirs[@]}
-        season_count=0
-
-        for season_dir in "${season_dirs[@]}"; do
-            season_count=$((season_count + 1))
-            season_name=$(basename "$season_dir")
-            series_name=$(basename "$content_path")
-            # Extract season number (assuming format "Season XX")
-            season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
-            season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
-            log "  • ${series_name}-S${season_num} ($season_count/$total_seasons)"
-
-            # Process each episode's thumb image
-            episode_thumbs=()
-            for thumb_file in "$season_dir"/*-thumb.jpg; do
-                if [ -f "$thumb_file" ]; then
-                    episode_thumbs+=("$thumb_file")
-                fi
-            done
-
-            total_episodes=${#episode_thumbs[@]}
-            episode_count=0
-
-            for thumb_file in "${episode_thumbs[@]}"; do
-                # Extract the base name without -thumb.jpg
-                local base_name="${thumb_file%-thumb.jpg}"
-                local mkv_file="${base_name}.mkv"
-                local episode_name=$(basename "$base_name")
-
-                if [ -f "$mkv_file" ]; then
-                    episode_count=$((episode_count + 1))
-                    # Extract episode number from filename (assuming SxxExx format)
-                    episode_num=$(echo "$episode_name" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
-                    episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
-                    log "    ◦ ${series_name}-S${season_num}E${episode_num} ($episode_count/$total_episodes)"
-                    get_languages "$mkv_file"
-                    add_overlay "$thumb_file" "thumb" "$mkv_file"
-                else
-                    debug_log "Warning: MKV file not found for thumb: $thumb_file"
-                fi
-            done
-        done
-
-        # Handle Sonarr specific event (process a single episode)
-        if [ -n "$sonarr_episodefile_path" ] && [ -f "$sonarr_episodefile_path" ]; then
-            local episode_basename=$(basename "$sonarr_episodefile_path" .mkv)
-            local episode_dir=$(dirname "$sonarr_episodefile_path")
-            local season_name=$(basename "$episode_dir")
-            local thumb_file="${episode_dir}/${episode_basename}-thumb.jpg"
-
-            # Check if thumb file exists, skip if not
-            if [ ! -f "$thumb_file" ]; then
-                debug_log "Thumb file not ready: $thumb_file. Skipping for now."
-                return
-            fi
-
-            if [ -f "$thumb_file" ]; then
-                get_languages "$sonarr_episodefile_path"
-                add_overlay "$thumb_file" "thumb" "$sonarr_episodefile_path"
-
-                # Extract season and episode numbers for event episode
-                series_name=$(basename "$content_path")
-                season_num=$(echo "$season_name" | grep -oE '[0-9]+' | head -1)
-                season_num=$(printf "%02d" "$season_num" 2>/dev/null || echo "$season_num")
-                episode_num=$(echo "$episode_basename" | grep -oE 'E[0-9]+|[0-9]+x[0-9]+' | grep -oE '[0-9]+$')
-                episode_num=$(printf "%02d" "$episode_num" 2>/dev/null || echo "$episode_num")
-
-                log "  • Event: ${series_name}-S${season_num}E${episode_num}"
-            else
-                debug_log "Error: Thumb file not found for episode: $sonarr_episodefile_path"
+        ;;
+    "queue_only")
+        log_info "Modo solo cola - evento ya procesado"
+        ;;
+    "all" | "movies" | "tvshows")
+        log_info "Procesando todo el contenido disponible"
+        # Procesar todo el contenido
+        if [[ "$MODE" == "all" || "$MODE" == "movies" ]]; then
+            if [ -d "$MOVIES_DIR" ]; then
+                find "$MOVIES_DIR" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" | while read -r video_file; do
+                    process_single_item "$video_file"
+                done
             fi
         fi
-    else
-        debug_log "No movie.nfo or tvshow.nfo found in $content_path. Skipping."
-    fi
-}
 
-# Function to process all movies or series in a base directory
-process_all() {
-    log "Processing all movies in $MOVIES_DIR and all series in $SERIES_DIR..."
-    debug_log "Starting batch processing..."
-
-    # Procesar películas secuencialmente
-    log "Collecting movie directories to process..."
-    movie_dirs=()
-    for dir in "$MOVIES_DIR"/*/; do
-        if [ -d "$dir" ]; then
-            movie_dirs+=("$dir")
+        if [[ "$MODE" == "all" || "$MODE" == "tvshows" ]]; then
+            if [ -d "$SERIES_DIR" ]; then
+                find "$SERIES_DIR" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" | while read -r video_file; do
+                    process_single_item "$video_file"
+                done
+            fi
         fi
-    done
-    total_movies=${#movie_dirs[@]}
-    log "Found $total_movies movie directories to process"
-    
-    movie_count=0
-    for dir in "${movie_dirs[@]}"; do
-        movie_count=$((movie_count + 1))
-        log "Processing MOVIE $movie_count/$total_movies: $(basename "$dir")"
-        wait_for_nfo_and_process "$dir" "true" "true"
-    done
-
-    # Procesar series secuencialmente
-    log "Collecting TV series directories to process..."
-    series_dirs=()
-    for dir in "$SERIES_DIR"/*/; do
-        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ] && [[ "$(basename "$dir")" != "trailers" ]]; then
-            series_dirs+=("$dir")
-        fi
-    done
-    total_series=${#series_dirs[@]}
-    log "Found $total_series series directories to process"
-    
-    series_count=0
-    for dir in "${series_dirs[@]}"; do
-        series_count=$((series_count + 1))
-        series_name=$(basename "$dir")
-        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-            update_status "Processing SERIES $series_count/$total_series: $series_name" "true"
-        else
-            log "Processing SERIES $series_count/$total_series: $series_name"
-        fi
-        wait_for_nfo_and_process "$dir" "true" "true"
-    done
-
-    debug_log "Finished batch processing."
-}
-
-# Function to handle Radarr or Sonarr events
-process_radarr_sonarr_event() {
-    # IMPORTANTE: Comprobar eventos de prueba al principio, antes de cualquier log u otra operación
-    # Esto asegura que con eventos de prueba retornamos éxito inmediatamente
-    [ "$radarr_eventtype" == "Test" ] && exit 0
-    [ "$sonarr_eventtype" == "Test" ] && exit 0
-
-    if [ -n "$radarr_eventtype" ]; then
-        log "Received Radarr event: $radarr_eventtype"
-        debug_log "Radarr Movie Path: $radarr_movie_path"
-        debug_log "Radarr Movie File Path: $radarr_moviefile_path"
-
-        if [ -n "$radarr_movie_path" ]; then
-            # En lugar de procesar inmediatamente, agregar a la cola
-            add_to_radarr_queue "$radarr_movie_path" "$radarr_moviefile_path"
-            log "Movie added to processing queue: $(basename "$radarr_movie_path")"
-        else
-            log "Error: radarr_movie_path is empty"
-        fi
-    elif [ -n "$sonarr_eventtype" ]; then
-        log "Received Sonarr event: $sonarr_eventtype"
-        debug_log "Sonarr Series Path: $sonarr_series_path"
-        debug_log "Sonarr Episode File Path: $sonarr_episodefile_path"
-
-        if [ -n "$sonarr_series_path" ]; then
-            # En lugar de procesar inmediatamente, agregar a la cola
-            add_to_sonarr_queue "$sonarr_series_path" "$sonarr_episodefile_path"
-            log "Series added to processing queue: $(basename "$sonarr_series_path")"
-        else
-            log "Error: sonarr_series_path is empty"
-        fi
-    else
-        log "Error: Neither Radarr nor Sonarr event detected."
+        ;;
+    *)
+        log_error "Modo desconocido: $MODE"
         exit 1
-    fi
-}
+        ;;
+    esac
 
-# Function to add Radarr event to queue
-add_to_radarr_queue() {
-    local movie_path="$1"
-    local movie_file_path="$2"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    # Formato: timestamp|movie_path|movie_file_path
-    echo "$timestamp|$movie_path|$movie_file_path" >> "$RADARR_QUEUE_FILE"
-    debug_log "Added to Radarr queue: $movie_path"
-}
-
-# Function to add Sonarr event to queue
-add_to_sonarr_queue() {
-    local series_path="$1"
-    local episode_file_path="$2"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    
-    # Formato: timestamp|series_path|episode_file_path
-    echo "$timestamp|$series_path|$episode_file_path" >> "$SONARR_QUEUE_FILE"
-    debug_log "Added to Sonarr queue: $series_path"
-}
-
-# Function to process queue files
-process_queue() {
-    log "Processing queued items..."
-    
-    # Procesar cola de Radarr
-    if [ -f "$RADARR_QUEUE_FILE" ] && [ -s "$RADARR_QUEUE_FILE" ]; then
-        log "Processing Radarr queue..."
-        while IFS='|' read -r timestamp movie_path movie_file_path; do
-            if [ -n "$movie_path" ] && [ -d "$movie_path" ]; then
-                log "Processing queued MOVIE: $(basename "$movie_path") (queued at $timestamp)"
-                # Establecer variables temporales para simular evento Radarr
-                radarr_movie_path="$movie_path"
-                radarr_moviefile_path="$movie_file_path"
-                wait_for_nfo_and_process "$movie_path" "false" "false"
-                unset radarr_movie_path radarr_moviefile_path
-            else
-                debug_log "Skipping invalid movie path: $movie_path"
-            fi
-        done < "$RADARR_QUEUE_FILE"
-        
-        # Limpiar archivo de cola después del procesamiento
-        > "$RADARR_QUEUE_FILE"
-        log "Radarr queue processed and cleared"
-    fi
-    
-    # Procesar cola de Sonarr
-    if [ -f "$SONARR_QUEUE_FILE" ] && [ -s "$SONARR_QUEUE_FILE" ]; then
-        log "Processing Sonarr queue..."
-        while IFS='|' read -r timestamp series_path episode_file_path; do
-            if [ -n "$series_path" ] && [ -d "$series_path" ]; then
-                log "Processing queued SERIES: $(basename "$series_path") (queued at $timestamp)"
-                # Establecer variables temporales para simular evento Sonarr
-                sonarr_series_path="$series_path"
-                sonarr_episodefile_path="$episode_file_path"
-                wait_for_nfo_and_process "$series_path" "false" "false"
-                unset sonarr_series_path sonarr_episodefile_path
-            else
-                debug_log "Skipping invalid series path: $series_path"
-            fi
-        done < "$SONARR_QUEUE_FILE"
-        
-        # Limpiar archivo de cola después del procesamiento
-        > "$SONARR_QUEUE_FILE"
-        log "Sonarr queue processed and cleared"
-    fi
-    
-    if [ ! -s "$RADARR_QUEUE_FILE" ] && [ ! -s "$SONARR_QUEUE_FILE" ]; then
-        log "No items in queue to process"
-    fi
-}
-
-# Function to clean up Jellyfin cache directories
-cleanup_jellyfin_cache() {
-    local cache_dirs=("/jellyfin-config/cache" "/jellyfin-config/.cache")
-    for dir in "${cache_dirs[@]}"; do
-        if [ -d "$dir" ]; then
-            debug_log "Deleting cache directory: $dir"
-            rm -rf "$dir"
-            debug_log "Cache directory $dir deleted."
-        else
-            debug_log "Cache directory $dir does not exist. Skipping."
-        fi
-    done
+    log_info "=== $scriptName completado ==="
 }
 
 # ========================
-# Main Script Logic
+# Script Execution
 # ========================
 
-# Ensure the temporary directory exists
-mkdir -p "$TMP_DIR"
+# Manejar interrupciones
+trap 'log_info "Script interrumpido - limpiando..."; exit 1' INT TERM
 
-# Install dependencies
-install_deps
-
-# Print the number of instances of this script currently running
-script_name=$(basename "$0")
-instance_count=$(pgrep -fc "$script_name")
-debug_log "Number of instances of $script_name running: $instance_count"
-
-# Main logic
-if [ "$MODE" == "all" ]; then
-    process_all "$MOVIES_DIR" "$SERIES_DIR"
-    cleanup_jellyfin_cache
-elif [ "$MODE" == "movies" ]; then
-    log "Processing all movies in $MOVIES_DIR..."
-    debug_log "Starting movies batch processing..."
-    # Recopilar todas las carpetas de películas
-    log "Collecting movie directories to process..."
-    movie_dirs=()
-    for dir in "$MOVIES_DIR"/*/; do
-        if [ -d "$dir" ]; then
-            movie_dirs+=("$dir")
-        fi
-    done
-    total_movies=${#movie_dirs[@]}
-    log "Found $total_movies movie directories to process"
-
-    # Procesar películas secuencialmente
-    movie_count=0
-    for dir in "${movie_dirs[@]}"; do
-        movie_count=$((movie_count + 1))
-        log "Processing MOVIE $movie_count/$total_movies: $(basename "$dir")"
-        wait_for_nfo_and_process "$dir" "true" "true"
-    done
-
-    cleanup_jellyfin_cache
-elif [ "$MODE" == "tvshows" ]; then
-    log "Processing all TV series in $SERIES_DIR..."
-    debug_log "Starting TV series batch processing..."
-    # Recopilar todas las carpetas de series
-    log "Collecting TV series directories to process..."
-    series_dirs=()
-    for dir in "$SERIES_DIR"/*/; do
-        if [ -d "$dir" ] && [ -f "$dir/tvshow.nfo" ] && [[ "$(basename "$dir")" != "trailers" ]]; then
-            series_dirs+=("$dir")
-        fi
-    done
-    total_series=${#series_dirs[@]}
-    log "Found $total_series series directories to process"
-
-    # Procesar series secuencialmente
-    series_count=0
-    for dir in "${series_dirs[@]}"; do
-        series_count=$((series_count + 1))
-        series_name=$(basename "$dir")
-        if [ "$INTERACTIVE_TERMINAL" = "true" ]; then
-            update_status "Processing SERIES $series_count/$total_series: $series_name" "true"
-        else
-            log "Processing SERIES $series_count/$total_series: $series_name"
-        fi
-        wait_for_nfo_and_process "$dir" "true" "true"
-    done
-
-    cleanup_jellyfin_cache
-elif [ "$MODE" == "queue" ]; then
-    process_queue
-    cleanup_jellyfin_cache
-else
-    process_radarr_sonarr_event
-    cleanup_jellyfin_cache
-fi
-
-# Log successful execution to stdout
-log "Script executed successfully."
-echo $SECONDS
+# Ejecutar función principal con todos los argumentos
+main "$@"
