@@ -191,57 +191,172 @@ setup_queue_files() {
 # Cron and Queue Processor
 # ========================
 
-# Configurar procesador de cola con cron
+# Configurar procesador de cola con cron permanente
 setup_queue_processor() {
-    local cron_locations=(
-        "/etc/cron.d"
-        "/tmp"
-        "$FLAGS_DIR/cron"
-    )
-
-    local cron_file=""
-    for location in "${cron_locations[@]}"; do
-        if [[ -w "$location" ]] || create_directory_safe "$location"; then
-            cron_file="$location/lang-flags-queue"
-            break
-        fi
-    done
-
-    if [[ -n "$cron_file" ]]; then
-        # Crear cron job
-        cat >"$cron_file" <<'EOF'
-# Lang-Flags Queue Processor
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-
-# Procesar cola cada minuto
-* * * * * root bash /flags/lang-flags.bash --process-queue >/dev/null 2>&1
-EOF
-        chmod 644 "$cron_file" 2>/dev/null || true
-        log_info "Cron job configurado en: $cron_file"
-
-        # Recargar cron si es posible
-        if command -v crond >/dev/null; then
-            killall -HUP crond 2>/dev/null || true
-        elif command -v cron >/dev/null; then
-            service cron reload 2>/dev/null || true
-        fi
-    else
-        log_warning "No se pudo configurar cron, usando fallback a proceso en background"
-        # Fallback a proceso background
-        start_background_queue_processor
+    local cron_entry="*/15 * * * * bash /flags/lang-flags.bash --process-queue >/dev/null 2>&1"
+    local crontab_file="/var/spool/cron/crontabs/root"
+    
+    # Verificar si ya existe la entrada en el crontab
+    if [[ -f "$crontab_file" ]] && grep -q "lang-flags.bash --process-queue" "$crontab_file" 2>/dev/null; then
+        log_debug "Cron job permanente ya configurado"
+        return 0
     fi
+    
+    # Crear directorio si no existe
+    mkdir -p "$(dirname "$crontab_file")" 2>/dev/null || true
+    
+    # Añadir entrada al crontab de root
+    echo "$cron_entry" >> "$crontab_file" 2>/dev/null && {
+        log_info "✓ Cron job permanente configurado: cada 15 minutos"
+        # Recargar cron para aplicar cambios
+        pkill -HUP crond 2>/dev/null || true
+        log_info "🟢 Procesador de cola PERMANENTE activado"
+        return 0
+    }
+    
+    log_error "✗ No se pudo configurar el cron job permanente"
+    return 1
 }
 
-# Iniciar procesador de cola en background como fallback
-start_background_queue_processor() {
-    (
-        while true; do
-            process_queue_files
-            sleep 60
+# Eliminar función start_background_queue_processor - no es necesaria
+# El cron permanente se encarga de todo
+
+# Verificar si las colas están vacías
+are_queues_empty() {
+    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
+    
+    for queue_file in "${queue_files[@]}"; do
+        if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
+            return 1  # No están vacías
+        fi
+    done
+    
+    return 0  # Están vacías
+}
+
+# Quitar procesador de cola - NO HACER NADA
+# El cron job es permanente y siempre está habilitado
+# Solo verificará si hay elementos y procesará si es necesario
+
+# Verificar si un archivo está listo para procesar
+is_ready_to_process() {
+    local file_path="$1"
+    local file_dir=$(dirname "$file_path")
+    local base_name=$(basename "$file_path" | sed 's/\.[^.]*$//')
+    
+    # Determinar si es episodio de TV o película
+    local is_tv_episode=false
+    if [[ "$file_path" =~ [Ss][0-9]+[Ee][0-9]+ ]] || [[ "$file_path" =~ Season ]]; then
+        is_tv_episode=true
+    fi
+    
+    # Buscar archivo NFO apropiado
+    local nfo_file=""
+    if [[ "$is_tv_episode" == true ]]; then
+        # Para episodios de TV, buscar season.nfo o cualquier NFO en el directorio
+        for nfo in "$file_dir"/season.nfo "$file_dir"/*.nfo; do
+            if [[ -f "$nfo" ]]; then
+                nfo_file="$nfo"
+                log_debug "NFO encontrado para episodio: $nfo"
+                break
+            fi
         done
-    ) &
-    log_info "Procesador de cola iniciado en background (PID: $!)"
+    else
+        # Para películas, buscar NFO específico del archivo
+        for nfo in "$file_dir"/"${base_name}.nfo" "$file_dir"/*.nfo; do
+            if [[ -f "$nfo" ]]; then
+                nfo_file="$nfo"
+                log_debug "NFO encontrado para película: $nfo"
+                break
+            fi
+        done
+    fi
+    
+    # Si no hay NFO, esperar un poco más
+    if [[ -z "$nfo_file" ]]; then
+        log_debug "NFO no encontrado para: $file_path - esperando que Jellyfin procese"
+        return 1
+    fi
+    
+    # Buscar imágenes de poster existentes (más permisivo para episodios)
+    local poster_found=false
+    if [[ "$is_tv_episode" == true ]]; then
+        # Para episodios, buscar posters a nivel de temporada o serie
+        local season_dir="$file_dir"
+        local series_dir=$(dirname "$season_dir")
+        
+        for ext in jpg jpeg png; do
+            for dir in "$season_dir" "$series_dir"; do
+                for pattern in "poster" "folder" "season" "banner" "thumb"; do
+                    if [[ -f "$dir/${pattern}.${ext}" ]]; then
+                        poster_found=true
+                        log_debug "Poster encontrado para episodio: $dir/${pattern}.${ext}"
+                        break 3
+                    fi
+                done
+            done
+        done
+    else
+        # Para películas, buscar poster específico
+        for ext in jpg jpeg png; do
+            for pattern in "poster" "folder" "${base_name}"; do
+                if [[ -f "$file_dir/${pattern}.${ext}" ]]; then
+                    poster_found=true
+                    log_debug "Poster encontrado para película: $file_dir/${pattern}.${ext}"
+                    break 2
+                fi
+            done
+        done
+    fi
+    
+    # Si no hay poster, esperar un poco más (pero ser más permisivo para episodios antiguos)
+    if [[ "$poster_found" == false ]]; then
+        local file_age=$(( $(date +%s) - $(stat -c %Y "$file_path" 2>/dev/null || echo 0) ))
+        if [[ "$is_tv_episode" == true ]] && [[ $file_age -gt 3600 ]]; then
+            # Para episodios de más de 1 hora, procesar aunque no haya poster
+            log_debug "Episodio antiguo sin poster, procesando de todas formas: $file_path"
+        else
+            log_debug "Poster no encontrado para: $file_path - esperando que Jellyfin genere imágenes"
+            return 1
+        fi
+    fi
+    
+    # Verificar que el archivo no sea demasiado reciente (dar tiempo a Jellyfin)
+    local file_age=$(( $(date +%s) - $(stat -c %Y "$file_path" 2>/dev/null || echo 0) ))
+    local min_age=${NFO_WAIT_SECONDS:-30}
+    
+    if [[ $file_age -lt $min_age ]]; then
+        log_debug "Archivo muy reciente ($file_age s), esperando $min_age s mínimo: $file_path"
+        return 1
+    fi
+    
+    log_debug "✓ Archivo listo para procesar: NFO encontrado, criterios cumplidos"
+    return 0
+}
+
+# ========================
+# Standard Queue Processing
+# ========================
+
+# Función estandarizada para procesar la cola (simplificada)
+# El cron es permanente, solo procesa la cola sin gestión automática
+standard_queue_processing() {
+    local context="${1:-general}"
+    
+    log_debug "Procesando cola (contexto: $context)"
+    
+    # Verificar si las colas están vacías antes de procesar
+    if are_queues_empty; then
+        log_debug "Colas vacías - terminando inmediatamente"
+        return 0
+    fi
+    
+    log_info "Procesando elementos en cola..."
+    
+    # Procesar la cola
+    process_queue_files
+    
+    log_debug "Procesamiento de cola completado (contexto: $context)"
 }
 
 # Procesar archivos de cola
@@ -250,15 +365,41 @@ process_queue_files() {
 
     for queue_file in "${queue_files[@]}"; do
         if [ -f "$queue_file" ] && [ -s "$queue_file" ]; then
+            local temp_file="${queue_file}.tmp.$$"
+            local processed_any=false
+            
+            # Leer la cola y procesar elemento por elemento
             while IFS='|' read -r timestamp event_type file_path; do
                 if [[ -n "$file_path" ]] && [[ -f "$file_path" ]]; then
-                    log_info "Procesando desde cola: $file_path"
-                    process_single_item "$file_path"
+                    log_info "Verificando desde cola: $file_path"
+                    
+                    # Verificar si el archivo está listo para procesar (NFO existe, etc.)
+                    if is_ready_to_process "$file_path"; then
+                        log_info "Procesando desde cola: $file_path"
+                        if process_single_item "$file_path"; then
+                            log_info "✓ Procesado exitosamente: $file_path"
+                            processed_any=true
+                        else
+                            log_warning "Error procesando, mantener en cola: $file_path"
+                            echo "$timestamp|$event_type|$file_path" >> "$temp_file"
+                        fi
+                    else
+                        log_debug "No listo para procesar, mantener en cola: $file_path"
+                        echo "$timestamp|$event_type|$file_path" >> "$temp_file"
+                    fi
+                else
+                    log_warning "Archivo no encontrado, removiendo de cola: $file_path"
                 fi
-            done <"$queue_file"
-
-            # Limpiar archivo de cola después de procesar
-            >"$queue_file"
+            done < "$queue_file"
+            
+            # Reemplazar la cola con solo los elementos no procesados
+            if [[ -f "$temp_file" ]]; then
+                mv "$temp_file" "$queue_file"
+                log_debug "Cola actualizada: $(wc -l < "$queue_file" 2>/dev/null || echo 0) elementos pendientes"
+            else
+                > "$queue_file"  # Vaciar si no hay elementos pendientes
+                log_debug "Cola vacía: todos los elementos procesados"
+            fi
         fi
     done
 }
@@ -288,26 +429,53 @@ ensure_directories_exist() {
 
 # Instalación de dependencias (simplificada y sin sudo)
 install_deps() {
-    log_info "Verificando dependencias..."
+    log_info "Instalando dependencias..."
 
-    # Lista de comandos requeridos
+    # Instalar dependencias de forma desatendida
+    export DEBIAN_FRONTEND=noninteractive
+
+    if command -v apt-get >/dev/null 2>&1; then
+        apt-get update -qq >/dev/null 2>&1
+        apt-get install -y -qq \
+            imagemagick \
+            libimage-exiftool-perl \
+            jq \
+            ffmpeg \
+            curl \
+            wget \
+            bc \
+            >/dev/null 2>&1
+    elif command -v apk >/dev/null 2>&1; then
+        apk add --no-cache \
+            imagemagick \
+            exiftool \
+            jq \
+            ffmpeg \
+            curl \
+            wget \
+            bc \
+            bash \
+            >/dev/null 2>&1
+    fi
+
+    # Crear estructura de directorios
+    mkdir -p /flags/queue /flags/cache/metadata /flags/tmp /flags/cron /flags/4x3 2>/dev/null
+    chmod -R 755 /flags 2>/dev/null
+
+    # Verificar instalación
+    return $(check_dependencies_quiet)
+}
+
+# Verificar dependencias silenciosamente
+check_dependencies_quiet() {
     local required_commands=("exiftool" "jq" "convert" "ffmpeg")
-    local missing_commands=()
-
+    
     for cmd in "${required_commands[@]}"; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
-            missing_commands+=("$cmd")
+            return 1
         fi
     done
-
-    if [ ${#missing_commands[@]} -gt 0 ]; then
-        log_warning "Comandos faltantes: ${missing_commands[*]}"
-        log_info "Las dependencias deben instalarse por el administrador del contenedor"
-        return 1
-    else
-        log_info "Todas las dependencias están disponibles"
-        return 0
-    fi
+    return 0
 }
 
 # ========================
@@ -488,6 +656,9 @@ parse_arguments() {
         --process-queue)
             MODE="process_queue"
             ;;
+        --init)
+            MODE="init"
+            ;;
         --setup-cron)
             setup_queue_processor
             exit 0
@@ -518,6 +689,12 @@ parse_arguments() {
 generate_container_init_script() {
     local init_script="/custom-cont-init.d/lang_flags-install_deps.sh"
 
+    # Solo generar si no existe o si es más antiguo que este script
+    if [[ -f "$init_script" ]] && [[ "$init_script" -nt "$0" ]]; then
+        log_debug "Script de inicialización ya existe y está actualizado"
+        return 0
+    fi
+
     log_debug "Generando script de inicialización del contenedor..."
 
     # Crear directorio si no existe
@@ -529,68 +706,19 @@ generate_container_init_script() {
     # Borrar archivo existente si existe
     rm -f "$init_script" 2>/dev/null || true
 
-    # Generar el script simple y efectivo
+    # Generar script simplificado que llama al principal
     cat > "$init_script" << 'EOF'
 #!/bin/bash
 
-echo "[$(date)] Lang-Flags: Instalando dependencias..."
+echo "[$(date)] Lang-Flags: Inicializando sistema..."
 
-# Instalar dependencias de forma desatendida
-export DEBIAN_FRONTEND=noninteractive
-
-if command -v apt-get >/dev/null 2>&1; then
-    apt-get update -qq >/dev/null 2>&1
-    apt-get install -y -qq \
-        imagemagick \
-        libimage-exiftool-perl \
-        jq \
-        ffmpeg \
-        curl \
-        wget \
-        bc \
-        >/dev/null 2>&1
-elif command -v apk >/dev/null 2>&1; then
-    apk add --no-cache \
-        imagemagick \
-        exiftool \
-        jq \
-        ffmpeg \
-        curl \
-        wget \
-        bc \
-        bash \
-        >/dev/null 2>&1
+# Llamar al script principal para inicialización
+if [[ -f "/flags/lang-flags.bash" ]]; then
+    bash /flags/lang-flags.bash --init
+else
+    echo "[$(date)] Lang-Flags: ERROR - Script principal no encontrado"
+    exit 1
 fi
-
-echo "[$(date)] Lang-Flags: Estableciendo permisos de cron..."
-
-# Establecer permisos para poder crear cron después
-if [[ -d "/etc/cron.d" ]]; then
-    chmod 777 "/etc/cron.d" 2>/dev/null
-elif mkdir -p "/etc/cron.d" 2>/dev/null; then
-    chmod 777 "/etc/cron.d" 2>/dev/null
-fi
-
-echo "[$(date)] Lang-Flags: Configurando cron para procesamiento de colas..."
-
-# Configurar cron job para procesar colas automáticamente
-cat > /etc/cron.d/lang-flags-queue << 'CRONEOF'
-# Lang-Flags Queue Processor - Se autodesactiva cuando las colas están vacías
-SHELL=/bin/bash
-PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-
-# Procesar cola cada minuto
-* * * * * root bash /flags/lang-flags.bash --process-queue >/dev/null 2>&1
-CRONEOF
-
-chmod 644 /etc/cron.d/lang-flags-queue 2>/dev/null
-
-# Recargar cron para aplicar cambios
-if command -v crond >/dev/null; then
-    pkill -HUP crond 2>/dev/null || true
-fi
-
-echo "[$(date)] Lang-Flags: Cron job configurado - se autodesactivará cuando las colas estén vacías"
 
 echo "[$(date)] Lang-Flags: Inicialización completada"
 EOF
@@ -607,55 +735,11 @@ EOF
 }
 
 # ========================
-# Verificar si las colas están vacías
-are_queues_empty() {
-    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
-    
-    for queue_file in "${queue_files[@]}"; do
-        if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
-            return 1  # No están vacías
-        fi
-    done
-    
-    return 0  # Están vacías
-}
-
-# Quitar procesador de cola cuando no hay elementos (autodesactivar cron)
-remove_queue_processor() {
-    local cron_locations=(
-        "/etc/cron.d/lang-flags-queue"
-        "/tmp/lang-flags-queue"
-        "$FLAGS_DIR/cron/lang-flags-queue"
-    )
-
-    local removed=false
-    for cron_file in "${cron_locations[@]}"; do
-        if [[ -f "$cron_file" ]]; then
-            rm -f "$cron_file" 2>/dev/null && {
-                log_info "✓ Cron job removido: $cron_file (colas vacías)"
-                removed=true
-            }
-        fi
-    done
-
-    if [[ "$removed" == true ]]; then
-        # Recargar cron para aplicar cambios
-        if command -v crond >/dev/null; then
-            pkill -HUP crond 2>/dev/null || true
-        fi
-        log_info "🔴 Procesador de cola desactivado - todas las colas vacías"
-    fi
-}
-
-# ========================
 # Main Execution
 # ========================
 
 # Función principal
 main() {
-    # LO PRIMERO: Generar script de inicialización
-    generate_container_init_script
-    
     # Configuración inicial
     logfileSetup
     ensure_directories_exist
@@ -667,9 +751,14 @@ main() {
     # Parsear argumentos
     parse_arguments "$@"
 
-    # Verificar dependencias
-    if ! install_deps; then
-        log_error "Dependencias faltantes - el script puede no funcionar correctamente"
+    # Solo generar script de inicialización si no estamos en modo init
+    if [[ "$MODE" != "init" ]]; then
+        generate_container_init_script
+    fi
+
+    # Verificar dependencias solo si no estamos en modo init
+    if [[ "$MODE" != "init" ]] && ! check_dependencies_quiet; then
+        log_warning "Algunas dependencias pueden estar faltantes"
     fi
 
     # Manejar eventos de Sonarr/Radarr
@@ -691,26 +780,38 @@ main() {
 
     # Ejecutar según el modo
     case "$MODE" in
-    "process_queue")
-        process_queue_files
-        # Verificar si las colas están vacías y autodesactivar cron
-        if are_queues_empty; then
-            remove_queue_processor
+    "init")
+        log_info "Modo inicialización - instalando dependencias y configurando cron"
+        # Instalar dependencias
+        if install_deps; then
+            log_info "✓ Dependencias instaladas correctamente"
+        else
+            log_error "✗ Error instalando dependencias"
+        fi
+        
+        # Configurar cron permanente
+        if setup_queue_processor; then
+            log_info "✓ Sistema inicializado correctamente"
+        else
+            log_error "✗ Error configurando cron permanente"
         fi
         ;;
+    "process_queue")
+        standard_queue_processing "cron-job"
+        ;;
     "monitor")
-        setup_queue_processor
         log_info "Monitor iniciado (intervalo: ${MONITOR_INTERVAL}s)"
+        # Asegurar que el cron permanente esté configurado
+        setup_queue_processor
+        # El monitor solo reporta, no procesa automáticamente
         while true; do
-            process_queue_files
+            log_info "Monitor activo - cron permanente procesando cada 15 minutos"
             sleep "$MONITOR_INTERVAL"
         done
         ;;
     "queue_only")
-        log_info "Modo solo cola - procesando automáticamente"
-        # Simplemente procesar las colas y activar procesador en background si hay elementos
-        process_queue_files
-        start_simple_queue_processor
+        log_info "Modo solo cola - evento ya procesado"
+        # Solo añadir a cola, el cron permanente se encarga del resto
         ;;
     "all" | "movies" | "tvshows")
         log_info "Procesando todo el contenido disponible"
@@ -749,72 +850,3 @@ trap 'log_info "Script interrumpido - limpiando..."; exit 1' INT TERM
 
 # Ejecutar función principal con todos los argumentos
 main "$@"
-
-# Iniciar procesador simple de cola en background
-start_simple_queue_processor() {
-    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
-    local has_items=false
-    
-    # Verificar si hay elementos en alguna cola
-    for queue_file in "${queue_files[@]}"; do
-        if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
-            has_items=true
-            break
-        fi
-    done
-    
-    if [[ "$has_items" == false ]]; then
-        log_debug "No hay elementos en cola, no se inicia procesador"
-        return 0
-    fi
-    
-    log_info "Iniciando procesador simple de cola en background..."
-    
-    # Proceso en background que procesa hasta que las colas estén vacías
-    (
-        while true; do
-            local processed_any=false
-            
-            for queue_file in "${queue_files[@]}"; do
-                if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
-                    while IFS='|' read -r timestamp event_type file_path; do
-                        if [[ -n "$file_path" ]] && [[ -f "$file_path" ]]; then
-                            echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Procesando desde cola: $file_path" >> "${LOG_FILE:-/tmp/lang-flags.log}"
-                            process_single_item "$file_path"
-                            processed_any=true
-                        fi
-                    done < "$queue_file"
-                    
-                    # Limpiar cola después de procesar
-                    > "$queue_file"
-                fi
-            done
-            
-            # Si no procesamos nada, verificar si quedan elementos
-            if [[ "$processed_any" == false ]]; then
-                local still_has_items=false
-                for queue_file in "${queue_files[@]}"; do
-                    if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
-                        still_has_items=true
-                        break
-                    fi
-                done
-                
-                if [[ "$still_has_items" == false ]]; then
-                    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] Todas las colas vacías - finalizando procesador" >> "${LOG_FILE:-/tmp/lang-flags.log}"
-                    break
-                fi
-            fi
-            
-            # Esperar un poco antes del siguiente ciclo
-            sleep 10
-        done
-    ) &
-    
-    local pid=$!
-    log_info "✓ Procesador de cola iniciado (PID: $pid)"
-    return 0
-}
-
-
-
