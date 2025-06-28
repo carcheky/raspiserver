@@ -70,7 +70,7 @@ detect_container_type() {
 
 readonly SCRIPT_NAME="Lang-Flags-Beta"
 readonly SCRIPT_VERSION="3.0-beta"
-readonly DEBUG=${DEBUG:-false}
+readonly DEBUG=false
 
 # Directorios principales
 readonly BASE_DIR="/flags"
@@ -596,16 +596,12 @@ update_image_exif_checksum() {
         return 1
     fi
     
-    # SISTEMA UNIFICADO: Solo UserComment con checksum (eliminar output de exiftool)
-    local temp_output
-    temp_output=$(exiftool -overwrite_original -UserComment="LangFlags:$video_checksum" "$image_file" 2>&1)
-    local exit_code=$?
-    
-    if [[ $exit_code -eq 0 ]]; then
+    # SISTEMA UNIFICADO: Solo UserComment con checksum (silenciar completamente exiftool)
+    if exiftool -overwrite_original -UserComment="LangFlags:$video_checksum" "$image_file" >/dev/null 2>&1; then
         log_debug "Cache EXIF actualizado en: $(basename "$image_file") (UserComment=LangFlags:$video_checksum)"
         return 0
     else
-        log_warning "No se pudo actualizar UserComment en: $(basename "$image_file") - Error: $temp_output"
+        log_warning "No se pudo actualizar UserComment en: $(basename "$image_file")"
         return 1
     fi
 }
@@ -639,22 +635,17 @@ get_video_checksum_cached() {
     local cached_checksum=$(exiftool -f -s3 -"UserComment" "$video_file" 2>/dev/null | grep "LangFlags:" | cut -d: -f2)
     
     if [[ -n "$cached_checksum" ]]; then
-        log_debug "Checksum leído desde cache del video: $cached_checksum"
+        # NO hacer log aquí - solo retornar el checksum
         echo "$cached_checksum"
         return 0
     fi
     
-    # Si no hay cache, calcular y guardar en el video
+    # Si no hay cache, calcular checksum (SIN guardarlo en el video para evitar problemas de permisos)
     local calculated_checksum
     calculated_checksum=$(get_video_checksum "$video_file")
     
     if [[ -n "$calculated_checksum" ]]; then
-        # Guardar en EXIF del video para próximas veces
-        if exiftool -overwrite_original -UserComment="LangFlags:$calculated_checksum" "$video_file" 2>/dev/null; then
-            log_debug "Checksum guardado en cache del video: $calculated_checksum"
-        else
-            log_debug "No se pudo guardar checksum en video (permisos?), usando calculado"
-        fi
+        # NO hacer log aquí - solo retornar el checksum calculado
         echo "$calculated_checksum"
         return 0
     fi
@@ -783,7 +774,8 @@ process_media_item() {
     
     # Obtener checksum del video para marcar en las imágenes (usando cache optimizado)
     local video_checksum
-    if ! video_checksum=$(get_video_checksum_cached "$media_path"); then
+    video_checksum=$(get_video_checksum_cached "$media_path" 2>/dev/null)
+    if [[ -z "$video_checksum" ]]; then
         log_warning "No se pudo calcular checksum del video: $media_path"
         video_checksum=""
     fi
