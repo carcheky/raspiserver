@@ -596,14 +596,18 @@ update_image_exif_checksum() {
         return 1
     fi
     
-    # SISTEMA UNIFICADO: Solo UserComment con checksum (eliminamos CreatorTool)
-    exiftool -overwrite_original -UserComment="LangFlags:$video_checksum" "$image_file" 2>/dev/null || {
-        log_warning "No se pudo actualizar UserComment en: $(basename "$image_file")"
-        return 1
-    }
+    # SISTEMA UNIFICADO: Solo UserComment con checksum (eliminar output de exiftool)
+    local temp_output
+    temp_output=$(exiftool -overwrite_original -UserComment="LangFlags:$video_checksum" "$image_file" 2>&1)
+    local exit_code=$?
     
-    log_debug "Cache EXIF actualizado en: $(basename "$image_file") (UserComment=LangFlags:$video_checksum)"
-    return 0
+    if [[ $exit_code -eq 0 ]]; then
+        log_debug "Cache EXIF actualizado en: $(basename "$image_file") (UserComment=LangFlags:$video_checksum)"
+        return 0
+    else
+        log_warning "No se pudo actualizar UserComment en: $(basename "$image_file") - Error: $temp_output"
+        return 1
+    fi
 }
 
 get_image_exif_checksum() {
@@ -1231,11 +1235,7 @@ auto_scan_and_process() {
     # Configurar limpieza al salir
     trap 'cleanup_locks; exit' EXIT INT TERM
     
-    # 2. Espera de 30 segundos como especificado
-    log_info "Esperando 30 segundos antes de iniciar escaneo..."
-    sleep 30
-    
-    # 3. Detectar origen y escanear correspondientemente
+    # 2. Detectar origen y escanear correspondientemente (sin espera)
     local scan_movies=false
     local scan_series=false
     
@@ -1279,7 +1279,7 @@ auto_scan_and_process() {
         fi
     fi
     
-    # 4. Ejecutar escaneos correspondientes (solo elementos pendientes)
+    # 3. Ejecutar escaneos correspondientes (solo elementos pendientes)
     local scan_success=true
     
     if [[ "$scan_movies" == "true" ]]; then
@@ -1298,7 +1298,7 @@ auto_scan_and_process() {
         fi
     fi
     
-    # 5. Liberar lock de escaneo
+    # 4. Liberar lock de escaneo
     release_lock "$SCAN_LOCK"
     
     if [[ "$scan_success" != "true" ]]; then
@@ -1306,7 +1306,7 @@ auto_scan_and_process() {
         return 1
     fi
     
-    # 6. Verificar si hay elementos en las colas antes de procesar
+    # 5. Verificar si hay elementos en las colas antes de procesar
     local radarr_count=$(wc -l < "$RADARR_QUEUE" 2>/dev/null || echo 0)
     local sonarr_count=$(wc -l < "$SONARR_QUEUE" 2>/dev/null || echo 0)
     local total_count=$((radarr_count + sonarr_count))
@@ -1318,14 +1318,14 @@ auto_scan_and_process() {
     
     log_info "Elementos en colas: $radarr_count (películas) + $sonarr_count (series) = $total_count total"
     
-    # 7. Procesar colas con lock separado
+    # 6. Procesar colas con lock separado
     log_info "Iniciando procesamiento de colas..."
     if ! acquire_lock "$PROCESS_LOCK" 600 "queue-process"; then
         log_warning "No se pudo adquirir lock de procesamiento, otro proceso está procesando"
         return 1
     fi
     
-    # 8. Procesar todas las colas
+    # 7. Procesar todas las colas
     if process_all_queues; then
         log_info "✓ Procesamiento automático completado exitosamente"
     else
@@ -1334,7 +1334,7 @@ auto_scan_and_process() {
         return 1
     fi
     
-    # 9. Liberar lock de procesamiento
+    # 8. Liberar lock de procesamiento
     release_lock "$PROCESS_LOCK"
     
     log_info "=== PROCESAMIENTO AUTOMÁTICO FINALIZADO ==="
@@ -1364,12 +1364,11 @@ MODOS DE EJECUCIÓN:
 
 PROCESAMIENTO AUTOMÁTICO (sin argumentos):
   1. Adquiere lock de escaneo (.lock)
-  2. Espera 30 segundos
-  3. Detecta origen (Radarr/Sonarr) y escanea correspondientemente
-  4. Libera lock de escaneo
-  5. Adquiere lock de procesamiento
-  6. Procesa todas las colas
-  7. Libera lock de procesamiento
+  2. Detecta origen (Radarr/Sonarr) y escanea correspondientemente
+  3. Libera lock de escaneo
+  4. Adquiere lock de procesamiento
+  5. Procesa todas las colas
+  6. Libera lock de procesamiento
 
 PARÁMETROS:
   -f, --force               Forzar procesamiento (ignorar cache EXIF)
