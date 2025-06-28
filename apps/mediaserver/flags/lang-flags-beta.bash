@@ -214,7 +214,7 @@ create_dirs() {
 }
 
 check_dependencies() {
-    local required=("exiftool" "jq" "convert" "ffprobe" "mediainfo" "mkvinfo" "rsvg-convert")
+    local required=("exiftool" "jq" "convert" "ffprobe" "mediainfo" "mkvinfo" "rsvg-convert" "at")
     local missing=()
     
     for cmd in "${required[@]}"; do
@@ -476,11 +476,22 @@ apply_language_overlays() {
         fi
     fi
     
-    # Obtener dimensiones del poster
+    # Obtener dimensiones del poster con múltiples métodos
     local poster_width=$(exiftool -f -s3 -"ImageWidth" "$poster_file" 2>/dev/null)
     local poster_height=$(exiftool -f -s3 -"ImageHeight" "$poster_file" 2>/dev/null)
-    if [[ -z "$poster_width" || "$poster_width" -eq 0 || -z "$poster_height" || "$poster_height" -eq 0 ]]; then
-        log_warning "No se pudieron obtener dimensiones de imagen: $poster_file"
+    
+    # Si exiftool falla, intentar con identify de ImageMagick
+    if [[ ! "$poster_width" =~ ^[0-9]+$ ]] || [[ ! "$poster_height" =~ ^[0-9]+$ ]]; then
+        local dimensions=$(identify -format "%w %h" "$poster_file" 2>/dev/null)
+        if [[ -n "$dimensions" ]]; then
+            poster_width=$(echo "$dimensions" | cut -d' ' -f1)
+            poster_height=$(echo "$dimensions" | cut -d' ' -f2)
+        fi
+    fi
+    
+    # Validar que las dimensiones son números válidos
+    if [[ ! "$poster_width" =~ ^[0-9]+$ ]] || [[ ! "$poster_height" =~ ^[0-9]+$ ]] || [[ "$poster_width" -eq 0 ]] || [[ "$poster_height" -eq 0 ]]; then
+        log_warning "No se pudieron obtener dimensiones válidas de imagen: $poster_file (width: $poster_width, height: $poster_height)"
         return 1
     fi
     log_debug "Dimensiones del poster: ${poster_width}x${poster_height}px"
@@ -814,6 +825,299 @@ process_media_item() {
 }
 
 # =============================================================================
+# PROGRAMACIÓN DIFERIDA CON AT
+# =============================================================================
+
+AT_JOB_FILE="$BASE_DIR/scheduled_processing.job"
+
+schedule_delayed_processing() {
+    # Solo usar 'at' si está disponible
+    if ! command -v at >/dev/null 2>&1; then
+        log_debug "Comando 'at' no disponible, usando solo cron"
+        return 0
+    fi
+    
+    log_info "Programando procesamiento de cola en 3 minutos con 'at'"
+    
+    # Cancelar job anterior si existe
+    if [[ -f "$AT_JOB_FILE" ]]; then
+        local old_job_id=$(cat "$AT_JOB_FILE" 2>/dev/null)
+        if [[ -n "$old_job_id" ]]; then
+            if atrm "$old_job_id" 2>/dev/null; then
+                log_debug "Job anterior cancelado: $old_job_id"
+            else
+                log_debug "No se pudo cancelar job anterior: $old_job_id (puede ya haber sido ejecutado)"
+            fi
+        fi
+        rm -f "$AT_JOB_FILE"
+    fi
+    
+    # Verificar que atd esté funcionando antes de programar
+    if ! atq >/dev/null 2>&1; then
+        log_warning "Servicio atd no responde, intentando iniciarlo..."
+        
+        # Intentar iniciar atd
+        local atd_started=false
+        if command -v service >/dev/null 2>&1 && service atd start >/dev/null 2>&1; then
+            atd_started=true
+        elif command -v systemctl >/dev/null 2>&1 && systemctl start atd >/dev/null 2>&1; then
+            atd_started=true
+        elif command -v atd >/dev/null 2>&1 && atd >/dev/null 2>&1; then
+            atd_started=true
+        fi
+        
+        if ! $atd_started; then
+            log_warning "No se pudo iniciar atd, usando solo cron"
+            return 0
+        fi
+        
+        # Dar tiempo al servicio para inicializar
+        sleep 2
+    fi
+    
+    # Programar nuevo job en 3 minutos
+    local job_output
+    if job_output=$(echo "/flags/lang-flags-beta.bash processqueue" | at now + 3 minutes 2>&1); then
+        # Extraer ID del job de la salida
+        local job_id=$(echo "$job_output" | grep -o 'job [0-9]*' | grep -o '[0-9]*' | head -1)
+        if [[ -n "$job_id" ]]; then
+            echo "$job_id" > "$AT_JOB_FILE"
+            log_info "✓ Procesamiento programado para 3 minutos (Job ID: $job_id)"
+            
+            # Verificar que el job realmente se programó
+            if atq | grep -q "^$job_id"; then
+                log_debug "✓ Job confirmado en cola at"
+                return 0
+            else
+                log_warning "Job programado pero no aparece en cola at"
+                # No eliminar el archivo si el job se programó pero no podemos verificarlo
+                log_debug "Manteniendo archivo de job para referencia futura"
+                return 0  # Asumir éxito de todas formas
+            fi
+        else
+            log_warning "No se pudo extraer ID del job programado"
+            log_debug "Salida de 'at': $job_output"
+            # Aunque no tengamos el ID, si 'at' ejecutó sin error, asumir éxito
+            return 0
+        fi
+    else
+        log_warning "Error programando job con 'at': $job_output"
+        
+        # Si hay problemas de permisos, mostrar información útil
+        if echo "$job_output" | grep -qi "permission\|denied\|access"; then
+            log_warning "Posible problema de permisos con 'at'. Verifique:"
+            log_warning "- Usuario tiene permisos para usar 'at'"
+            log_warning "- /var/spool/at/ existe y es escribible"
+            log_warning "- Servicio atd está ejecutándose correctamente"
+        fi
+        return 1
+    fi
+}
+
+cancel_delayed_processing() {
+    if [[ -f "$AT_JOB_FILE" ]]; then
+        local job_id=$(cat "$AT_JOB_FILE" 2>/dev/null)
+        if [[ -n "$job_id" ]] && command -v atrm >/dev/null 2>&1; then
+            if atrm "$job_id" 2>/dev/null; then
+                log_debug "Job programado cancelado: $job_id"
+            fi
+        fi
+        rm -f "$AT_JOB_FILE"
+    fi
+}
+
+# =============================================================================
+# VERIFICACIÓN DE TRABAJOS AT
+# =============================================================================
+
+# =============================================================================
+# VERIFICACIÓN DE TRABAJOS AT Y DIAGNÓSTICO
+# =============================================================================
+
+check_at_system() {
+    echo "=== DIAGNÓSTICO DEL SISTEMA 'AT' ==="
+    echo ""
+    
+    # 1. Verificar comando 'at'
+    if command -v at >/dev/null 2>&1; then
+        echo "✅ Comando 'at' está instalado"
+        local at_version=$(at -V 2>&1 | head -1 || echo "Versión no disponible")
+        echo "   📦 Versión: $at_version"
+    else
+        echo "❌ Comando 'at' NO está instalado"
+        echo "   💡 Ejecute: $0 setup"
+        return 1
+    fi
+    
+    echo ""
+    
+    # 2. Verificar daemon atd
+    local atd_running=false
+    if pgrep -f "atd" >/dev/null 2>&1; then
+        echo "✅ Daemon 'atd' está ejecutándose"
+        atd_running=true
+        
+        # Mostrar procesos atd
+        local atd_processes=$(pgrep -f "atd" | wc -l)
+        echo "   🔧 Procesos atd activos: $atd_processes"
+    else
+        echo "❌ Daemon 'atd' NO está ejecutándose"
+        echo "   💡 Intente iniciar manualmente: service atd start"
+    fi
+    
+    echo ""
+    
+    # 3. Verificar cola at
+    if atq >/dev/null 2>&1; then
+        echo "✅ Cola 'at' accesible"
+        local job_count=$(atq 2>/dev/null | wc -l)
+        echo "   📊 Trabajos en cola: $job_count"
+    else
+        echo "❌ Cola 'at' NO accesible"
+        echo "   ⚠️  Posible problema de permisos o atd no funcional"
+    fi
+    
+    echo ""
+    
+    # 4. Test funcional
+    echo "🧪 Realizando test funcional..."
+    local test_output
+    if test_output=$(echo "echo 'test-at-functionality'" | at now + 1 minute 2>&1); then
+        local test_job_id=$(echo "$test_output" | grep -o 'job [0-9]*' | grep -o '[0-9]*' | head -1)
+        if [[ -n "$test_job_id" ]]; then
+            echo "✅ Test funcional EXITOSO"
+            echo "   🆔 Job de test creado: $test_job_id"
+            
+            # Cancelar job de test inmediatamente
+            if atrm "$test_job_id" 2>/dev/null; then
+                echo "   🗑️  Job de test cancelado correctamente"
+            else
+                echo "   ⚠️  No se pudo cancelar job de test (no crítico)"
+            fi
+        else
+            echo "❌ Test funcional FALLÓ: No se pudo extraer ID del job"
+            echo "   📝 Salida: $test_output"
+        fi
+    else
+        echo "❌ Test funcional FALLÓ"
+        echo "   📝 Error: $test_output"
+        
+        if echo "$test_output" | grep -qi "permission\|denied\|access"; then
+            echo "   🔒 PROBLEMA DE PERMISOS detectado"
+            echo "       - Verificar permisos de /var/spool/at/"
+            echo "       - Verificar archivo /etc/at.allow o /etc/at.deny"
+        fi
+    fi
+    
+    echo ""
+    
+    # 5. Información del entorno
+    echo "📋 INFORMACIÓN DEL ENTORNO:"
+    echo "   🏠 Usuario actual: $(whoami)"
+    echo "   🆔 UID: $(id -u)"
+    echo "   👥 Grupos: $(id -G)"
+    
+    # Verificar archivos de permisos at
+    if [[ -f "/etc/at.allow" ]]; then
+        echo "   📄 /etc/at.allow existe"
+        if grep -q "$(whoami)" /etc/at.allow 2>/dev/null; then
+            echo "       ✅ Usuario actual está permitido"
+        else
+            echo "       ❌ Usuario actual NO está en la lista"
+        fi
+    elif [[ -f "/etc/at.deny" ]]; then
+        echo "   📄 /etc/at.deny existe"
+        if grep -q "$(whoami)" /etc/at.deny 2>/dev/null; then
+            echo "       ❌ Usuario actual está DENEGADO"
+        else
+            echo "       ✅ Usuario actual no está denegado"
+        fi
+    else
+        echo "   📄 Sin archivos de permisos at específicos (debería funcionar para todos)"
+    fi
+    
+    # Verificar directorio spool
+    if [[ -d "/var/spool/at" ]]; then
+        echo "   📁 /var/spool/at existe"
+        local spool_perms=$(ls -ld /var/spool/at 2>/dev/null | awk '{print $1}')
+        echo "       🔐 Permisos: $spool_perms"
+    else
+        echo "   📁 /var/spool/at NO existe (problema crítico)"
+    fi
+    
+    echo ""
+    echo "💡 COMANDOS ÚTILES PARA DIAGNÓSTICO:"
+    echo "   atq                    - Listar trabajos en cola"
+    echo "   at -l                  - Listar trabajos (alternativo)"
+    echo "   at now + 1 minute      - Crear job de test manual"
+    echo "   atrm <job_id>          - Cancelar job específico"
+    echo "   service atd status     - Estado del servicio atd"
+    echo "   ps aux | grep atd      - Procesos atd"
+    
+    return 0
+}
+
+check_scheduled_jobs() {
+    echo "=== VERIFICACIÓN DE TRABAJOS AT PROGRAMADOS ==="
+    
+    # Verificar si 'at' está disponible
+    if ! command -v at >/dev/null 2>&1; then
+        echo "❌ Comando 'at' no está disponible en el sistema"
+        echo "💡 Ejecute: $0 setup"
+        return 1
+    fi
+    
+    # Mostrar todos los trabajos at pendientes
+    echo "📋 Trabajos 'at' en cola:"
+    local jobs_output=$(atq 2>/dev/null)
+    if [[ -n "$jobs_output" ]]; then
+        echo "$jobs_output"
+    else
+        echo "   (No hay trabajos programados)"
+    fi
+    
+    echo ""
+    
+    # Verificar job específico de este script
+    if [[ -f "$AT_JOB_FILE" ]]; then
+        local job_id=$(cat "$AT_JOB_FILE" 2>/dev/null)
+        if [[ -n "$job_id" ]]; then
+            echo "🔍 Job específico del script:"
+            echo "   Job ID guardado: $job_id"
+            
+            # Verificar si el job existe en la cola
+            if atq | grep -q "^$job_id"; then
+                local job_details=$(atq | grep "^$job_id")
+                echo "   ✅ Estado: PROGRAMADO"
+                echo "   📅 Detalles: $job_details"
+                
+                # Mostrar detalles del job si es posible
+                echo "   📝 Comando programado:"
+                at -c "$job_id" 2>/dev/null | tail -1 || echo "      (No se pueden obtener detalles)"
+            else
+                echo "   ❌ Estado: NO ENCONTRADO en cola at"
+                echo "   ⚠️  El job puede haber sido ejecutado o cancelado"
+            fi
+        else
+            echo "❌ Archivo de job existe pero está vacío: $AT_JOB_FILE"
+        fi
+    else
+        echo "ℹ️  No hay job específico programado por este script"
+        echo "   (Archivo no existe: $AT_JOB_FILE)"
+    fi
+    
+    echo ""
+    echo "💡 Comandos útiles para verificación manual:"
+    echo "   atq                    - Listar todos los trabajos"
+    echo "   at -c <job_id>         - Ver detalles de un job específico"
+    echo "   atrm <job_id>          - Cancelar un job específico"
+    echo "   cat $AT_JOB_FILE       - Ver ID del job del script"
+    echo "   $0 check-at-system     - Diagnóstico completo del sistema at"
+    
+    return 0
+}
+
+# =============================================================================
 # FUNCIONES DE ESCANEO SIN LOCKS (PARA USO CON LOCKS EXTERNOS)
 # =============================================================================
 
@@ -1037,17 +1341,17 @@ setup_environment() {
     if command -v apt-get >/dev/null 2>&1; then
         export DEBIAN_FRONTEND=noninteractive
         apt-get update -qq >/dev/null 2>&1
-        apt-get install -y -qq imagemagick libimage-exiftool-perl jq ffmpeg mediainfo mkvtoolnix librsvg2-bin curl wget bc cron >/dev/null 2>&1
+        apt-get install -y -qq imagemagick libimage-exiftool-perl jq ffmpeg mediainfo mkvtoolnix librsvg2-bin curl wget bc cron at >/dev/null 2>&1
         installed=true
-        log_info "✓ Dependencias instaladas con apt-get"
+        log_info "✓ Dependencias instaladas con apt-get (incluyendo 'at')"
     elif command -v apk >/dev/null 2>&1; then
-        apk add --no-cache imagemagick exiftool jq ffmpeg mediainfo mkvtoolnix librsvg rsvg-convert curl wget bc bash dcron >/dev/null 2>&1
+        apk add --no-cache imagemagick exiftool jq ffmpeg mediainfo mkvtoolnix librsvg rsvg-convert curl wget bc bash dcron at >/dev/null 2>&1
         installed=true
-        log_info "✓ Dependencias instaladas con apk"
+        log_info "✓ Dependencias instaladas con apk (incluyendo 'at')"
     elif command -v yum >/dev/null 2>&1; then
-        yum install -y -q ImageMagick perl-Image-ExifTool jq ffmpeg mediainfo mkvtoolnix librsvg2 curl wget bc cronie >/dev/null 2>&1
+        yum install -y -q ImageMagick perl-Image-ExifTool jq ffmpeg mediainfo mkvtoolnix librsvg2 curl wget bc cronie at >/dev/null 2>&1
         installed=true
-        log_info "✓ Dependencias instaladas con yum"
+        log_info "✓ Dependencias instaladas con yum (incluyendo 'at')"
     fi
     
     if ! $installed; then
@@ -1098,11 +1402,56 @@ setup_environment() {
     chmod 644 "$cron_file" 2>/dev/null
     log_info "✓ Cron configurado en: $cron_file (${#cron_entries[@]} entradas)"
     
-    # Iniciar servicio cron si está disponible
+    # Iniciar servicios cron y atd si están disponibles
+    log_info "Iniciando servicios de programación..."
+    
+    # Intentar iniciar cron
+    local cron_started=false
     if command -v service >/dev/null 2>&1; then
-        service cron start >/dev/null 2>&1 || service crond start >/dev/null 2>&1
+        if service cron start >/dev/null 2>&1 || service crond start >/dev/null 2>&1; then
+            cron_started=true
+            log_debug "✓ Servicio cron iniciado con 'service'"
+        fi
     elif command -v systemctl >/dev/null 2>&1; then
-        systemctl start cron >/dev/null 2>&1 || systemctl start crond >/dev/null 2>&1
+        if systemctl start cron >/dev/null 2>&1 || systemctl start crond >/dev/null 2>&1; then
+            cron_started=true
+            log_debug "✓ Servicio cron iniciado con 'systemctl'"
+        fi
+    fi
+    
+    if ! $cron_started; then
+        log_warning "⚠ No se pudo iniciar servicio cron automáticamente"
+    fi
+    
+    # Intentar iniciar atd con múltiples métodos
+    local atd_started=false
+    
+    # Método 1: service/systemctl
+    if command -v service >/dev/null 2>&1; then
+        if service atd start >/dev/null 2>&1; then
+            atd_started=true
+            log_debug "✓ Servicio atd iniciado con 'service'"
+        fi
+    elif command -v systemctl >/dev/null 2>&1; then
+        if systemctl start atd >/dev/null 2>&1; then
+            atd_started=true
+            log_debug "✓ Servicio atd iniciado con 'systemctl'"
+        fi
+    fi
+    
+    # Método 2: Ejecutar atd directamente si el método anterior falló
+    if ! $atd_started && command -v atd >/dev/null 2>&1; then
+        if atd >/dev/null 2>&1; then
+            atd_started=true
+            log_debug "✓ Daemon atd iniciado directamente"
+        fi
+    fi
+    
+    # Verificar disponibilidad de 'at' sin programar tests
+    if command -v at >/dev/null 2>&1; then
+        log_info "✓ Comando 'at' disponible para programación diferida"
+    else
+        log_warning "⚠ Comando 'at' no disponible, se usará solo cron"
     fi
     
     # 3. Generar script de inicialización del contenedor
@@ -1135,7 +1484,7 @@ generate_container_init_script() {
     # Siempre borrar archivo existente para sobreescribir
     rm -f "$init_script" 2>/dev/null || true
 
-    # Generar script completo que ejecuta setup, all y processqueue en secuencia
+    # Generar script simplificado que usa la función boot_process
     cat > "$init_script" << 'EOF'
 #!/bin/bash
 echo "[$(date)] Lang-Flags-Beta: Inicializando sistema..."
@@ -1144,13 +1493,9 @@ echo "[$(date)] Lang-Flags-Beta: Inicializando sistema..."
 echo "[$(date)] Lang-Flags-Beta: Ejecutando setup..."
 /flags/lang-flags-beta.bash setup
 
-# 2. Ejecutar procesamiento automático (detecta origen y procesa correspondientemente)
-echo "[$(date)] Lang-Flags-Beta: Iniciando procesamiento automático..."
-/flags/lang-flags-beta.bash
-
-# 3. Procesar colas inmediatamente
-echo "[$(date)] Lang-Flags-Beta: Procesando colas..."
-/flags/lang-flags-beta.bash processqueue
+# 2. Lanzar boot_process en segundo plano
+echo "[$(date)] Lang-Flags-Beta: Lanzando boot_process en segundo plano..."
+/flags/lang-flags-beta.bash boot_process &
 
 echo "[$(date)] Lang-Flags-Beta: Inicialización completada"
 EOF
@@ -1298,7 +1643,7 @@ auto_scan_and_process() {
         return 1
     fi
     
-    # 5. Verificar si hay elementos en las colas antes de procesar
+    # 5. Verificar si hay elementos en las colas
     local radarr_count=$(wc -l < "$RADARR_QUEUE" 2>/dev/null || echo 0)
     local sonarr_count=$(wc -l < "$SONARR_QUEUE" 2>/dev/null || echo 0)
     local total_count=$((radarr_count + sonarr_count))
@@ -1310,24 +1655,41 @@ auto_scan_and_process() {
     
     log_info "Elementos en colas: $radarr_count (películas) + $sonarr_count (series) = $total_count total"
     
-    # 6. Procesar colas con lock separado
-    log_info "Iniciando procesamiento de colas..."
-    if ! acquire_lock "$PROCESS_LOCK" 600 "queue-process"; then
-        log_warning "No se pudo adquirir lock de procesamiento, otro proceso está procesando"
-        return 1
-    fi
-    
-    # 7. Procesar todas las colas
-    if process_all_queues; then
-        log_info "✓ Procesamiento automático completado exitosamente"
+    # 6. Determinar método de procesamiento basado en origen
+    # Solo usar 'at' para eventos específicos de Sonarr/Radarr con variables de entorno
+    if [[ -n "$radarr_eventtype" ]] || [[ -n "$sonarr_eventtype" ]]; then
+        # EVENTOS ESPECÍFICOS DE SONARR/RADARR: Programar con 'at' (3 minutos)
+        log_info "Evento automático de Sonarr/Radarr detectado - Programando procesamiento para 3 minutos"
+        if schedule_delayed_processing; then
+            log_info "✓ Procesamiento programado correctamente"
+        else
+            log_warning "Error programando procesamiento, procesando inmediatamente como fallback"
+            # Fallback: procesar inmediatamente si falla la programación
+            if ! acquire_lock "$PROCESS_LOCK" 600 "fallback-process"; then
+                log_warning "No se pudo adquirir lock de procesamiento para fallback"
+                return 1
+            fi
+            process_all_queues
+            release_lock "$PROCESS_LOCK"
+        fi
     else
-        log_error "Error durante el procesamiento de colas"
+        # LLAMADAS AUTOMÁTICAS SIN VARIABLES DE ENTORNO: Procesar inmediatamente
+        log_info "Ejecución automática sin variables de entorno - Procesando inmediatamente"
+        if ! acquire_lock "$PROCESS_LOCK" 600 "auto-process"; then
+            log_warning "No se pudo adquirir lock de procesamiento"
+            return 1
+        fi
+        
+        if process_all_queues; then
+            log_info "✓ Procesamiento automático completado exitosamente"
+        else
+            log_error "Error durante el procesamiento de colas"
+            release_lock "$PROCESS_LOCK"
+            return 1
+        fi
+        
         release_lock "$PROCESS_LOCK"
-        return 1
     fi
-    
-    # 8. Liberar lock de procesamiento
-    release_lock "$PROCESS_LOCK"
     
     log_info "=== PROCESAMIENTO AUTOMÁTICO FINALIZADO ==="
     return 0
@@ -1349,6 +1711,9 @@ MODOS DE EJECUCIÓN:
   additem <path> [type]     Añadir elemento específico a cola (type: movie|series)
   processqueue, queue       Procesar elementos en las colas (con lock)
   debug-events              Verificar detección de variables de entorno de eventos
+  check-scheduled           Verificar trabajos 'at' programados del script
+  check-at-system           Diagnóstico completo del sistema 'at'
+  boot_process              Proceso de inicialización (auto-scan + process, para contenedores)
   set-deps, --install-deps  Instalar dependencias del sistema
   set-cron, --setup-cron    Configurar cron para procesamiento automático
   test                      Verificar configuración
@@ -1373,6 +1738,8 @@ EJEMPLOS:
   $0 series                 # Añadir solo series pendientes a cola
   $0 additem "/path/movie.mkv" movie   # Añadir película específica a cola
   $0 processqueue           # Procesar cola manualmente
+  $0 check-scheduled        # Ver trabajos at programados
+  $0 check-at-system        # Diagnóstico completo del sistema at
   $0 set-deps               # Instalar dependencias
   $0 set-cron               # Configurar cron
 
@@ -1380,11 +1747,21 @@ EVENTOS AUTOMÁTICOS:
   El script se ejecuta automáticamente desde Radarr/Sonarr via webhooks
   y procesa elementos añadiéndolos a colas para procesamiento diferido.
   El sistema de locks evita ejecuciones concurrentes.
+  
+  SOLO los eventos con variables de entorno específicas (radarr_eventtype, 
+  sonarr_eventtype) programan el procesamiento para 3 minutos después 
+  usando el comando 'at'. Las ejecuciones automáticas sin estas variables
+  (cron, manual) procesan inmediatamente.
 
 DETECCIÓN DE ORIGEN:
   - Radarr: Variables radarr_eventtype, radarr_movie_path
   - Sonarr: Variables sonarr_eventtype, sonarr_series_path, sonarr_episodefile_path
   - Eventos soportados: Download, Rename, Grab, Test
+
+VERIFICACIÓN DE SISTEMA 'AT':
+  $0 check-at-system        # Diagnóstico completo del sistema 'at'
+  $0 check-scheduled        # Ver trabajos programados del script
+  atq                       # Ver todos los trabajos 'at' en cola
 
 EOF
 }
@@ -1488,6 +1865,42 @@ debug_event_detection() {
     echo "  scan_movies: $scan_movies"
     echo "  scan_series: $scan_series"
     echo "=== FIN DEBUG ==="
+}
+
+# =============================================================================
+# FUNCIÓN BOOT PROCESS (PARA INICIALIZACIÓN DEL CONTENEDOR)
+# =============================================================================
+
+boot_process() {
+    log_info "=== BOOT PROCESS INICIADO ==="
+    
+    # Esperar 2 minutos para que el contenedor se estabilice
+    log_info "Esperando 120 segundos para estabilización del contenedor..."
+    sleep 120
+    
+    # 1. Ejecutar procesamiento automático (detecta origen y procesa correspondientemente)
+    log_info "Iniciando procesamiento automático..."
+    if auto_scan_and_process; then
+        log_info "✓ Procesamiento automático completado"
+    else
+        log_warning "⚠ Error en procesamiento automático"
+    fi
+    
+    # 2. Procesar colas inmediatamente
+    log_info "Procesando colas..."
+    if acquire_lock "$PROCESS_LOCK" 600 "boot-process"; then
+        if process_all_queues; then
+            log_info "✓ Procesamiento de colas completado"
+        else
+            log_warning "⚠ Error procesando colas"
+        fi
+        release_lock "$PROCESS_LOCK"
+    else
+        log_warning "⚠ No se pudo adquirir lock para procesamiento de colas"
+    fi
+    
+    log_info "=== BOOT PROCESS COMPLETADO ==="
+    return 0
 }
 
 # =============================================================================
@@ -1630,12 +2043,9 @@ handle_radarr_event() {
                     fi
                 done
                 
-                if acquire_lock "$PROCESS_LOCK" 300 "radarr-event"; then
-                    process_all_queues
-                    release_lock "$PROCESS_LOCK"
-                else
-                    log_warning "No se pudo procesar inmediatamente, se procesará en el próximo cron"
-                fi
+                # SOLO programar con 'at', NO procesar inmediatamente
+                log_info "Programando procesamiento con 'at' en 3 minutos..."
+                schedule_delayed_processing
             else
                 log_warning "No se especificó ruta de película válida: ${radarr_movie_path:-'no definida'}"
             fi
@@ -1674,11 +2084,10 @@ handle_sonarr_event() {
                 log_warning "No se especificó ruta válida. Serie: ${sonarr_series_path:-'no definida'}, Episodio: ${sonarr_episodefile_path:-'no definida'}"
             fi
             
-            if acquire_lock "$PROCESS_LOCK" 300 "sonarr-event"; then
-                process_all_queues
-                release_lock "$PROCESS_LOCK"
-            else
-                log_warning "No se pudo procesar inmediatamente, se procesará en el próximo cron"
+            # Programar procesamiento con delay usando 'at'
+            if ! schedule_delayed_processing; then
+                log_warning "No se pudo programar procesamiento con delay, procesando inmediatamente..."
+                process_queue
             fi
             ;;
         "test")
@@ -1979,6 +2388,15 @@ main() {
             ;;
         "debug-events"|"--debug-events")
             debug_event_detection
+            ;;
+        "check-scheduled"|"--check-scheduled")
+            check_scheduled_jobs
+            ;;
+        "check-at-system"|"--check-at-system")
+            check_at_system
+            ;;
+        "boot_process"|"boot-process"|"--boot-process")
+            boot_process
             ;;
         *)
             log_error "Modo desconocido: $1"
