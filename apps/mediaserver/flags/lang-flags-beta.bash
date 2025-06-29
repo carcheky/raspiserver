@@ -825,18 +825,240 @@ process_media_item() {
 }
 
 # =============================================================================
-# PROGRAMACIÓN DIFERIDA CON AT
+# CONFIGURACIÓN ROBUSTA DE CRON
 # =============================================================================
 
-# =============================================================================
-# PROGRAMACIÓN DIFERIDA (ELIMINADA - SE USA SOLO CRON)
-# =============================================================================
+configure_robust_cron() {
+    log_info "Configurando cron automáticamente..."
+    
+    # Definir entradas de cron (cada 5 minutos para processqueue)
+    local user_cron_entries=(
+        "*/5 * * * * /flags/lang-flags-beta.bash processqueue >/dev/null 2>&1"
+        "0 3 * * 0 /flags/lang-flags-beta.bash >/dev/null 2>&1  # Semanal automático"
+        "0 2 1 * * /flags/lang-flags-beta.bash -f >/dev/null 2>&1  # Mensual forzado"
+    )
+    
+    local system_cron_entries=(
+        "*/5 * * * * root /flags/lang-flags-beta.bash processqueue >/dev/null 2>&1"
+        "0 3 * * 0 root /flags/lang-flags-beta.bash >/dev/null 2>&1  # Semanal automático"
+        "0 2 1 * * root /flags/lang-flags-beta.bash -f >/dev/null 2>&1  # Mensual forzado"
+    )
+    
+    local cron_configured=false
+    local cron_type=""
+    local method_used=""
+    
+    # Fase 1: Detección inteligente del tipo de cron
+    log_debug "Fase 1: Detectando tipo de cron..."
+    
+    # 1.1 Verificar si hay BusyBox cron activo
+    if command -v crond >/dev/null 2>&1; then
+        # Verificar si es BusyBox específicamente
+        if crond -h 2>&1 | grep -qi "busybox\|usage.*crond"; then
+            cron_type="busybox"
+            log_debug "✓ Detectado BusyBox cron definitivamente"
+        elif ps aux 2>/dev/null | grep -v grep | grep -q crond; then
+            cron_type="busybox_running"
+            log_debug "✓ Detectado crond ejecutándose (probablemente BusyBox)"
+        fi
+    fi
+    
+    # 1.2 Verificar si hay cron del sistema disponible
+    if [[ -z "$cron_type" ]] && command -v cron >/dev/null 2>&1; then
+        cron_type="system_cron"
+        log_debug "✓ Detectado cron del sistema disponible"
+    fi
+    
+    # 1.3 Verificar soporte para /etc/cron.d/
+    local supports_cron_d=false
+    if [[ -d "/etc/cron.d" ]]; then
+        # Intentar escribir un archivo de prueba
+        if touch "/etc/cron.d/.lang-flags-test" 2>/dev/null; then
+            rm -f "/etc/cron.d/.lang-flags-test" 2>/dev/null
+            supports_cron_d=true
+            log_debug "✓ Soporte para /etc/cron.d/ confirmado"
+        else
+            log_debug "⚠ Directorio /etc/cron.d/ existe pero no es escribible"
+        fi
+    else
+        log_debug "⚠ Directorio /etc/cron.d/ no existe"
+    fi
+    
+    # 1.4 Verificar soporte para crontab de usuario
+    local supports_user_crontab=false
+    if command -v crontab >/dev/null 2>&1; then
+        # Intentar leer crontab actual (puede fallar pero eso está bien)
+        if crontab -l >/dev/null 2>&1 || [[ $? -eq 1 ]]; then  # Exit code 1 = no crontab, que es válido
+            supports_user_crontab=true
+            log_debug "✓ Soporte para crontab de usuario confirmado"
+        else
+            log_debug "⚠ Comando crontab disponible pero no funcional"
+        fi
+    else
+        log_debug "⚠ Comando crontab no disponible"
+    fi
+    
+    log_info "Detección completada: tipo=$cron_type, cron.d=$supports_cron_d, crontab=$supports_user_crontab"
+    
+    # Fase 2: Estrategia de configuración basada en detección
+    log_debug "Fase 2: Aplicando estrategia de configuración..."
+    
+    # Estrategia 1: BusyBox cron detectado -> usar crontab de usuario
+    if [[ "$cron_type" =~ ^busybox ]]; then
+        log_info "Estrategia: BusyBox cron -> crontab de usuario"
+        if configure_user_crontab "${user_cron_entries[@]}"; then
+            cron_configured=true
+            method_used="user_crontab_busybox"
+            log_info "✓ Configurado con crontab de usuario (BusyBox)"
+        fi
+    fi
+    
+    # Estrategia 2: Sistema tradicional con /etc/cron.d/ (si anterior falló)
+    if [[ "$cron_configured" == "false" ]] && [[ "$supports_cron_d" == "true" ]] && [[ "$cron_type" != busybox* ]]; then
+        log_info "Estrategia: Sistema tradicional -> /etc/cron.d/"
+        if configure_system_cron "${system_cron_entries[@]}"; then
+            cron_configured=true
+            method_used="system_cron_d"
+            log_info "✓ Configurado con /etc/cron.d/"
+        fi
+    fi
+    
+    # Estrategia 3: Fallback a crontab de usuario (si todo lo anterior falló)
+    if [[ "$cron_configured" == "false" ]] && [[ "$supports_user_crontab" == "true" ]]; then
+        log_info "Estrategia: Fallback -> crontab de usuario"
+        if configure_user_crontab "${user_cron_entries[@]}"; then
+            cron_configured=true
+            method_used="user_crontab_fallback"
+            log_info "✓ Configurado con crontab de usuario (fallback)"
+        fi
+    fi
+    
+    # Fase 3: Verificar que la configuración funcionó
+    if [[ "$cron_configured" == "false" ]]; then
+        log_error "✗ No se pudo configurar cron con ninguna estrategia"
+        log_error "  - Tipo detectado: $cron_type"
+        log_error "  - Soporte /etc/cron.d/: $supports_cron_d"
+        log_error "  - Soporte crontab usuario: $supports_user_crontab"
+        return 1
+    fi
+    
+    # Fase 4: Iniciar y verificar servicio cron
+    log_debug "Fase 3: Iniciando servicio cron..."
+    if start_cron_service; then
+        log_info "✓ Servicio cron iniciado correctamente"
+    else
+        log_warning "⚠ No se pudo verificar inicio del servicio cron (puede estar ya ejecutándose)"
+    fi
+    
+    # Verificación final
+    log_info "✓ Cron configurado exitosamente:"
+    log_info "  - Método: $method_used"
+    log_info "  - Frecuencia processqueue: cada 5 minutos"
+    log_info "  - Procesamiento semanal automático: domingos 3:00"
+    log_info "  - Procesamiento mensual forzado: día 1 a las 2:00"
+    
+    return 0
+}
 
-# Nota: La funcionalidad de programación diferida con 'at' ha sido eliminada.
-# Todo el procesamiento se maneja inmediatamente o via cron cada 5 minutos.
+configure_user_crontab() {
+    local cron_entries=("$@")
+    log_debug "Configurando crontab de usuario con ${#cron_entries[@]} entradas..."
+    
+    # Crear crontab temporal
+    local temp_crontab=$(mktemp)
+    if [[ ! -f "$temp_crontab" ]]; then
+        log_error "No se pudo crear archivo temporal para crontab"
+        return 1
+    fi
+    
+    # Leer crontab existente y filtrar entradas previas de lang-flags
+    {
+        crontab -l 2>/dev/null | grep -v "lang-flags-beta.bash" || true
+        # Añadir nuestras entradas
+        printf '%s\n' "${cron_entries[@]}"
+    } > "$temp_crontab"
+    
+    # Aplicar nueva crontab
+    if crontab "$temp_crontab" 2>/dev/null; then
+        rm -f "$temp_crontab"
+        log_debug "✓ Crontab de usuario actualizado exitosamente"
+        return 0
+    else
+        rm -f "$temp_crontab"
+        log_error "✗ Error aplicando crontab de usuario"
+        return 1
+    fi
+}
 
+configure_system_cron() {
+    local cron_entries=("$@")
+    log_debug "Configurando /etc/cron.d/ con ${#cron_entries[@]} entradas..."
+    
+    local cron_file="/etc/cron.d/lang-flags"
+    
+    # Crear archivo de cron del sistema
+    {
+        echo "# Lang-Flags automatización - Generado automáticamente el $(date)"
+        echo "# Procesamiento cada 5 minutos, semanal automático y mensual forzado"
+        echo ""
+        printf '%s\n' "${cron_entries[@]}"
+        echo ""
+    } > "$cron_file" 2>/dev/null || {
+        log_error "✗ Error escribiendo archivo $cron_file"
+        return 1
+    }
+    
+    # Establecer permisos correctos
+    if chmod 644 "$cron_file" 2>/dev/null; then
+        log_debug "✓ Archivo /etc/cron.d/lang-flags creado con permisos correctos"
+        return 0
+    else
+        log_error "✗ Error estableciendo permisos en $cron_file"
+        return 1
+    fi
+}
 
-
+start_cron_service() {
+    log_debug "Intentando iniciar servicio cron..."
+    
+    local service_started=false
+    
+    # Método 1: service (SysV init)
+    if command -v service >/dev/null 2>&1; then
+        if service cron start >/dev/null 2>&1 || service crond start >/dev/null 2>&1; then
+            service_started=true
+            log_debug "✓ Servicio iniciado con 'service'"
+        fi
+    fi
+    
+    # Método 2: systemctl (systemd)
+    if [[ "$service_started" == "false" ]] && command -v systemctl >/dev/null 2>&1; then
+        if systemctl start cron >/dev/null 2>&1 || systemctl start crond >/dev/null 2>&1; then
+            service_started=true
+            log_debug "✓ Servicio iniciado con 'systemctl'"
+        fi
+    fi
+    
+    # Método 3: Intentar iniciar crond directamente (para BusyBox)
+    if [[ "$service_started" == "false" ]] && command -v crond >/dev/null 2>&1; then
+        # Verificar si ya está ejecutándose
+        if ! pgrep crond >/dev/null 2>&1; then
+            # Intentar iniciar crond en segundo plano
+            if crond -b >/dev/null 2>&1 || { crond >/dev/null 2>&1 & }; then
+                sleep 1
+                if pgrep crond >/dev/null 2>&1; then
+                    service_started=true
+                    log_debug "✓ crond iniciado directamente"
+                fi
+            fi
+        else
+            service_started=true
+            log_debug "✓ crond ya estaba ejecutándose"
+        fi
+    fi
+    
+    return $([[ "$service_started" == "true" ]] && echo 0 || echo 1)
+}
 # =============================================================================
 # FUNCIONES DE ESCANEO SIN LOCKS (PARA USO CON LOCKS EXTERNOS)
 # =============================================================================
@@ -1090,60 +1312,12 @@ setup_environment() {
     # 2. Configurar cron para procesamiento automático
     log_info "Paso 2/3: Configurando cron para procesamiento automático..."
     
-    local cron_file="/etc/cron.d/lang-flags"
-    
-    # Definir todas las entradas de cron (evita duplicados al sobreescribir)
-    local cron_entries=(
-        "*/5 * * * * root /flags/lang-flags-beta.bash processqueue >/dev/null 2>&1"
-        "0 3 * * 0 root /flags/lang-flags-beta.bash >/dev/null 2>&1  # Semanal automático (detecta origen)"
-        "0 2 1 * * root /flags/lang-flags-beta.bash -f >/dev/null 2>&1  # Mensual forzado automático"
-    )
-    
-    # Siempre sobreescribir archivo cron para evitar duplicados
-    {
-        echo "# Lang-Flags automatización - Generado automáticamente"
-        printf '%s\n' "${cron_entries[@]}"
-    } > "$cron_file" 2>/dev/null || {
-        log_warning "No se pudo crear archivo cron, intentando crontab..."
-        
-        # Intentar con crontab del usuario (limpiar entradas previas)
-        (
-            crontab -l 2>/dev/null | grep -v lang-flags
-            printf '%s\n' "${cron_entries[@]}" | sed 's/^[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*[^[:space:]]*[[:space:]]*root[[:space:]]*//'
-        ) | crontab - 2>/dev/null || {
-            log_error "✗ No se pudo configurar cron"
-            return 1
-        }
-        
-        log_info "✓ Cron configurado con crontab (${#cron_entries[@]} entradas)"
-        return 0
-    }
-    
-    chmod 644 "$cron_file" 2>/dev/null
-    log_info "✓ Cron configurado en: $cron_file (${#cron_entries[@]} entradas)"
-    
-    # Iniciar servicio cron
-    log_info "Iniciando servicio cron..."
-    
-    # Intentar iniciar cron
-    local cron_started=false
-    if command -v service >/dev/null 2>&1; then
-        if service cron start >/dev/null 2>&1 || service crond start >/dev/null 2>&1; then
-            cron_started=true
-            log_debug "✓ Servicio cron iniciado con 'service'"
-        fi
-    elif command -v systemctl >/dev/null 2>&1; then
-        if systemctl start cron >/dev/null 2>&1 || systemctl start crond >/dev/null 2>&1; then
-            cron_started=true
-            log_debug "✓ Servicio cron iniciado con 'systemctl'"
-        fi
+    if ! configure_robust_cron; then
+        log_error "✗ Error crítico configurando cron"
+        return 1
     fi
     
-    if ! $cron_started; then
-        log_warning "⚠ No se pudo iniciar servicio cron automáticamente"
-    else
-        log_info "✓ Servicio cron configurado y funcionando"
-    fi
+    log_info "✓ Cron configurado y funcionando"
     
     # 3. Generar script de inicialización del contenedor
     log_info "Paso 3/3: Generando script de inicialización del contenedor..."
