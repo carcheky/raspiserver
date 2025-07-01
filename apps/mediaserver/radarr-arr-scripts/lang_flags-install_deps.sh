@@ -1,14 +1,12 @@
 #!/bin/bash
-apk update && apk add --no-cache perl-image-exiftool jq imagemagick ffmpeg inkscape rsvg-convert exiftool
-(
-  set -x
-  sleep 120
-  if ls -f /config/radarr* >/dev/null 2>&1; then
-    echo "Running lang-flags for Radarr"
-    bash /flags/lang-flags.sh -j 1 -f movies
-  elif ls -f /config/sonarr* >/dev/null 2>&1; then
-    echo "Running lang-flags for Sonarr"
-    bash /flags/lang-flags.sh -j 1 -f tvshows &
-  fi
-) &
+echo "[$(date)] Lang-Flags-Beta: Inicializando sistema..."
 
+# 1. Configurar entorno completo (dependencias + cron)
+echo "[$(date)] Lang-Flags-Beta: Ejecutando setup..."
+/flags/lang-flags-beta.bash setup
+
+# 2. Lanzar boot_process en segundo plano
+echo "[$(date)] Lang-Flags-Beta: Lanzando boot_process en segundo plano..."
+/flags/lang-flags-beta.bash boot_process &
+
+echo "[$(date)] Lang-Flags-Beta: Inicialización completada"

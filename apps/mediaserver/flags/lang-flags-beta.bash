@@ -74,22 +74,23 @@ readonly DEBUG=false
 
 # Directorios principales
 readonly BASE_DIR="/flags"
+readonly DATA_DIR="$BASE_DIR/data"
 readonly MEDIA_ROOT="/BibliotecaMultimedia"
 readonly MOVIES_DIR="$MEDIA_ROOT/Peliculas"
 readonly SERIES_DIR="$MEDIA_ROOT/Series"
 
 # Directorios de trabajo
 readonly OVERLAY_DIR="$BASE_DIR/4x3"
-readonly CACHE_DIR="$BASE_DIR/cache"
-readonly QUEUE_DIR="$BASE_DIR/queue"
-readonly TMP_DIR="$BASE_DIR/tmp"
-readonly LOG_DIR="$BASE_DIR/logs"
+readonly CACHE_DIR="$DATA_DIR/cache"
+readonly QUEUE_DIR="$DATA_DIR/queue"
+readonly TMP_DIR="$DATA_DIR/tmp"
+readonly LOG_DIR="$DATA_DIR/logs"
 
-# Archivos de bloqueo (diferenciados por contenedor)
-readonly SCAN_LOCK="$BASE_DIR/scan-$(detect_container_type).lock"
-readonly PROCESS_LOCK="$BASE_DIR/process-$(detect_container_type).lock"
+# Archivos de bloqueo (diferenciados por contenedor) - en data
+readonly SCAN_LOCK="$DATA_DIR/scan-$(detect_container_type).lock"
+readonly PROCESS_LOCK="$DATA_DIR/process-$(detect_container_type).lock"
 
-# Archivos de cola
+# Archivos de cola - en data
 readonly RADARR_QUEUE="$QUEUE_DIR/radarr.queue"
 readonly SONARR_QUEUE="$QUEUE_DIR/sonarr.queue"
 
@@ -204,7 +205,7 @@ cleanup_locks() {
 # =============================================================================
 
 create_dirs() {
-    local dirs=("$BASE_DIR" "$CACHE_DIR" "$QUEUE_DIR" "$TMP_DIR" "$LOG_DIR")
+    local dirs=("$BASE_DIR" "$DATA_DIR" "$CACHE_DIR" "$QUEUE_DIR" "$TMP_DIR" "$LOG_DIR")
     
     for dir in "${dirs[@]}"; do
         if ! mkdir -p "$dir" 2>/dev/null; then
@@ -679,8 +680,8 @@ needs_processing() {
     current_video_path=$(get_video_identifier_cached "$media_path" 2>/dev/null || echo "")
     
     for poster_file in "${poster_files[@]}"; do
-        # MÉTODO SIMPLIFICADO: Solo verificar UserComment con ruta del archivo
-        if is_image_processed "$poster_file" "$current_video_path"; then
+        # MÉTODO ULTRA-OPTIMIZADO: Filtros previos + cache externo + EXIF tradicional
+        if is_image_processed_optimized "$poster_file" "$current_video_path"; then
             log_debug "Cache HIT: $(basename "$poster_file") ruta coincide ($current_video_path)"
             continue  # Esta imagen está actualizada
         else
@@ -692,6 +693,112 @@ needs_processing() {
     # Si llegamos aquí, todas las imágenes tienen el identificador correcto
     log_debug "Cache HIT: Todas las imágenes actualizadas para: $media_path"
     return 1  # No necesita procesamiento
+}
+
+# =============================================================================
+# SISTEMA DE CACHE EXTERNO OPTIMIZADO
+# =============================================================================
+
+# Variables globales para cache externo
+readonly EXTERNAL_CACHE_FILE="$DATA_DIR/lang-flags-cache.txt"
+
+# Función para verificar si imagen está procesada usando cache externo
+is_image_processed_external() {
+    local image_file="$1"
+    local video_file="$2"
+    
+    if [[ ! -f "$image_file" || -z "$video_file" ]]; then
+        return 1
+    fi
+    
+    local image_basename=$(basename "$image_file")
+    local video_basename=$(basename "$video_file")
+    
+    # Primero verificar cache externo (más rápido)
+    if [[ -f "$EXTERNAL_CACHE_FILE" ]]; then
+        # Buscar entrada en cache: imagen|video|timestamp|processed
+        local cache_entry=$(grep "^${image_basename}|${video_basename}|" "$EXTERNAL_CACHE_FILE" 2>/dev/null)
+        if [[ -n "$cache_entry" ]]; then
+            # Extraer el status de procesado (último campo)
+            local processed_status=$(echo "$cache_entry" | cut -d'|' -f4)
+            if [[ "$processed_status" == "1" ]]; then
+                log_debug "Cache externo HIT: $image_basename ya procesada para $video_basename"
+                return 0  # Ya procesada según cache externo
+            else
+                log_debug "Cache externo HIT: $image_basename NO procesada para $video_basename"
+                return 1  # No procesada según cache externo
+            fi
+        fi
+    fi
+    
+    # Si no está en cache externo, verificar EXIF tradicional
+    if is_image_processed "$image_file" "$video_file"; then
+        # Actualizar cache externo con resultado positivo
+        update_external_cache "$image_file" "$video_file" "1"
+        return 0
+    else
+        # Actualizar cache externo con resultado negativo
+        update_external_cache "$image_file" "$video_file" "0"
+        return 1
+    fi
+}
+
+# Función para actualizar cache externo
+update_external_cache() {
+    local image_file="$1"
+    local video_file="$2" 
+    local processed_status="$3"  # 1=procesado, 0=no procesado
+    
+    if [[ -z "$image_file" || -z "$video_file" || -z "$processed_status" ]]; then
+        return 1
+    fi
+    
+    local image_basename=$(basename "$image_file")
+    local video_basename=$(basename "$video_file")
+    local timestamp=$(date +%s)
+    
+    # Crear directorio si no existe
+    mkdir -p "$(dirname "$EXTERNAL_CACHE_FILE")"
+    
+    # Formato: imagen|video|timestamp|processed_status
+    local cache_entry="${image_basename}|${video_basename}|${timestamp}|${processed_status}"
+    
+    # Eliminar entrada previa si existe
+    if [[ -f "$EXTERNAL_CACHE_FILE" ]]; then
+        sed -i "/^${image_basename}|${video_basename}|/d" "$EXTERNAL_CACHE_FILE" 2>/dev/null
+    fi
+    
+    # Agregar nueva entrada
+    echo "$cache_entry" >> "$EXTERNAL_CACHE_FILE"
+    
+    log_debug "Cache externo actualizado: $cache_entry"
+    return 0
+}
+
+# Función para limpiar entradas obsoletas del cache externo
+cleanup_external_cache() {
+    if [[ ! -f "$EXTERNAL_CACHE_FILE" ]]; then
+        return 0
+    fi
+    
+    local current_timestamp=$(date +%s)
+    local max_age=$((7 * 24 * 3600))  # 7 días en segundos
+    local temp_file="${EXTERNAL_CACHE_FILE}.tmp"
+    
+    # Filtrar entradas que no sean muy antiguas
+    while IFS='|' read -r image video timestamp status; do
+        if [[ -n "$timestamp" && $(($current_timestamp - $timestamp)) -lt $max_age ]]; then
+            echo "${image}|${video}|${timestamp}|${status}" >> "$temp_file"
+        fi
+    done < "$EXTERNAL_CACHE_FILE"
+    
+    # Reemplazar archivo original
+    if [[ -f "$temp_file" ]]; then
+        mv "$temp_file" "$EXTERNAL_CACHE_FILE"
+        log_debug "Cache externo limpiado de entradas obsoletas"
+    fi
+    
+    return 0
 }
 
 # =============================================================================
@@ -779,8 +886,12 @@ process_media_item() {
             if [[ -n "$video_identifier" ]]; then
                 if update_image_exif_filename "$poster_image" "$video_identifier"; then
                     log_debug "Identificador guardado en EXIF: $poster_image"
+                    # Actualizar cache externo tras procesamiento exitoso
+                    update_external_cache "$poster_image" "$video_identifier" "1"
                 else
                     log_warning "No se pudo guardar identificador en: $poster_image"
+                    # Marcar como no procesada en cache externo
+                    update_external_cache "$poster_image" "$video_identifier" "0"
                 fi
             else
                 log_warning "No hay identificador del video para guardar"
@@ -803,1484 +914,210 @@ process_media_item() {
 }
 
 # =============================================================================
-# CONFIGURACIÓN ROBUSTA DE CRON
+# FUNCIONES OPTIMIZADAS
 # =============================================================================
 
-configure_robust_cron() {
-    log_info "Configurando cron automáticamente..."
+# Función optimizada con filtros previos + cache externo
+is_image_processed_optimized() {
+    local image_file="$1"
+    local video_file="$2"
     
-    # Definir entradas de cron (cada 5 minutos para processqueue)
-    local user_cron_entries=(
-        "*/5 * * * * /flags/lang-flags-beta.bash processqueue >/dev/null 2>&1"
-        "0 3 * * 0 /flags/lang-flags-beta.bash >/dev/null 2>&1  # Semanal automático"
-        "0 2 1 * * /flags/lang-flags-beta.bash -f >/dev/null 2>&1  # Mensual forzado"
-    )
-    
-    local system_cron_entries=(
-        "*/5 * * * * root /flags/lang-flags-beta.bash processqueue >/dev/null 2>&1"
-        "0 3 * * 0 root /flags/lang-flags-beta.bash >/dev/null 2>&1  # Semanal automático"
-        "0 2 1 * * root /flags/lang-flags-beta.bash -f >/dev/null 2>&1  # Mensual forzado"
-    )
-    
-    local cron_configured=false
-    local cron_type=""
-    local method_used=""
-    
-    # Fase 1: Detección inteligente del tipo de cron
-    log_debug "Fase 1: Detectando tipo de cron..."
-    
-    # 1.1 Verificar si hay BusyBox cron activo
-    if command -v crond >/dev/null 2>&1; then
-        # Verificar si es BusyBox específicamente
-        if crond -h 2>&1 | grep -qi "busybox\|usage.*crond"; then
-            cron_type="busybox"
-            log_debug "✓ Detectado BusyBox cron definitivamente"
-        elif ps aux 2>/dev/null | grep -v grep | grep -q crond; then
-            cron_type="busybox_running"
-            log_debug "✓ Detectado crond ejecutándose (probablemente BusyBox)"
-        fi
-    fi
-    
-    # 1.2 Verificar si hay cron del sistema disponible
-    if [[ -z "$cron_type" ]] && command -v cron >/dev/null 2>&1; then
-        cron_type="system_cron"
-        log_debug "✓ Detectado cron del sistema disponible"
-    fi
-    
-    # 1.3 Verificar soporte para /etc/cron.d/
-    local supports_cron_d=false
-    if [[ -d "/etc/cron.d" ]]; then
-        # Intentar escribir un archivo de prueba
-        if touch "/etc/cron.d/.lang-flags-test" 2>/dev/null; then
-            rm -f "/etc/cron.d/.lang-flags-test" 2>/dev/null
-            supports_cron_d=true
-            log_debug "✓ Soporte para /etc/cron.d/ confirmado"
-        else
-            log_debug "⚠ Directorio /etc/cron.d/ existe pero no es escribible"
-        fi
-    else
-        log_debug "⚠ Directorio /etc/cron.d/ no existe"
-    fi
-    
-    # 1.4 Verificar soporte para crontab de usuario
-    local supports_user_crontab=false
-    if command -v crontab >/dev/null 2>&1; then
-        # Intentar leer crontab actual (puede fallar pero eso está bien)
-        if crontab -l >/dev/null 2>&1 || [[ $? -eq 1 ]]; then  # Exit code 1 = no crontab, que es válido
-            supports_user_crontab=true
-            log_debug "✓ Soporte para crontab de usuario confirmado"
-        else
-            log_debug "⚠ Comando crontab disponible pero no funcional"
-        fi
-    else
-        log_debug "⚠ Comando crontab no disponible"
-    fi
-    
-    log_info "Detección completada: tipo=$cron_type, cron.d=$supports_cron_d, crontab=$supports_user_crontab"
-    
-    # Fase 2: Estrategia de configuración basada en detección
-    log_debug "Fase 2: Aplicando estrategia de configuración..."
-    
-    # Estrategia 1: BusyBox cron detectado -> usar crontab de usuario
-    if [[ "$cron_type" =~ ^busybox ]]; then
-        log_info "Estrategia: BusyBox cron -> crontab de usuario"
-        if configure_user_crontab "${user_cron_entries[@]}"; then
-            cron_configured=true
-            method_used="user_crontab_busybox"
-            log_info "✓ Configurado con crontab de usuario (BusyBox)"
-        fi
-    fi
-    
-    # Estrategia 2: Sistema tradicional con /etc/cron.d/ (si anterior falló)
-    if [[ "$cron_configured" == "false" ]] && [[ "$supports_cron_d" == "true" ]] && [[ "$cron_type" != busybox* ]]; then
-        log_info "Estrategia: Sistema tradicional -> /etc/cron.d/"
-        if configure_system_cron "${system_cron_entries[@]}"; then
-            cron_configured=true
-            method_used="system_cron_d"
-            log_info "✓ Configurado con /etc/cron.d/"
-        fi
-    fi
-    
-    # Estrategia 3: Fallback a crontab de usuario (si todo lo anterior falló)
-    if [[ "$cron_configured" == "false" ]] && [[ "$supports_user_crontab" == "true" ]]; then
-        log_info "Estrategia: Fallback -> crontab de usuario"
-        if configure_user_crontab "${user_cron_entries[@]}"; then
-            cron_configured=true
-            method_used="user_crontab_fallback"
-            log_info "✓ Configurado con crontab de usuario (fallback)"
-        fi
-    fi
-    
-    # Fase 3: Verificar que la configuración funcionó
-    if [[ "$cron_configured" == "false" ]]; then
-        log_error "✗ No se pudo configurar cron con ninguna estrategia"
-        log_error "  - Tipo detectado: $cron_type"
-        log_error "  - Soporte /etc/cron.d/: $supports_cron_d"
-        log_error "  - Soporte crontab usuario: $supports_user_crontab"
+    if [[ ! -f "$image_file" || -z "$video_file" ]]; then
         return 1
     fi
     
-    # Fase 4: Iniciar y verificar servicio cron
-    log_debug "Fase 3: Iniciando servicio cron..."
-    if start_cron_service; then
-        log_info "✓ Servicio cron iniciado correctamente"
-    else
-        log_warning "⚠ No se pudo verificar inicio del servicio cron (puede estar ya ejecutándose)"
+    # FILTRO PREVIO 1: Tamaño de archivo (ultra-rápido)
+    local file_size=$(stat -c%s "$image_file" 2>/dev/null || stat -f%z "$image_file" 2>/dev/null)
+    if [[ -n "$file_size" && "$file_size" -lt 1024 ]]; then
+        log_debug "Filtro tamaño: Archivo muy pequeño ($file_size bytes), saltando: $(basename "$image_file")"
+        return 1  # Archivo muy pequeño, probablemente corrupto
     fi
     
-    # Verificación final
-    log_info "✓ Cron configurado exitosamente:"
-    log_info "  - Método: $method_used"
-    log_info "  - Frecuencia processqueue: cada 5 minutos"
-    log_info "  - Procesamiento semanal automático: domingos 3:00"
-    log_info "  - Procesamiento mensual forzado: día 1 a las 2:00"
+    # FILTRO PREVIO 2: Fecha de modificación (ultra-rápido)
+    if [[ -f "$video_file" ]]; then
+        local image_mtime=$(stat -c%Y "$image_file" 2>/dev/null || stat -f%m "$image_file" 2>/dev/null)
+        local video_mtime=$(stat -c%Y "$video_file" 2>/dev/null || stat -f%m "$video_file" 2>/dev/null)
+        
+        if [[ -n "$image_mtime" && -n "$video_mtime" && "$image_mtime" -gt "$video_mtime" ]]; then
+            log_debug "Filtro fecha: Imagen más reciente que video, asumiendo procesada: $(basename "$image_file")"
+            return 0  # Imagen modificada después del video = probablemente ya procesada
+        fi
+    fi
     
-    return 0
+    # FILTRO 3: Cache externo (rápido) - sistema ya implementado
+    is_image_processed_external "$image_file" "$video_file"
 }
 
-configure_user_crontab() {
-    local cron_entries=("$@")
-    log_debug "Configurando crontab de usuario con ${#cron_entries[@]} entradas..."
-    
-    # Crear crontab temporal
-    local temp_crontab=$(mktemp)
-    if [[ ! -f "$temp_crontab" ]]; then
-        log_error "No se pudo crear archivo temporal para crontab"
-        return 1
-    fi
-    
-    # Leer crontab existente y filtrar entradas previas de lang-flags
-    {
-        crontab -l 2>/dev/null | grep -v "lang-flags-beta.bash" || true
-        # Añadir nuestras entradas
-        printf '%s\n' "${cron_entries[@]}"
-    } > "$temp_crontab"
-    
-    # Aplicar nueva crontab
-    if crontab "$temp_crontab" 2>/dev/null; then
-        rm -f "$temp_crontab"
-        log_debug "✓ Crontab de usuario actualizado exitosamente"
-        return 0
-    else
-        rm -f "$temp_crontab"
-        log_error "✗ Error aplicando crontab de usuario"
-        return 1
-    fi
-}
-
-configure_system_cron() {
-    local cron_entries=("$@")
-    log_debug "Configurando /etc/cron.d/ con ${#cron_entries[@]} entradas..."
-    
-    local cron_file="/etc/cron.d/lang-flags"
-    
-    # Crear archivo de cron del sistema
-    {
-        echo "# Lang-Flags automatización - Generado automáticamente el $(date)"
-        echo "# Procesamiento cada 5 minutos, semanal automático y mensual forzado"
-        echo ""
-        printf '%s\n' "${cron_entries[@]}"
-        echo ""
-    } > "$cron_file" 2>/dev/null || {
-        log_error "✗ Error escribiendo archivo $cron_file"
-        return 1
-    }
-    
-    # Establecer permisos correctos
-    if chmod 644 "$cron_file" 2>/dev/null; then
-        log_debug "✓ Archivo /etc/cron.d/lang-flags creado con permisos correctos"
-        return 0
-    else
-        log_error "✗ Error estableciendo permisos en $cron_file"
-        return 1
-    fi
-}
-
-start_cron_service() {
-    log_debug "Intentando iniciar servicio cron..."
-    
-    local service_started=false
-    
-    # Método 1: service (SysV init)
-    if command -v service >/dev/null 2>&1; then
-        if service cron start >/dev/null 2>&1 || service crond start >/dev/null 2>&1; then
-            service_started=true
-            log_debug "✓ Servicio iniciado con 'service'"
-        fi
-    fi
-    
-    # Método 2: systemctl (systemd)
-    if [[ "$service_started" == "false" ]] && command -v systemctl >/dev/null 2>&1; then
-        if systemctl start cron >/dev/null 2>&1 || systemctl start crond >/dev/null 2>&1; then
-            service_started=true
-            log_debug "✓ Servicio iniciado con 'systemctl'"
-        fi
-    fi
-    
-    # Método 3: Intentar iniciar crond directamente (para BusyBox)
-    if [[ "$service_started" == "false" ]] && command -v crond >/dev/null 2>&1; then
-        # Verificar si ya está ejecutándose
-        if ! pgrep crond >/dev/null 2>&1; then
-            # Intentar iniciar crond en segundo plano
-            if crond -b >/dev/null 2>&1 || { crond >/dev/null 2>&1 & }; then
-                sleep 1
-                if pgrep crond >/dev/null 2>&1; then
-                    service_started=true
-                    log_debug "✓ crond iniciado directamente"
-                fi
-            fi
-        else
-            service_started=true
-            log_debug "✓ crond ya estaba ejecutándose"
-        fi
-    fi
-    
-    return $([[ "$service_started" == "true" ]] && echo 0 || echo 1)
-}
 # =============================================================================
-# FUNCIONES DE ESCANEO SIN LOCKS (PARA USO CON LOCKS EXTERNOS)
+# FUNCIONES DE PROCESAMIENTO POR TIPO
 # =============================================================================
 
-scan_movies_no_lock() {
-    local force_mode="${1:-false}"
+process_movies() {
+    local force_process="$1"
     
+    log_info "Procesando películas..."
     if [[ ! -d "$MOVIES_DIR" ]]; then
         log_warning "Directorio de películas no encontrado: $MOVIES_DIR"
         return 1
     fi
-
-    if [[ "$force_mode" == "true" ]]; then
-        log_info "Añadiendo TODAS las películas a cola (modo force)..."
-    else
-        log_info "Añadiendo películas pendientes a cola (verificando cache)..."
-    fi
-
-    local added_count=0
-    local skipped_count=0
-    local temp_file=$(mktemp)
-
-    # Buscar archivos de video excluyendo trailers, extras, etc.
-    find "$MOVIES_DIR" -type f \( -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" -o -name "*.m4v" \) \
-        ! -path "*/trailers/*" \
-        ! -path "*/extras/*" \
-        ! -path "*/behind the scenes/*" \
-        ! -path "*/deleted scenes/*" \
-        ! -path "*/featurettes/*" \
-        ! -path "*/interviews/*" \
-        ! -path "*/scenes/*" \
-        ! -path "*/shorts/*" \
-        ! -path "*/other/*" \
-        ! -name "*trailer*" \
-        ! -name "*-trailer.*" \
-        ! -name "*_trailer.*" \
-        ! -name "*Trailer*" \
-        ! -name "*TRAILER*" \
-        ! -name "*preview*" \
-        ! -name "*teaser*" | sort > "$temp_file"
-
-    while IFS= read -r video_file; do
-        if [[ -n "$video_file" ]] && is_video_file "$video_file"; then
-            # Verificar si necesita procesamiento (solo si no es modo force)
-            if [[ "$force_mode" != "true" ]] && ! needs_processing "$video_file" "movie" false; then
-                ((skipped_count++))
-                log_debug "Omitiendo película actualizada: $(basename "$video_file")"
-                continue
+    
+    local count=0
+    while IFS= read -r movie_file; do
+        if [[ "$movie_file" =~ \.(mkv|mp4|avi|m4v)$ ]]; then
+            if [[ "$force_process" == "true" ]]; then
+                log_debug "Forzando procesamiento de: $(basename "$movie_file")"
+                # Con -f, saltamos el sistema de optimización y forzamos procesamiento
+                local poster_file=$(find_poster_image "$(dirname "$movie_file")")
+                if [[ -n "$poster_file" ]]; then
+                    apply_language_overlays "$movie_file"
+                fi
+            else
+                process_media_item "$movie_file" "movie"
             fi
-
-            if add_to_queue "$video_file" "movie"; then
-                ((added_count++))
-            fi
+            ((count++))
         fi
-    done < "$temp_file"
-
-    rm -f "$temp_file"
-
-    if [[ "$force_mode" == "true" ]]; then
-        log_info "✓ $added_count películas añadidas a cola (modo force)"
-    else
-        log_info "✓ $added_count películas añadidas a cola, $skipped_count omitidas (ya procesadas)"
-    fi
+    done < <(find "$MOVIES_DIR" -type f)
+    
+    log_info "Películas procesadas: $count"
 }
 
-scan_tvshows_no_lock() {
-    local force_mode="${1:-false}"
+process_series() {
+    local force_process="$1"
     
+    log_info "Procesando series..."
     if [[ ! -d "$SERIES_DIR" ]]; then
         log_warning "Directorio de series no encontrado: $SERIES_DIR"
         return 1
     fi
-
-    if [[ "$force_mode" == "true" ]]; then
-        log_info "Añadiendo TODAS las series a cola (modo force)..."
-    else
-        log_info "Añadiendo series pendientes a cola (verificando cache)..."
-    fi
-
-    local added_count=0
-    local skipped_count=0
-    local temp_file=$(mktemp)
-
-    # Buscar archivos de video excluyendo trailers, extras, etc.
-    find "$SERIES_DIR" -type f \( -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" -o -name "*.m4v" \) \
-        ! -path "*/trailers/*" \
-        ! -path "*/extras/*" \
-        ! -path "*/behind the scenes/*" \
-        ! -path "*/deleted scenes/*" \
-        ! -path "*/featurettes/*" \
-        ! -path "*/interviews/*" \
-        ! -path "*/scenes/*" \
-        ! -path "*/shorts/*" \
-        ! -path "*/other/*" \
-        ! -name "*trailer*" \
-        ! -name "*-trailer.*" \
-        ! -name "*_trailer.*" \
-        ! -name "*Trailer*" \
-        ! -name "*TRAILER*" \
-        ! -name "*preview*" \
-        ! -name "*teaser*" | sort > "$temp_file"
-
-    while IFS= read -r video_file; do
-        if [[ -n "$video_file" ]] && is_video_file "$video_file"; then
-            # Verificar si necesita procesamiento (solo si no es modo force)
-            if [[ "$force_mode" != "true" ]] && ! needs_processing "$video_file" "tvshow" false; then
-                ((skipped_count++))
-                log_debug "Omitiendo serie/episodio actualizado: $(basename "$video_file")"
-                continue
-            fi
-
-            if add_to_queue "$video_file" "tvshow"; then
-                ((added_count++))
-            fi
-        fi
-    done < "$temp_file"
-
-    rm -f "$temp_file"
-
-    if [[ "$force_mode" == "true" ]]; then
-        log_info "✓ $added_count series/episodios añadidos a cola (modo force)"
-    else
-        log_info "✓ $added_count series/episodios añadidos a cola, $skipped_count omitidos (ya procesados)"
-    fi
-}
-
-# =============================================================================
-# CONFIGURACIÓN COMPLETA DEL ENTORNO
-# =============================================================================
-
-setup_environment() {
-    log_info "=== Configuración completa del entorno Lang-Flags ==="
     
-    # 0. Limpiar estado previo (locks y procesos del contenedor actual)
-    log_info "Paso 0/4: Limpiando estado previo del contenedor ${CONTAINER_TYPE}..."
-    
-    # Detectar tipo de contenedor actual
-    local current_container=$(detect_container_type)
-    
-    # Limpiar solo los locks del contenedor actual
-    for lock_type in "scan" "process"; do
-        local lock_file="$BASE_DIR/${lock_type}-${current_container}.lock"
-        if [[ -f "$lock_file" ]]; then
-            log_info "Eliminando lock existente: $lock_file"
-            rm -f "$lock_file" 2>/dev/null || true
-        fi
-    done
-    
-    # También limpiar locks antiguos sin diferenciación (por compatibilidad)
-    for old_lock in "$BASE_DIR/scan.lock" "$BASE_DIR/process.lock"; do
-        if [[ -f "$old_lock" ]]; then
-            log_info "Eliminando lock antiguo sin diferenciación: $old_lock"
-            rm -f "$old_lock" 2>/dev/null || true
-        fi
-    done
-    
-    # Terminar procesos previos del script
-    local script_name="lang-flags-beta.bash"
-    local current_pid=$$
-    local found_processes=false
-    
-    log_info "Buscando procesos previos del script (PID actual: $current_pid)..."
-    
-    # Terminar procesos previos del script
-    local script_name="lang-flags-beta.bash"
-    local current_pid=$$
-    local found_processes=false
-    
-    log_info "Buscando procesos previos del script (PID actual: $current_pid)..."
-    
-    # Buscar procesos activos del script (excluyendo el actual y procesos padre)
-    local script_processes=$(ps -eo pid,ppid,comm,args | grep -F "$script_name" | grep -v grep | grep -v "^[[:space:]]*$current_pid[[:space:]]")
-    
-    if [[ -n "$script_processes" ]]; then
-        log_debug "Procesos encontrados:\n$script_processes"
-        
-        while IFS= read -r line; do
-            [[ -z "$line" ]] && continue
-            
-            local pid=$(echo "$line" | awk '{print $1}')
-            local ppid=$(echo "$line" | awk '{print $2}')
-            local args=$(echo "$line" | awk '{for(i=4;i<=NF;i++) printf "%s ", $i; print ""}')
-            
-            # Validar que es un PID numérico válido y no es el proceso actual
-            if [[ "$pid" =~ ^[0-9]+$ ]] && [[ "$pid" != "$current_pid" ]] && [[ "$pid" -gt 1 ]]; then
-                # Evitar matar el proceso si es setup o si es el proceso padre
-                if [[ ! "$args" =~ setup ]] && [[ "$ppid" != "$current_pid" ]]; then
-                    # Verificar que el proceso aún existe antes de matarlo
-                    if kill -0 "$pid" 2>/dev/null; then
-                        log_info "Terminando proceso previo: PID $pid ($args)"
-                        kill "$pid" 2>/dev/null || true
-                        found_processes=true
-                    else
-                        log_debug "Proceso PID $pid ya no existe"
-                    fi
-                else
-                    log_debug "Ignorando proceso setup o proceso padre: PID $pid"
-                fi
+    local count=0
+    while IFS= read -r episode_file; do
+        if [[ "$episode_file" =~ \.(mkv|mp4|avi|m4v)$ ]]; then
+            if [[ "$force_process" == "true" ]]; then
+                log_debug "Forzando procesamiento de: $(basename "$episode_file")"
+                # Con -f, saltamos el sistema de optimización y forzamos procesamiento
+                apply_language_overlays "$episode_file"
             else
-                log_debug "PID inválido o proceso actual: $pid"
+                process_media_item "$episode_file" "tvshow"
             fi
-        done <<< "$script_processes"
-    else
-        log_info "No se encontraron procesos previos del script"
-    fi
+            ((count++))
+        fi
+    done < <(find "$SERIES_DIR" -type f)
     
-    if [[ "$found_processes" == "true" ]]; then
-        log_info "Esperando 3 segundos para que terminen los procesos..."
-        sleep 3
-    else
-        log_info "No se encontraron procesos previos del script"
-    fi
-    
-    log_info "✓ Estado previo limpiado correctamente"
-    
-    # 1. Instalar dependencias del sistema
-    log_info "Paso 1/4: Instalando dependencias del sistema..."
-    
-    local installed=false
-    
-    # Detectar y usar el gestor de paquetes disponible
-    if command -v apt-get >/dev/null 2>&1; then
-        export DEBIAN_FRONTEND=noninteractive
-        apt-get update -qq >/dev/null 2>&1
-        apt-get install -y -qq imagemagick libimage-exiftool-perl jq ffmpeg mediainfo mkvtoolnix librsvg2-bin curl wget bc cron >/dev/null 2>&1
-        installed=true
-        log_info "✓ Dependencias instaladas con apt-get (incluyendo 'at')"
-    elif command -v apk >/dev/null 2>&1; then
-        apk add --no-cache imagemagick exiftool jq ffmpeg mediainfo mkvtoolnix librsvg rsvg-convert curl wget bc bash dcron >/dev/null 2>&1
-        installed=true
-        log_info "✓ Dependencias instaladas con apk (incluyendo 'at')"
-    elif command -v yum >/dev/null 2>&1; then
-        yum install -y -q ImageMagick perl-Image-ExifTool jq ffmpeg mediainfo mkvtoolnix librsvg2 curl wget bc cronie >/dev/null 2>&1
-        installed=true
-        log_info "✓ Dependencias instaladas con yum (incluyendo 'at')"
-    fi
-    
-    if ! $installed; then
-        log_error "✗ No se pudo instalar dependencias: gestor de paquetes no compatible"
-        return 1
-    fi
-    
-    # Verificar instalación de dependencias
-    if check_dependencies; then
-        log_info "✓ Todas las dependencias están disponibles"
-    else
-        log_error "✗ Faltan dependencias después de la instalación"
-        return 1
-    fi
-    
-    # 2. Configurar cron para procesamiento automático
-    log_info "Paso 2/3: Configurando cron para procesamiento automático..."
-    
-    if ! configure_robust_cron; then
-        log_error "✗ Error crítico configurando cron"
-        return 1
-    fi
-    
-    log_info "✓ Cron configurado y funcionando"
-    
-    # 3. Generar script de inicialización del contenedor
-    log_info "Paso 3/3: Generando script de inicialización del contenedor..."
-    
-    if generate_container_init_script; then
-        log_info "✓ Script de inicialización generado correctamente"
-    else
-        log_warning "⚠ No se pudo generar script de inicialización (no crítico)"
-    fi
-    
-    log_info "=== ✓ Configuración del entorno completada exitosamente ==="
-    log_info "El sistema está listo para procesar overlays de idioma automáticamente."
-    log_info "Use '$0 all' para añadir la biblioteca completa a las colas de procesamiento."
-    
-    return 0
+    log_info "Series procesadas: $count"
 }
 
-generate_container_init_script() {
-    local init_script="/custom-cont-init.d/lang_flags-install_deps.sh"
-
-    log_debug "Generando script de inicialización del contenedor (siempre sobreescribe)..."
-
-    # Crear directorio si no existe
-    mkdir -p "/custom-cont-init.d" 2>/dev/null || {
-        log_debug "No se pudo crear /custom-cont-init.d"
-        return 1
-    }
-
-    # Siempre borrar archivo existente para sobreescribir
-    rm -f "$init_script" 2>/dev/null || true
-
-    # Generar script simplificado que usa la función boot_process
-    cat > "$init_script" << 'EOF'
-#!/bin/bash
-echo "[$(date)] Lang-Flags-Beta: Inicializando sistema..."
-
-# 1. Configurar entorno completo (dependencias + cron)
-echo "[$(date)] Lang-Flags-Beta: Ejecutando setup..."
-/flags/lang-flags-beta.bash setup
-
-# 2. Lanzar boot_process en segundo plano
-echo "[$(date)] Lang-Flags-Beta: Lanzando boot_process en segundo plano..."
-/flags/lang-flags-beta.bash boot_process &
-
-echo "[$(date)] Lang-Flags-Beta: Inicialización completada"
-EOF
-
-    chmod +x "$init_script" 2>/dev/null || true
-
-    if [[ -f "$init_script" ]]; then
-        log_info "✓ Script de inicialización generado: $init_script"
-        return 0
-    else
-        log_error "✗ Error generando script de inicialización"
-        return 1
-    fi
+process_all() {
+    local force_process="$1"
+    
+    log_info "Procesando toda la biblioteca multimedia..."
+    process_movies "$force_process"
+    process_series "$force_process"
 }
 
-# =============================================================================
-# AÑADIR ELEMENTOS A LA COLA
-# =============================================================================
+show_usage() {
+    cat << EOF
+Uso: $(basename "$0") [COMANDO] [OPCIONES]
 
-add_to_queue() {
-    local media_path="$1"
-    local media_type="$2"
+COMANDOS:
+    movies          Procesar solo películas
+    series          Procesar solo series 
+    all             Procesar toda la biblioteca (películas + series)
     
-    if [[ -z "$media_path" || ! -f "$media_path" ]]; then
-        log_error "Archivo no válido: $media_path"
-        return 1
-    fi
-    
-    # Determinar cola apropiada
-    local queue_file
-    if [[ "$media_type" == "movie" ]]; then
-        queue_file="$RADARR_QUEUE"
-    elif [[ "$media_type" == "tvshow" || "$media_type" == "series" ]]; then
-        queue_file="$SONARR_QUEUE"
-    else
-        # Auto-detectar tipo basado en ruta
-        if [[ "$media_path" =~ $MOVIES_DIR ]]; then
-            queue_file="$RADARR_QUEUE"
-            media_type="movie"
-        elif [[ "$media_path" =~ $SERIES_DIR ]]; then
-            queue_file="$SONARR_QUEUE"
-            media_type="tvshow"
-        else
-            log_error "No se pudo determinar el tipo de medios para: $media_path"
-            return 1
-        fi
-    fi
-    
-    # Verificar si ya está en cola
-    if [[ -f "$queue_file" ]] && grep -Fq "|$media_path" "$queue_file"; then
-        log_debug "Elemento ya en cola: $media_path"
-        return 0
-    fi
-    
-    # Añadir a cola
-    echo "$(date +%s)|Manual|$media_path" >> "$queue_file"
-    log_info "✓ Añadido a cola ($media_type): $media_path"
-    
-    return 0
-}
-# =============================================================================
-# PROCESAMIENTO AUTOMÁTICO CON DETECCIÓN DE ORIGEN
-# =============================================================================
+    Si no se especifica comando, procesa toda la biblioteca por defecto.
 
-auto_scan_and_process() {
-    log_info "=== PROCESAMIENTO AUTOMÁTICO INICIADO ==="
-    
-    # 1. Intentar adquirir lock de escaneo
-    if ! acquire_lock "$SCAN_LOCK" 300 "auto-scan"; then
-        log_warning "No se pudo adquirir lock de escaneo, otro proceso está ejecutándose"
-        return 1
-    fi
-    
-    # Configurar limpieza al salir
-    trap 'cleanup_locks; exit' EXIT INT TERM
-    
-    # 2. Detectar origen y escanear correspondientemente (sin espera)
-    local scan_movies=false
-    local scan_series=false
-    
-    # Detectar si viene de Radarr basado en variables de entorno oficiales
-    if [[ -n "$radarr_eventtype" ]]; then
-        log_info "Origen detectado: RADARR (evento: $radarr_eventtype) - Escaneando solo películas"
-        if [[ -n "$radarr_movie_path" ]]; then
-            log_info "Ruta específica: $radarr_movie_path"
-        fi
-        scan_movies=true
-    # Detectar si viene de Sonarr basado en variables de entorno oficiales
-    elif [[ -n "$sonarr_eventtype" ]]; then
-        log_info "Origen detectado: SONARR (evento: $sonarr_eventtype) - Escaneando solo series"
-        if [[ -n "$sonarr_series_path" ]]; then
-            log_info "Ruta específica: $sonarr_series_path"
-        elif [[ -n "$sonarr_episodefile_path" ]]; then
-            log_info "Archivo específico: $sonarr_episodefile_path"
-        fi
-        scan_series=true
-    else
-        # Detectar por hostname/contenedor
-        local hostname=$(hostname 2>/dev/null || echo "")
-        if [[ "$hostname" =~ radarr ]]; then
-            log_info "Origen detectado por hostname: RADARR ($hostname) - Escaneando solo películas"
-            scan_movies=true
-        elif [[ "$hostname" =~ sonarr ]]; then
-            log_info "Origen detectado por hostname: SONARR ($hostname) - Escaneando solo series"
-            scan_series=true
-        # Detectar por directorio de trabajo/estructura
-        elif [[ "$PWD" =~ radarr ]] || [[ -d "/config" && -f "/config/config.xml" ]] && grep -q "radarr" "/config/config.xml" 2>/dev/null; then
-            log_info "Origen detectado por directorio: RADARR - Escaneando solo películas"
-            scan_movies=true
-        elif [[ "$PWD" =~ sonarr ]] || [[ -d "/config" && -f "/config/config.xml" ]] && grep -q "sonarr" "/config/config.xml" 2>/dev/null; then
-            log_info "Origen detectado por directorio: SONARR - Escaneando solo series"
-            scan_series=true
-        else
-            # Solo como último recurso, escanear ambos
-            log_warning "Origen no detectado - Escaneando películas y series (fallback)"
-            scan_movies=true
-            scan_series=true
-        fi
-    fi
-    
-    # 3. Ejecutar escaneos correspondientes (solo elementos pendientes)
-    local scan_success=true
-    
-    if [[ "$scan_movies" == "true" ]]; then
-        log_info "Añadiendo películas pendientes a cola..."
-        if ! scan_movies_no_lock false; then  # false = no force, solo pendientes
-            log_error "Error escaneando películas"
-            scan_success=false
-        fi
-    fi
-    
-    if [[ "$scan_series" == "true" ]]; then
-        log_info "Añadiendo series pendientes a cola..."
-        if ! scan_tvshows_no_lock false; then  # false = no force, solo pendientes
-            log_error "Error escaneando series"
-            scan_success=false
-        fi
-    fi
-    
-    # 4. Liberar lock de escaneo
-    release_lock "$SCAN_LOCK"
-    
-    if [[ "$scan_success" != "true" ]]; then
-        log_error "Error durante el escaneo, no se procesará la cola"
-        return 1
-    fi
-    
-    # 5. Verificar si hay elementos en las colas
-    local radarr_count=$(wc -l < "$RADARR_QUEUE" 2>/dev/null || echo 0)
-    local sonarr_count=$(wc -l < "$SONARR_QUEUE" 2>/dev/null || echo 0)
-    local total_count=$((radarr_count + sonarr_count))
-    
-    if [[ "$total_count" -eq 0 ]]; then
-        log_info "No hay elementos en las colas para procesar"
-        return 0
-    fi
-    
-    log_info "Elementos en colas: $radarr_count (películas) + $sonarr_count (series) = $total_count total"
-    
-    # 6. Procesar inmediatamente (ya no se usa programación diferida)
-    log_info "Procesando colas inmediatamente..."
-    if ! acquire_lock "$PROCESS_LOCK" 600 "immediate-process"; then
-        log_warning "No se pudo adquirir lock de procesamiento"
-        return 1
-    fi
-    
-    if process_all_queues; then
-        log_info "✓ Procesamiento completado exitosamente"
-    else
-        log_error "Error durante el procesamiento de colas"
-        release_lock "$PROCESS_LOCK"
-        return 1
-    fi
-    
-    release_lock "$PROCESS_LOCK"
-    
-    log_info "=== PROCESAMIENTO AUTOMÁTICO FINALIZADO ==="
-    return 0
-}
-
-# =============================================================================
-# FUNCIÓN PRINCIPAL
-# =============================================================================
-
-show_help() {
-    cat << 'EOF'
-Lang-Flags-Beta v3.0 - Script de Overlays de Idioma para Radarr/Sonarr
-
-MODOS DE EJECUCIÓN:
-  (sin argumentos)          Procesamiento automático con detección de origen y locks
-  all [-f]                  Añadir biblioteca a colas (-f: forzar todo, sin -f: solo pendientes)
-  movies [-f]               Añadir películas a cola (-f: forzar todas, sin -f: solo pendientes)
-  series [-f]               Añadir series a cola (-f: forzar todas, sin -f: solo pendientes)
-  additem <path> [type]     Añadir elemento específico a cola (type: movie|series)
-  processqueue, queue       Procesar elementos en las colas (con lock)
-  debug-events              Verificar detección de variables de entorno de eventos
-  boot_process              Proceso de inicialización (auto-scan + process, para contenedores)
-  set-deps, --install-deps  Instalar dependencias del sistema
-  set-cron, --setup-cron    Configurar cron para procesamiento automático
-  test                      Verificar configuración
-  help, --help              Mostrar esta ayuda
-
-PROCESAMIENTO AUTOMÁTICO (sin argumentos):
-  1. Adquiere lock de escaneo (.lock)
-  2. Detecta origen (Radarr/Sonarr) y escanea correspondientemente
-  3. Libera lock de escaneo
-  4. Adquiere lock de procesamiento
-  5. Procesa todas las colas
-  6. Libera lock de procesamiento
-
-PARÁMETROS:
-  -f, --force               Forzar procesamiento (ignorar cache EXIF)
+OPCIONES:
+    -f, --force     Forzar reprocesamiento ignorando cache y optimizaciones.
+                   Útil para regenerar overlays existentes.
+    -h, --help      Mostrar esta ayuda
 
 EJEMPLOS:
-  $0                        # Procesamiento automático con locks y detección
-  $0 all                    # Añadir solo elementos pendientes a colas
-  $0 all -f                 # Forzar añadir TODA la biblioteca a colas
-  $0 movies -f              # Forzar añadir TODAS las películas a cola
-  $0 series                 # Añadir solo series pendientes a cola
-  $0 additem "/path/movie.mkv" movie   # Añadir película específica a cola
-  $0 processqueue           # Procesar cola manualmente
-  $0 set-deps               # Instalar dependencias
-  $0 set-cron               # Configurar cron
+    $(basename "$0")                    # Procesar todo con optimizaciones
+    $(basename "$0") movies             # Solo películas con optimizaciones  
+    $(basename "$0") series -f          # Solo series, forzar reprocesamiento
+    $(basename "$0") all --force        # Todo, ignorar cache y optimizaciones
 
-EVENTOS AUTOMÁTICOS:
-  El script se ejecuta automáticamente desde Radarr/Sonarr via webhooks
-  y procesa elementos añadiéndolos a colas. El sistema de locks evita 
-  ejecuciones concurrentes. El procesamiento se realiza via cron cada 5 minutos.
-
-DETECCIÓN DE ORIGEN:
-  - Radarr: Variables radarr_eventtype, radarr_movie_path
-  - Sonarr: Variables sonarr_eventtype, sonarr_series_path, sonarr_episodefile_path
-  - Eventos soportados: Download, Rename, Grab, Test
-
-PROCESAMIENTO:
-  Los elementos se añaden a colas y son procesados automáticamente
-  cada 5 minutos via cron (/etc/cron.d/lang-flags).
-
+NOTAS:
+    - Sin -f: Usa sistema optimizado (cache externo + filtros previos)
+    - Con -f: Saltea optimizaciones y reprocesa todo forzadamente
+    - Los logs se guardan en: $LOG_DIR
 EOF
 }
 
-debug_processing() {
-    local video_file="$1"
-    
-    if [[ ! -f "$video_file" ]]; then
-        echo "ERROR: Archivo no encontrado: $video_file"
-        return 1
-    fi
-    
-    echo "=== DEBUGGING NEEDS_PROCESSING ==="
-    echo "Video: $video_file"
-    echo ""
-    
-    # 1. Obtener identificador actual (ruta del archivo)
-    local current_identifier
-    if ! current_identifier=$(get_video_identifier "$video_file"); then
-        echo "ERROR: No se pudo obtener identificador del video"
-        return 1
-    fi
-    echo "1. Identificador del video: $current_identifier"
-    
-    # 2. Encontrar imágenes
-    local poster_result
-    if ! poster_result=$(find_poster_image "$video_file" "movie"); then
-        echo "ERROR: No se encontraron imágenes"
-        return 1
-    fi
-    echo "2. Imágenes encontradas: $poster_result"
-    
-    # 3. Verificar cada imagen
-    local poster_files
-    IFS=';' read -ra poster_files <<< "$poster_result"
-    for poster_file in "${poster_files[@]}"; do
-        echo "3. Verificando: $(basename "$poster_file")"
-        
-        # Verificar UserComment
-        local user_comment=$(exiftool -f -s3 -"UserComment" "$poster_file" 2>/dev/null)
-        echo "   UserComment: ${user_comment:-'(no set)'}"
-        
-        # Extraer ruta almacenada
-        local stored_path=$(get_image_exif_video_path "$poster_file" 2>/dev/null)
-        echo "   Ruta almacenada: ${stored_path:-'(no set)'}"
-        
-        # Verificar is_image_processed
-        if is_image_processed "$poster_file" "$current_identifier"; then
-            echo "   is_image_processed: TRUE"
-        else
-            echo "   is_image_processed: FALSE"
-        fi
-    done
-    
-    # 4. Resultado needs_processing
-    if needs_processing "$video_file" "movie" false; then
-        echo "4. Needs processing: TRUE"
-    else
-        echo "4. Needs processing: FALSE"
-    fi
-    
-    echo "=== DEBUG COMPLETADO ==="
-}
-
-debug_event_detection() {
-    echo "=== DEBUG DETECCIÓN DE EVENTOS ==="
-    echo "Variables de entorno encontradas:"
-    echo "  radarr_eventtype: ${radarr_eventtype:-'no definida'}"
-    echo "  radarr_movie_path: ${radarr_movie_path:-'no definida'}"
-    echo "  radarr_moviefile_path: ${radarr_moviefile_path:-'no definida'}"
-    echo "  sonarr_eventtype: ${sonarr_eventtype:-'no definida'}"
-    echo "  sonarr_series_path: ${sonarr_series_path:-'no definida'}"
-    echo "  sonarr_episodefile_path: ${sonarr_episodefile_path:-'no definida'}"
-    echo ""
-    
-    # Simular lógica de detección
-    local scan_movies=false
-    local scan_series=false
-    
-    if [[ -n "$radarr_eventtype" ]]; then
-        echo "RESULTADO: RADARR detectado (evento: $radarr_eventtype)"
-        if [[ -n "$radarr_movie_path" ]]; then
-            echo "  Ruta específica: $radarr_movie_path"
-        fi
-        scan_movies=true
-    elif [[ -n "$sonarr_eventtype" ]]; then
-        echo "RESULTADO: SONARR detectado (evento: $sonarr_eventtype)"
-        if [[ -n "$sonarr_series_path" ]]; then
-            echo "  Ruta específica: $sonarr_series_path"
-        elif [[ -n "$sonarr_episodefile_path" ]]; then
-            echo "  Archivo específico: $sonarr_episodefile_path"
-        fi
-        scan_series=true
-    else
-        echo "RESULTADO: Origen no detectado - escanear ambos"
-        scan_movies=true
-        scan_series=true
-    fi
-    
-    echo "Configuración:"
-    echo "  scan_movies: $scan_movies"
-    echo "  scan_series: $scan_series"
-    echo "=== FIN DEBUG ==="
-}
-
 # =============================================================================
-# FUNCIÓN BOOT PROCESS (PARA INICIALIZACIÓN DEL CONTENEDOR)
+# FUNCIÓN PRINCIPAL Y PARSEO DE ARGUMENTOS
 # =============================================================================
-
-boot_process() {
-    log_info "=== BOOT PROCESS INICIADO ==="
-    
-    # Esperar 2 minutos para que el contenedor se estabilice
-    log_info "Esperando 120 segundos para estabilización del contenedor..."
-    sleep 120
-    
-    # 1. Ejecutar procesamiento automático (detecta origen y procesa correspondientemente)
-    log_info "Iniciando procesamiento automático..."
-    if auto_scan_and_process; then
-        log_info "✓ Procesamiento automático completado"
-    else
-        log_warning "⚠ Error en procesamiento automático"
-    fi
-    
-    # 2. Procesar colas inmediatamente
-    log_info "Procesando colas..."
-    if acquire_lock "$PROCESS_LOCK" 600 "boot-process"; then
-        if process_all_queues; then
-            log_info "✓ Procesamiento de colas completado"
-        else
-            log_warning "⚠ Error procesando colas"
-        fi
-        release_lock "$PROCESS_LOCK"
-    else
-        log_warning "⚠ No se pudo adquirir lock para procesamiento de colas"
-    fi
-    
-    log_info "=== BOOT PROCESS COMPLETADO ==="
-    return 0
-}
-
-# =============================================================================
-# PROCESAMIENTO DE COLAS
-# =============================================================================
-
-process_all_queues() {
-    log_info "=== PROCESANDO TODAS LAS COLAS ==="
-    
-    local total_processed=0
-    local total_failed=0
-    
-    # Procesar cola de Radarr (películas)
-    if [[ -f "$RADARR_QUEUE" ]]; then
-        local radarr_count=$(wc -l < "$RADARR_QUEUE" 2>/dev/null || echo 0)
-        if [[ "$radarr_count" -gt 0 ]]; then
-            log_info "Procesando cola de Radarr: $radarr_count elementos"
-            
-            # Procesamiento línea por línea con eliminación inmediata
-            while [[ -s "$RADARR_QUEUE" ]]; do
-                # Leer primera línea de la cola
-                local first_line=$(head -n 1 "$RADARR_QUEUE" 2>/dev/null)
-                [[ -z "$first_line" ]] && break
-                
-                # Extraer datos de la línea
-                IFS='|' read -r timestamp origin path <<< "$first_line"
-                [[ -z "$path" ]] && {
-                    # Eliminar línea vacía inmediatamente
-                    sed -i '1d' "$RADARR_QUEUE" 2>/dev/null || tail -n +2 "$RADARR_QUEUE" > "$RADARR_QUEUE.tmp" && mv "$RADARR_QUEUE.tmp" "$RADARR_QUEUE"
-                    continue
-                }
-                
-                log_info "Procesando película: $path"
-                
-                if process_media_item "$path" "movie"; then
-                    ((total_processed++))
-                    log_info "✓ Procesado correctamente: $(basename "$path") - ELIMINANDO de cola INMEDIATAMENTE"
-                    # Eliminar primera línea de la cola INMEDIATAMENTE
-                    sed -i '1d' "$RADARR_QUEUE" 2>/dev/null || {
-                        tail -n +2 "$RADARR_QUEUE" > "$RADARR_QUEUE.tmp" && mv "$RADARR_QUEUE.tmp" "$RADARR_QUEUE"
-                    }
-                else
-                    ((total_failed++))
-                    log_warning "✗ Error procesando: $(basename "$path") - MANTENIDO en cola para reintento"
-                    # Mover elemento fallido al final de la cola para evitar bucle infinito
-                    sed -i '1d' "$RADARR_QUEUE" 2>/dev/null || {
-                        tail -n +2 "$RADARR_QUEUE" > "$RADARR_QUEUE.tmp" && mv "$RADARR_QUEUE.tmp" "$RADARR_QUEUE"
-                    }
-                    echo "$timestamp|$origin|$path" >> "$RADARR_QUEUE"
-                fi
-                
-                # Pequeña pausa entre procesamiento
-                sleep 1
-            done
-        else
-            log_info "Cola de Radarr vacía"
-        fi
-    else
-        log_info "No existe cola de Radarr"
-    fi
-    
-    # Procesar cola de Sonarr (series)
-    if [[ -f "$SONARR_QUEUE" ]]; then
-        local sonarr_count=$(wc -l < "$SONARR_QUEUE" 2>/dev/null || echo 0)
-        if [[ "$sonarr_count" -gt 0 ]]; then
-            log_info "Procesando cola de Sonarr: $sonarr_count elementos"
-            
-            # Procesamiento línea por línea con eliminación inmediata
-            while [[ -s "$SONARR_QUEUE" ]]; do
-                # Leer primera línea de la cola
-                local first_line=$(head -n 1 "$SONARR_QUEUE" 2>/dev/null)
-                [[ -z "$first_line" ]] && break
-                
-                # Extraer datos de la línea
-                IFS='|' read -r timestamp origin path <<< "$first_line"
-                [[ -z "$path" ]] && {
-                    # Eliminar línea vacía inmediatamente
-                    sed -i '1d' "$SONARR_QUEUE" 2>/dev/null || tail -n +2 "$SONARR_QUEUE" > "$SONARR_QUEUE.tmp" && mv "$SONARR_QUEUE.tmp" "$SONARR_QUEUE"
-                    continue
-                }
-                
-                log_info "Procesando serie/episodio: $path"
-                
-                if process_media_item "$path" "tvshow"; then
-                    ((total_processed++))
-                    log_info "✓ Procesado correctamente: $(basename "$path") - ELIMINANDO de cola INMEDIATAMENTE"
-                    # Eliminar primera línea de la cola INMEDIATAMENTE
-                    sed -i '1d' "$SONARR_QUEUE" 2>/dev/null || {
-                        tail -n +2 "$SONARR_QUEUE" > "$SONARR_QUEUE.tmp" && mv "$SONARR_QUEUE.tmp" "$SONARR_QUEUE"
-                    }
-                else
-                    ((total_failed++))
-                    log_warning "✗ Error procesando: $(basename "$path") - MANTENIDO en cola para reintento"
-                    # Mover elemento fallido al final de la cola para evitar bucle infinito
-                    sed -i '1d' "$SONARR_QUEUE" 2>/dev/null || {
-                        tail -n +2 "$SONARR_QUEUE" > "$SONARR_QUEUE.tmp" && mv "$SONARR_QUEUE.tmp" "$SONARR_QUEUE"
-                    }
-                    echo "$timestamp|$origin|$path" >> "$SONARR_QUEUE"
-                fi
-                
-                # Pequeña pausa entre procesamiento
-                sleep 1
-            done
-        else
-            log_info "Cola de Sonarr vacía"
-        fi
-    else
-        log_info "No existe cola de Sonarr"
-    fi
-    
-    # Resumen final
-    log_info "=== PROCESAMIENTO COMPLETADO ==="
-    log_info "Total procesados: $total_processed"
-    log_info "Total fallidos: $total_failed"
-    
-    if [[ "$total_processed" -gt 0 ]]; then
-        return 0
-    elif [[ "$total_failed" -gt 0 ]]; then
-        return 1
-    else
-        log_info "No había elementos para procesar"
-        return 0
-    fi
-}
-
-handle_radarr_event() {
-    log_info "=== EVENTO RADARR DETECTADO ==="
-    log_info "Tipo de evento: ${radarr_eventtype:-unknown}"
-    
-    case "${radarr_eventtype,,}" in
-        "download"|"rename"|"movieadded"|"movieupdated")
-            if [[ -n "$radarr_movie_path" && -d "$radarr_movie_path" ]]; then
-                log_info "Procesando película específica: $radarr_movie_path"
-                find "$radarr_movie_path" -type f \( -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" -o -name "*.m4v" \) \
-                    ! -path "*/trailers/*" ! -path "*/extras/*" \
-                    ! -name "*trailer*" ! -name "*Trailer*" \
-                    | while IFS= read -r video_file; do
-                    if [[ -n "$video_file" ]]; then
-                        add_to_queue "$video_file" "movie"
-                    fi
-                done
-                
-                # Elementos añadidos a cola, el cron cada 5 minutos los procesará
-                log_info "Elementos añadidos a cola. Procesamiento automático via cron cada 5 minutos."
-            else
-                log_warning "No se especificó ruta de película válida: ${radarr_movie_path:-'no definida'}"
-            fi
-            ;;
-        "test")
-            log_info "Evento de test de Radarr recibido correctamente"
-            ;;
-        *)
-            log_warning "Evento Radarr no soportado: $radarr_eventtype"
-            ;;
-    esac
-    
-    log_info "=== EVENTO RADARR PROCESADO ==="
-}
-
-handle_sonarr_event() {
-    log_info "=== EVENTO SONARR DETECTADO ==="
-    log_info "Tipo de evento: ${sonarr_eventtype:-unknown}"
-    
-    case "${sonarr_eventtype,,}" in
-        "download"|"rename"|"seriesadd"|"episodefileadded")
-            if [[ -n "$sonarr_episodefile_path" && -f "$sonarr_episodefile_path" ]]; then
-                log_info "Procesando episodio específico: $sonarr_episodefile_path"
-                add_to_queue "$sonarr_episodefile_path" "tvshow"
-            elif [[ -n "$sonarr_series_path" && -d "$sonarr_series_path" ]]; then
-                log_info "Procesando serie completa: $sonarr_series_path"
-                find "$sonarr_series_path" -type f \( -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" -o -name "*.m4v" \) \
-                    ! -path "*/trailers/*" ! -path "*/extras/*" \
-                    ! -name "*trailer*" ! -name "*Trailer*" \
-                    | while IFS= read -r video_file; do
-                    if [[ -n "$video_file" ]]; then
-                        add_to_queue "$video_file" "tvshow"
-                    fi
-                done
-            else
-                log_warning "No se especificó ruta válida. Serie: ${sonarr_series_path:-'no definida'}, Episodio: ${sonarr_episodefile_path:-'no definida'}"
-            fi
-            
-            # Elementos añadidos a cola, el cron cada 5 minutos los procesará
-            log_info "Elementos añadidos a cola. Procesamiento automático via cron cada 5 minutos."
-            ;;
-        "test")
-            log_info "Evento de test de Sonarr recibido correctamente"
-            ;;
-        *)
-            log_warning "Evento Sonarr no soportado: $sonarr_eventtype"
-            ;;
-    esac
-    
-    log_info "=== EVENTO SONARR PROCESADO ==="
-}
 
 main() {
-    setup_logging
+    local command=""
+    local force_process="false"
+    
+    # Parsear argumentos
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            movies|series|all)
+                command="$1"
+                shift
+                ;;
+            -f|--force)
+                force_process="true"
+                shift
+                ;;
+            -h|--help)
+                show_usage
+                exit 0
+                ;;
+            *)
+                log_error "Argumento desconocido: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Si no se especifica comando, usar 'all' por defecto
+    if [[ -z "$command" ]]; then
+        command="all"
+    fi
+    
+    log_info "Iniciando Lang-Flags Beta - Versión $SCRIPT_VERSION"
+    log_info "Comando: $command | Forzar: $force_process"
+    
+    # Crear directorios necesarios
     create_dirs
     
-    log_info "=== $SCRIPT_NAME v$SCRIPT_VERSION iniciado ==="
-    log_info "PID: $$, Usuario: $(whoami), Argumentos: $*"
+    # Configurar logging
+    setup_logging
     
-    # Siempre generar y ejecutar script de inicialización del contenedor
-    local init_script_was_missing=false
-    if [[ ! -f "/custom-cont-init.d/lang_flags-install_deps.sh" ]]; then
-        init_script_was_missing=true
+    # Limpiar cache externo al inicio (opcional, solo si no es force)
+    if [[ "$force_process" != "true" ]]; then
+        cleanup_external_cache
     fi
     
-    generate_container_init_script
-    
-    # Si el script no existía, ejecutarlo inmediatamente
-    if [[ "$init_script_was_missing" == "true" && -f "/custom-cont-init.d/lang_flags-install_deps.sh" ]]; then
-        log_info "Ejecutando script de inicialización recién creado..."
-        /custom-cont-init.d/lang_flags-install_deps.sh
-    fi
-    
-    # Manejar eventos de Sonarr/Radarr (tienen prioridad)
-    if [[ -n "$radarr_eventtype" ]]; then
-        handle_radarr_event
-        exit 0
-    elif [[ -n "$sonarr_eventtype" ]]; then
-        handle_sonarr_event
-        exit 0
-    fi
-    
-    # Procesar argumentos de línea de comandos
-    local force_mode=false
-    local main_command="$1"
-    
-    # Verificar si se pasó el parámetro -f
-    if [[ "$2" == "-f" || "$1" == "-f" ]]; then
-        force_mode=true
-        # Si -f es el primer argumento, el comando real es el segundo
-        if [[ "$1" == "-f" ]]; then
-            main_command="$2"
-        fi
-    fi
-    
-    case "$main_command" in
-        "all"|"--scan-all")
-            if ! check_dependencies; then
-                log_error "Dependencias faltantes. Ejecute: $0 set-deps"
-                exit 1
-            fi
-            
-            # Adquirir lock de escaneo primero
-            if ! acquire_lock "$SCAN_LOCK" 300 "scan-all-movies-series"; then
-                log_error "No se pudo adquirir lock de escaneo, otro proceso está ejecutándose"
-                exit 1
-            fi
-            
-            # Configurar limpieza al salir
-            trap 'cleanup_locks; exit' EXIT INT TERM
-            
-            if [[ "$force_mode" == "true" ]]; then
-                log_info "Añadiendo TODA la biblioteca a colas (modo force)..."
-            else
-                log_info "Añadiendo biblioteca pendiente a colas (verificando cache)..."
-            fi
-            
-            # Escanear sin locks internos (ya tenemos el lock)
-            local scan_success=true
-            if ! scan_movies_no_lock "$force_mode"; then
-                scan_success=false
-            fi
-            if ! scan_tvshows_no_lock "$force_mode"; then
-                scan_success=false
-            fi
-            
-            # Liberar lock de escaneo
-            release_lock "$SCAN_LOCK"
-            
-            if [[ "$scan_success" != "true" ]]; then
-                log_error "Error durante el escaneo"
-                exit 1
-            fi
-            
-            log_info "✓ Biblioteca añadida a colas. Procesando inmediatamente..."
-            
-            # Procesar colas inmediatamente después de añadir elementos
-            if ! acquire_lock "$PROCESS_LOCK" 60 "immediate-process"; then
-                log_warning "No se pudo adquirir lock de procesamiento, el cron procesará más tarde"
-            else
-                trap 'cleanup_locks; exit' EXIT INT TERM
-                process_all_queues
-                release_lock "$PROCESS_LOCK"
-                log_info "✓ Procesamiento inmediato completado."
-            fi
+    # Ejecutar comando correspondiente
+    case "$command" in
+        movies)
+            process_movies "$force_process"
             ;;
-        "movies"|"--scan-movies")
-            if ! check_dependencies; then
-                log_error "Dependencias faltantes. Ejecute: $0 set-deps"
-                exit 1
-            fi
-            
-            # Adquirir lock de escaneo primero
-            if ! acquire_lock "$SCAN_LOCK" 300 "scan-movies"; then
-                log_error "No se pudo adquirir lock de escaneo, otro proceso está ejecutándose"
-                exit 1
-            fi
-            
-            # Configurar limpieza al salir
-            trap 'cleanup_locks; exit' EXIT INT TERM
-            
-            if [[ "$force_mode" == "true" ]]; then
-                log_info "Añadiendo TODAS las películas a cola (modo force)..."
-            else
-                log_info "Añadiendo películas pendientes a cola (verificando cache)..."
-            fi
-            
-            # Escanear sin locks internos (ya tenemos el lock)
-            local scan_success=true
-            if ! scan_movies_no_lock "$force_mode"; then
-                scan_success=false
-            fi
-            
-            # Liberar lock de escaneo
-            release_lock "$SCAN_LOCK"
-            
-            if [[ "$scan_success" != "true" ]]; then
-                log_error "Error durante el escaneo"
-                exit 1
-            fi
-            
-            log_info "✓ Películas añadidas a cola. Procesando inmediatamente..."
-            
-            # Procesar colas inmediatamente después de añadir elementos
-            if ! acquire_lock "$PROCESS_LOCK" 60 "immediate-process"; then
-                log_warning "No se pudo adquirir lock de procesamiento, el cron procesará más tarde"
-            else
-                trap 'cleanup_locks; exit' EXIT INT TERM
-                process_all_queues
-                release_lock "$PROCESS_LOCK"
-                log_info "✓ Procesamiento inmediato completado."
-            fi
+        series)
+            process_series "$force_process"
             ;;
-        "series"|"--scan-series"|"tvshows"|"--scan-tvshows")
-            if ! check_dependencies; then
-                log_error "Dependencias faltantes. Ejecute: $0 set-deps"
-                exit 1
-            fi
-            
-            # Adquirir lock de escaneo primero
-            if ! acquire_lock "$SCAN_LOCK" 300 "scan-series"; then
-                log_error "No se pudo adquirir lock de escaneo, otro proceso está ejecutándose"
-                exit 1
-            fi
-            
-            # Configurar limpieza al salir
-            trap 'cleanup_locks; exit' EXIT INT TERM
-            
-            if [[ "$force_mode" == "true" ]]; then
-                log_info "Añadiendo TODAS las series a cola (modo force)..."
-            else
-                log_info "Añadiendo series pendientes a cola (verificando cache)..."
-            fi
-            
-            # Escanear sin locks internos (ya tenemos el lock)
-            local scan_success=true
-            if ! scan_tvshows_no_lock "$force_mode"; then
-                scan_success=false
-            fi
-            
-            # Liberar lock de escaneo
-            release_lock "$SCAN_LOCK"
-            
-            if [[ "$scan_success" != "true" ]]; then
-                log_error "Error durante el escaneo"
-                exit 1
-            fi
-            
-            log_info "✓ Series añadidas a cola. Procesando inmediatamente..."
-            
-            # Procesar colas inmediatamente después de añadir elementos
-            if ! acquire_lock "$PROCESS_LOCK" 60 "immediate-process"; then
-                log_warning "No se pudo adquirir lock de procesamiento, el cron procesará más tarde"
-            else
-                trap 'cleanup_locks; exit' EXIT INT TERM
-                process_all_queues
-                release_lock "$PROCESS_LOCK"
-                log_info "✓ Procesamiento inmediato completado."
-            fi
-            ;;
-        "additem"|"--add-item")
-            local media_path="$2"
-            local media_type="$3"
-            
-            if [[ -z "$media_path" ]]; then
-                log_error "Debe especificar ruta del archivo"
-                log_info "Uso: $0 additem <ruta_archivo> [movie|series]"
-                exit 1
-            fi
-            
-            add_to_queue "$media_path" "$media_type"
-            ;;
-        "setup"|"--setup")
-            log_info "Configurando entorno completo..."
-            setup_environment
-            ;;
-        "set-deps"|"--install-deps"|"install-deps")
-            log_info "Configurando entorno completo (instalación de dependencias)..."
-            setup_environment
-            ;;
-        "set-cron"|"--setup-cron"|"setup-cron")
-            log_info "Configurando entorno completo (configuración de cron)..."
-            setup_environment
-            ;;
-        "test"|"--test")
-            log_info "=== VERIFICACIÓN DE CONFIGURACIÓN ==="
-            log_info "Directorios:"
-            log_info "  - Base: $BASE_DIR"
-            log_info "  - Películas: $MOVIES_DIR"
-            log_info "  - Series: $SERIES_DIR"
-            log_info "  - Overlays: $OVERLAY_DIR"
-            
-            log_info "Dependencias:"
-            if check_dependencies; then
-                log_info "  ✓ Todas las dependencias están disponibles"
-            else
-                log_warning "  ✗ Faltan dependencias (ejecute: $0 set-deps)"
-            fi
-            
-            log_info "Colas:"
-            log_info "  - Radarr: $(wc -l < "$RADARR_QUEUE" 2>/dev/null || echo 0) elementos"
-            log_info "  - Sonarr: $(wc -l < "$SONARR_QUEUE" 2>/dev/null || echo 0) elementos"
-            
-            log_info "✓ Verificación completada"
-            ;;
-        "debug-lang"|"--debug-lang")
-            local test_file="$2"
-            if [[ -z "$test_file" ]]; then
-                test_file="/BibliotecaMultimedia/Peliculas/Blade (1998)/Blade (1998) {imdb-tt0120611} [ES ES-VO][Bluray-1080p][AC3 5.1][ES+EN][8bit][x264][ES+EN].mkv"
-            fi
-            debug_language_detection "$test_file"
-            ;;
-        "debug-processing"|"--debug-processing")
-            local test_file="$2"
-            if [[ -z "$test_file" ]]; then
-                test_file="/BibliotecaMultimedia/Peliculas/Blade (1998)/Blade (1998) {imdb-tt0120611} [ES ES-VO][Bluray-1080p][DTS 5.1][ES+EN][8bit][x264][ES+EN]-HDO.mkv"
-            fi
-            debug_processing "$test_file"
-            ;;
-        "debug-identifier"|"--debug-identifier")
-            local test_file="$2"
-            if [[ -z "$test_file" ]]; then
-                log_error "Uso: $0 debug-identifier <archivo_video>"
-                exit 1
-            fi
-            if [[ ! -f "$test_file" ]]; then
-                log_error "Archivo no encontrado: $test_file"
-                exit 1
-            fi
-            get_video_identifier "$test_file"
-            ;;
-        "help"|"--help"|"-h")
-            show_help
-            ;;
-        "")
-            log_info "Ejecutando procesamiento automático (sin argumentos)..."
-            auto_scan_and_process
-            ;;
-        "processqueue"|"queue"|"--process-queue")
-            if ! check_dependencies; then
-                log_warning "Dependencias faltantes, configurando entorno..."
-                setup_environment || {
-                    log_error "Error configurando entorno"
-                    exit 1
-                }
-            fi
-            
-            # Adquirir lock para procesamiento manual
-            if ! acquire_lock "$PROCESS_LOCK" 600 "manual-process"; then
-                log_warning "No se pudo adquirir lock de procesamiento, otro proceso está ejecutándose"
-                exit 1
-            fi
-            
-            trap 'cleanup_locks; exit' EXIT INT TERM
-            process_all_queues
-            release_lock "$PROCESS_LOCK"
-            ;;
-        "debug-events"|"--debug-events")
-            debug_event_detection
-            ;;
-        "boot_process"|"boot-process"|"--boot-process")
-            boot_process
+        all)
+            process_all "$force_process"
             ;;
         *)
-            log_error "Modo desconocido: $1"
-            log_info "Use '$0 help' para ver los modos disponibles"
+            log_error "Comando desconocido: $command"
+            show_usage
             exit 1
             ;;
     esac
     
-    log_info "=== $SCRIPT_NAME completado ==="
+    log_info "Proceso completado. Revisar logs en $LOG_DIR"
 }
 
 # =============================================================================
-# EJECUCIÓN
+# EJECUCIÓN PRINCIPAL
 # =============================================================================
 
-# Manejo de señales
-trap 'log_info "Script interrumpido"; exit 1' INT TERM
-
-# Ejecutar función principal
+# Ejecutar función principal con todos los argumentos
 main "$@"
-
-# =============================================================================
-# FUNCIÓN DE TEST PARA DEBUGGING
-# =============================================================================
-
-debug_language_detection() {
-    local video_file="$1"
-    
-    if [[ ! -f "$video_file" ]]; then
-        echo "ERROR: Archivo no encontrado: $video_file"
-        return 1
-    fi
-    
-    echo "=== DEBUGGING DETECCIÓN DE IDIOMAS ==="
-    echo "Archivo: $video_file"
-    echo ""
-    
-    # MediaInfo
-    echo "1. MediaInfo Audio:"
-    local audio_langs=$(mediainfo --Output="Audio;%Language/String3%" "$video_file" 2>/dev/null | grep -v "^$" | sort -u)
-    echo "   Resultado: '$audio_langs'"
-    
-    echo "2. MediaInfo Text:"
-    local sub_langs=$(mediainfo --Output="Text;%Language/String3%" "$video_file" 2>/dev/null | grep -v "^$" | sort -u)
-    echo "   Resultado: '$sub_langs'"
-    
-    # Procesamiento
-    echo "3. Procesando idiomas concatenados:"
-    local all_langs="$audio_langs $sub_langs"
-    echo "   Combined: '$all_langs'"
-    
-    local languages=()
-    for lang_string in $all_langs; do
-        if [[ -n "$lang_string" && "$lang_string" != "Unknown" ]]; then
-            echo "   Procesando: '$lang_string' (longitud: ${#lang_string})"
-            # Si es un string largo, intentar separar códigos de 3 caracteres
-            if [[ ${#lang_string} -gt 3 ]]; then
-                local i=0
-                while [[ $i -lt ${#lang_string} ]]; do
-                    local lang_code="${lang_string:$i:3}"
-                    if [[ ${#lang_code} -eq 3 && "$lang_code" != "und" ]]; then
-                        languages+=("$lang_code")
-                        echo "     Extraído: '$lang_code'"
-                    fi
-                    ((i+=3))
-                done
-            else
-                # Idioma individual
-                if [[ "$lang_string" != "und" ]]; then
-                    languages+=("$lang_string")
-                    echo "     Individual: '$lang_string'"
-                fi
-            fi
-        fi
-    done
-    
-    echo "4. Idiomas finales: ${languages[*]}"
-    
-    # FFprobe
-    echo "5. FFprobe audio:"
-    ffprobe -v quiet -select_streams a -show_entries stream_tags=language -of csv=p=0 "$video_file" 2>/dev/null | head -3
-    log_info "=== $SCRIPT_NAME completado ==="
-}
