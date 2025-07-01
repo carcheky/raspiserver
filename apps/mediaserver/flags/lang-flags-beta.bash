@@ -568,48 +568,49 @@ apply_language_overlays() {
 # GESTIÓN DE CACHE BASADO EN EXIF
 # =============================================================================
 
-get_video_checksum() {
+get_video_identifier() {
     local video_file="$1"
     
     if [[ ! -f "$video_file" ]]; then
         return 1
     fi
     
-    # Generar checksum del archivo de video (usando size + fecha de modificación para rapidez)
-    local file_size=$(stat -c %s "$video_file" 2>/dev/null || echo 0)
-    local file_mtime=$(stat -c %Y "$video_file" 2>/dev/null || echo 0)
-    
-    echo "${file_size}_${file_mtime}" | md5sum | cut -d' ' -f1
+    # Retornar solo el nombre del archivo (sin ruta)
+    basename "$video_file"
 }
 
 is_image_processed() {
     local image_file="$1"
+    local video_file="$2"  # Recibe la ruta completa del video
     
-    if [[ ! -f "$image_file" ]]; then
+    if [[ ! -f "$image_file" || -z "$video_file" ]]; then
         return 1
     fi
     
-    # SISTEMA UNIFICADO: Solo verificar UserComment con checksum
+    # SISTEMA SIMPLIFICADO: Verificar UserComment con nombre del archivo (sin ruta)
     local user_comment=$(exiftool -f -s3 -"UserComment" "$image_file" 2>/dev/null)
+    local video_filename=$(basename "$video_file")
+    local expected_comment="LangFlags:$video_filename"
     
-    if [[ -n "$user_comment" && "$user_comment" == LangFlags:* ]]; then
-        return 0  # Ya procesada (tiene checksum válido)
+    if [[ -n "$user_comment" && "$user_comment" == "$expected_comment" ]]; then
+        return 0  # Ya procesada (nombre coincide)
     fi
     
-    return 1  # No procesada
+    return 1  # No procesada o nombre diferente
 }
 
-update_image_exif_checksum() {
+update_image_exif_filename() {
     local image_file="$1"
-    local video_checksum="$2"
+    local video_file="$2"  # Recibe la ruta completa del video
     
-    if [[ ! -f "$image_file" || -z "$video_checksum" ]]; then
+    if [[ ! -f "$image_file" || -z "$video_file" ]]; then
         return 1
     fi
     
-    # SISTEMA UNIFICADO: Solo UserComment con checksum (silenciar completamente exiftool)
-    if exiftool -overwrite_original -UserComment="LangFlags:$video_checksum" "$image_file" >/dev/null 2>&1; then
-        log_debug "Cache EXIF actualizado en: $(basename "$image_file") (UserComment=LangFlags:$video_checksum)"
+    # SISTEMA SIMPLIFICADO: Solo UserComment con nombre del archivo (sin ruta)
+    local video_filename=$(basename "$video_file")
+    if exiftool -overwrite_original -UserComment="LangFlags:$video_filename" "$image_file" >/dev/null 2>&1; then
+        log_debug "Cache EXIF actualizado en: $(basename "$image_file") (UserComment=LangFlags:$video_filename)"
         return 0
     else
         log_warning "No se pudo actualizar UserComment en: $(basename "$image_file")"
@@ -617,51 +618,34 @@ update_image_exif_checksum() {
     fi
 }
 
-get_image_exif_checksum() {
+get_image_exif_video_path() {
     local image_file="$1"
     
     if [[ ! -f "$image_file" ]]; then
         return 1
     fi
     
-    # Extraer checksum del campo UserComment
-    local checksum=$(exiftool -f -s3 -"UserComment" "$image_file" 2>/dev/null | grep "LangFlags:" | cut -d: -f2)
+    # Extraer ruta del archivo del campo UserComment
+    local video_path=$(exiftool -f -s3 -"UserComment" "$image_file" 2>/dev/null | grep "LangFlags:" | cut -d: -f2-)
     
-    if [[ -n "$checksum" ]]; then
-        echo "$checksum"
+    if [[ -n "$video_path" ]]; then
+        echo "$video_path"
         return 0
     else
         return 1
     fi
 }
 
-get_video_checksum_cached() {
+get_video_identifier_cached() {
     local video_file="$1"
     
     if [[ ! -f "$video_file" ]]; then
         return 1
     fi
     
-    # OPTIMIZACIÓN: Intentar leer checksum del EXIF del video primero
-    local cached_checksum=$(exiftool -f -s3 -"UserComment" "$video_file" 2>/dev/null | grep "LangFlags:" | cut -d: -f2)
-    
-    if [[ -n "$cached_checksum" ]]; then
-        # NO hacer log aquí - solo retornar el checksum
-        echo "$cached_checksum"
-        return 0
-    fi
-    
-    # Si no hay cache, calcular checksum (SIN guardarlo en el video para evitar problemas de permisos)
-    local calculated_checksum
-    calculated_checksum=$(get_video_checksum "$video_file")
-    
-    if [[ -n "$calculated_checksum" ]]; then
-        # NO hacer log aquí - solo retornar el checksum calculado
-        echo "$calculated_checksum"
-        return 0
-    fi
-    
-    return 1
+    # SISTEMA SIMPLIFICADO: Solo retornar la ruta del archivo directamente
+    echo "$video_file"
+    return 0
 }
 
 needs_processing() {
@@ -690,28 +674,22 @@ needs_processing() {
         IFS=';' read -ra poster_files <<< "$poster_result"
     fi
     
-    # Obtener checksum actual del archivo de video (usando cache optimizado)
-    local current_checksum
-    current_checksum=$(get_video_checksum_cached "$media_path" 2>/dev/null || echo "")
+    # Obtener identificador actual del archivo de video (ruta completa)
+    local current_video_path
+    current_video_path=$(get_video_identifier_cached "$media_path" 2>/dev/null || echo "")
     
     for poster_file in "${poster_files[@]}"; do
-        # MÉTODO UNIFICADO: Solo verificar UserComment con checksum
-        local stored_checksum
-        if stored_checksum=$(get_image_exif_checksum "$poster_file"); then
-            if [[ -n "$current_checksum" && "$stored_checksum" == "$current_checksum" ]]; then
-                log_debug "Cache HIT: $(basename "$poster_file") checksum coincide ($stored_checksum)"
-                continue  # Esta imagen está actualizada
-            else
-                log_debug "Cache MISS: $(basename "$poster_file") checksum diferente ($stored_checksum vs $current_checksum)"
-                return 0  # Necesita procesamiento
-            fi
+        # MÉTODO SIMPLIFICADO: Solo verificar UserComment con ruta del archivo
+        if is_image_processed "$poster_file" "$current_video_path"; then
+            log_debug "Cache HIT: $(basename "$poster_file") ruta coincide ($current_video_path)"
+            continue  # Esta imagen está actualizada
         else
-            log_debug "Cache MISS: $(basename "$poster_file") sin UserComment válido"
+            log_debug "Cache MISS: $(basename "$poster_file") ruta diferente o no procesada"
             return 0  # Necesita procesamiento
         fi
     done
     
-    # Si llegamos aquí, todas las imágenes tienen el checksum correcto
+    # Si llegamos aquí, todas las imágenes tienen el identificador correcto
     log_debug "Cache HIT: Todas las imágenes actualizadas para: $media_path"
     return 1  # No necesita procesamiento
 }
@@ -783,12 +761,12 @@ process_media_item() {
     
     log_info "Aplicando overlays para idiomas: ${languages[*]} en ${#valid_images[@]} imagen(es) (${media_type})"
     
-    # Obtener checksum del video para marcar en las imágenes (usando cache optimizado)
-    local video_checksum
-    video_checksum=$(get_video_checksum_cached "$media_path" 2>/dev/null)
-    if [[ -z "$video_checksum" ]]; then
-        log_warning "No se pudo calcular checksum del video: $media_path"
-        video_checksum=""
+    # Obtener identificador del video para marcar en las imágenes (usando cache optimizado)
+    local video_identifier
+    video_identifier=$(get_video_identifier_cached "$media_path" 2>/dev/null)
+    if [[ -z "$video_identifier" ]]; then
+        log_warning "No se pudo obtener identificador del video: $media_path"
+        video_identifier=""
     fi
     
     # 8. Aplicar overlays a cada imagen válida
@@ -797,15 +775,15 @@ process_media_item() {
         log_debug "Procesando imagen: $poster_image"
         
         if apply_language_overlays "$poster_image" "${languages[@]}"; then
-            # Marcar imagen como procesada guardando SOLO el checksum del video
-            if [[ -n "$video_checksum" ]]; then
-                if update_image_exif_checksum "$poster_image" "$video_checksum"; then
-                    log_debug "Checksum guardado en EXIF: $poster_image"
+            # Marcar imagen como procesada guardando la ruta del archivo de video
+            if [[ -n "$video_identifier" ]]; then
+                if update_image_exif_filename "$poster_image" "$video_identifier"; then
+                    log_debug "Identificador guardado en EXIF: $poster_image"
                 else
-                    log_warning "No se pudo guardar checksum en: $poster_image"
+                    log_warning "No se pudo guardar identificador en: $poster_image"
                 fi
             else
-                log_warning "No hay checksum del video para guardar"
+                log_warning "No hay identificador del video para guardar"
             fi
             ((success_count++))
             log_debug "✓ Overlay aplicado exitosamente: $poster_image"
@@ -1614,13 +1592,13 @@ debug_processing() {
     echo "Video: $video_file"
     echo ""
     
-    # 1. Calcular checksum actual (usando cache optimizado)
-    local current_checksum
-    if ! current_checksum=$(get_video_checksum "$video_file"); then
-        echo "ERROR: No se pudo calcular checksum del video"
+    # 1. Obtener identificador actual (ruta del archivo)
+    local current_identifier
+    if ! current_identifier=$(get_video_identifier "$video_file"); then
+        echo "ERROR: No se pudo obtener identificador del video"
         return 1
     fi
-    echo "1. Checksum actual del video: $current_checksum"
+    echo "1. Identificador del video: $current_identifier"
     
     # 2. Encontrar imágenes
     local poster_result
@@ -1640,12 +1618,12 @@ debug_processing() {
         local user_comment=$(exiftool -f -s3 -"UserComment" "$poster_file" 2>/dev/null)
         echo "   UserComment: ${user_comment:-'(no set)'}"
         
-        # Extraer checksum almacenado
-        local stored_checksum=$(get_image_exif_checksum "$poster_file" 2>/dev/null)
-        echo "   Checksum almacenado: ${stored_checksum:-'(no set)'}"
+        # Extraer ruta almacenada
+        local stored_path=$(get_image_exif_video_path "$poster_file" 2>/dev/null)
+        echo "   Ruta almacenada: ${stored_path:-'(no set)'}"
         
         # Verificar is_image_processed
-        if is_image_processed "$poster_file"; then
+        if is_image_processed "$poster_file" "$current_identifier"; then
             echo "   is_image_processed: TRUE"
         else
             echo "   is_image_processed: FALSE"
@@ -2180,17 +2158,17 @@ main() {
             fi
             debug_processing "$test_file"
             ;;
-        "debug-checksum"|"--debug-checksum")
+        "debug-identifier"|"--debug-identifier")
             local test_file="$2"
             if [[ -z "$test_file" ]]; then
-                log_error "Uso: $0 debug-checksum <archivo_video>"
+                log_error "Uso: $0 debug-identifier <archivo_video>"
                 exit 1
             fi
             if [[ ! -f "$test_file" ]]; then
                 log_error "Archivo no encontrado: $test_file"
                 exit 1
             fi
-            get_video_checksum "$test_file"
+            get_video_identifier "$test_file"
             ;;
         "help"|"--help"|"-h")
             show_help
