@@ -28,3 +28,5 @@ apps/mediaserver/flags/cache
 apps/mediaserver/flags/sonarr_queue_process_603.txt
 apps/mediaserver/flags/*.lock
 apps/mediaserver/**/lang_flags-install_deps.sh
+apps/mediaserver/flags/data
+apps/mediaserver/radarr-arr-scripts/99-lang-flags-setup.sh

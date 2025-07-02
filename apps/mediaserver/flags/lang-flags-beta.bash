@@ -215,7 +215,8 @@ create_dirs() {
 }
 
 check_dependencies() {
-    local required=("exiftool" "jq" "convert" "ffprobe" "mediainfo" "mkvinfo" "rsvg-convert" "at")
+    local required=("exiftool" "jq" "convert" "ffprobe" "mediainfo" "mkvinfo" "rsvg-convert")
+    local optional=("at")
     local missing=()
     
     for cmd in "${required[@]}"; do
@@ -225,8 +226,20 @@ check_dependencies() {
     done
     
     if [[ ${#missing[@]} -gt 0 ]]; then
-        log_error "Dependencias faltantes: ${missing[*]}"
+        log_error "Dependencias críticas faltantes: ${missing[*]}"
         return 1
+    fi
+    
+    # Verificar dependencias opcionales
+    local missing_optional=()
+    for cmd in "${optional[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing_optional+=("$cmd")
+        fi
+    done
+    
+    if [[ ${#missing_optional[@]} -gt 0 ]]; then
+        log_warning "Dependencias opcionales faltantes: ${missing_optional[*]}"
     fi
     
     return 0
@@ -497,10 +510,10 @@ apply_language_overlays() {
     fi
     log_debug "Dimensiones del poster: ${poster_width}x${poster_height}px"
     
-    # Calcular tamaño de bandera (25% del ancho del poster, mínimo 80px, máximo 200px)
-    local flag_width=$((poster_width * 25 / 100))
-    if [[ $flag_width -lt 80 ]]; then flag_width=80; fi
-    if [[ $flag_width -gt 200 ]]; then flag_width=200; fi
+    # Tamaño proporcional de bandera (20% del ancho del poster)
+    # Esto asegura que las banderas se vean del mismo tamaño visual en Jellyfin
+    local flag_width=$((poster_width / 5))
+    local flag_height=$((flag_width * 3 / 4))  # Mantener proporción 4:3
     
     # Procesar idiomas uno por uno
     local applied_overlays=0
@@ -521,8 +534,8 @@ apply_language_overlays() {
         local temp_overlay="$TMP_DIR/${country_code}_overlay_tmp_$$.png"
         local temp_flag="$TMP_DIR/${country_code}_flag_tmp_$$.png"
         
-        # Paso 1: Convertir SVG a PNG pequeño (bandera) con color explícito
-        if ! rsvg-convert -w "$flag_width" -h "$((flag_width * 3 / 4))" --format=png --background-color=transparent "$flag_file" -o "$temp_flag" 2>/dev/null; then
+        # Paso 1: Convertir SVG a PNG con tamaño fijo (120x90px) y color explícito
+        if ! rsvg-convert -w "$flag_width" -h "$flag_height" --format=png --background-color=transparent "$flag_file" -o "$temp_flag" 2>/dev/null; then
             log_warning "Error convirtiendo SVG: $flag_file"
             continue
         fi
@@ -546,8 +559,8 @@ apply_language_overlays() {
         if convert "$poster_file" "$temp_overlay" -colorspace sRGB -flatten "$poster_file" 2>/dev/null; then
             log_info "✓ Overlay aplicado: $lang → $(basename "$poster_file")"
             ((applied_overlays++))
-            # Ajustar posición para siguiente bandera
-            y_offset=$((y_offset + (flag_width * 3 / 4) + 5))
+            # Ajustar posición para siguiente bandera (usar altura fija + margen)
+            y_offset=$((y_offset + flag_height + 5))
         else
             log_warning "Error aplicando overlay $lang a: $(basename "$poster_file")"
         fi
@@ -802,6 +815,365 @@ cleanup_external_cache() {
 }
 
 # =============================================================================
+# INSTALACIÓN DE DEPENDENCIAS
+# =============================================================================
+
+create_autosetup_script() {
+    local init_dir="/custom-cont-init.d"
+    local init_script="$init_dir/99-lang-flags-setup.sh"
+    
+    log_info "📝 Creando script de auto-setup en: $init_script"
+    
+    # Crear directorio si no existe
+    if ! mkdir -p "$init_dir" 2>/dev/null; then
+        log_warning "⚠️ No se pudo crear directorio $init_dir (puede requerir permisos root)"
+        return 1
+    fi
+    
+    # Crear script de inicialización ultra-simple
+    cat > "$init_script" << 'EOF'
+#!/bin/bash
+# Auto-setup para Lang-Flags - Ejecutado al inicio del contenedor
+# Generado automáticamente por lang-flags-beta.bash
+
+if [[ -f "/flags/lang-flags-beta.bash" ]]; then
+    bash /flags/lang-flags-beta.bash setup
+fi
+EOF
+    
+    # Hacer ejecutable
+    if chmod +x "$init_script" 2>/dev/null; then
+        log_info "✅ Script de auto-setup creado: $init_script"
+        log_info "🔄 Se ejecutará automáticamente al iniciar el contenedor"
+        return 0
+    else
+        log_warning "⚠️ No se pudo hacer ejecutable: $init_script"
+        return 1
+    fi
+}
+
+setup_dependencies() {
+    log_info "🔧 Iniciando instalación de dependencias para Lang-Flags..."
+    
+    # Crear script de auto-setup primero
+    create_autosetup_script
+    
+    # Detectar el gestor de paquetes disponible
+    local package_manager=""
+    if command -v apt-get >/dev/null 2>&1; then
+        package_manager="apt"
+    elif command -v apk >/dev/null 2>&1; then
+        package_manager="apk"
+    elif command -v yum >/dev/null 2>&1; then
+        package_manager="yum"
+    else
+        log_error "❌ No se detectó un gestor de paquetes compatible (apt, apk, yum)"
+        return 1
+    fi
+    
+    log_info "📦 Gestor de paquetes detectado: $package_manager"
+    
+    # Lista de paquetes necesarios por gestor
+    local packages_apt="libimage-exiftool-perl imagemagick librsvg2-bin ffmpeg mediainfo mkvtoolnix jq at"
+    local packages_apk="exiftool imagemagick librsvg rsvg-convert ffmpeg mediainfo mkvtoolnix jq"
+    local packages_yum="perl-Image-ExifTool ImageMagick librsvg2-tools ffmpeg mediainfo mkvtoolnix jq at"
+    
+    # Instalar según el gestor de paquetes
+    case "$package_manager" in
+        "apt")
+            log_info "🔄 Actualizando repositorios apt..."
+            if ! apt-get update >/dev/null 2>&1; then
+                log_warning "⚠️ No se pudo actualizar repositorios (puede ser por permisos)"
+            fi
+            
+            log_info "📥 Instalando paquetes: $packages_apt"
+            if apt-get install -y $packages_apt >/dev/null 2>&1; then
+                log_info "✅ Paquetes APT instalados exitosamente"
+            else
+                log_error "❌ Error instalando paquetes APT"
+                return 1
+            fi
+            ;;
+        "apk")
+            log_info "🔄 Actualizando repositorios apk..."
+            if ! apk update >/dev/null 2>&1; then
+                log_warning "⚠️ No se pudo actualizar repositorios (puede ser por permisos)"
+            fi
+            
+            log_info "📥 Instalando paquetes: $packages_apk"
+            if apk add $packages_apk >/dev/null 2>&1; then
+                log_info "✅ Paquetes APK instalados exitosamente"
+            else
+                log_error "❌ Error instalando paquetes APK"
+                return 1
+            fi
+            ;;
+        "yum")
+            log_info "📥 Instalando paquetes: $packages_yum"
+            if yum install -y $packages_yum >/dev/null 2>&1; then
+                log_info "✅ Paquetes YUM instalados exitosamente"
+            else
+                log_error "❌ Error instalando paquetes YUM"
+                return 1
+            fi
+            ;;
+    esac
+    
+    # Verificar instalación
+    log_info "🔍 Verificando dependencias instaladas..."
+    if check_dependencies; then
+        log_info "✅ ¡Todas las dependencias están correctamente instaladas!"
+        log_info "🚀 Lang-Flags está listo para usar"
+        return 0
+    else
+        log_error "❌ Algunas dependencias siguen faltando después de la instalación"
+        return 1
+    fi
+}
+
+# =============================================================================
+# SISTEMA DE GESTIÓN DE COLAS
+# =============================================================================
+
+add_to_queue() {
+    local media_path="$1"
+    local media_type="$2"  # "movie" o "tvshow"
+    local container_type=$(detect_container_type)
+    
+    # Determinar archivo de cola según el contenedor
+    local queue_file=""
+    case "$container_type" in
+        "radarr")
+            queue_file="$RADARR_QUEUE"
+            ;;
+        "sonarr")
+            queue_file="$SONARR_QUEUE"
+            ;;
+        *)
+            # Contenedor desconocido, usar cola genérica
+            queue_file="$QUEUE_DIR/generic.queue"
+            ;;
+    esac
+    
+    # Crear directorio de cola si no existe
+    mkdir -p "$QUEUE_DIR"
+    
+    # Formato: timestamp|media_type|media_path
+    local timestamp=$(date +%s)
+    local queue_entry="${timestamp}|${media_type}|${media_path}"
+    
+    # Verificar si el item ya está en la cola
+    if [[ -f "$queue_file" ]] && grep -q "|${media_path}$" "$queue_file" 2>/dev/null; then
+        log_debug "Item ya en cola: $media_path"
+        return 0
+    fi
+    
+    # Añadir a la cola
+    echo "$queue_entry" >> "$queue_file"
+    log_info "✓ Añadido a cola: $(basename "$media_path") (tipo: $media_type)"
+    return 0
+}
+
+process_queue() {
+    local container_type=$(detect_container_type)
+    
+    # Determinar archivo de cola según el contenedor
+    local queue_file=""
+    case "$container_type" in
+        "radarr")
+            queue_file="$RADARR_QUEUE"
+            ;;
+        "sonarr")
+            queue_file="$SONARR_QUEUE"
+            ;;
+        *)
+            # Procesar todas las colas disponibles
+            local queue_files=("$RADARR_QUEUE" "$SONARR_QUEUE" "$QUEUE_DIR/generic.queue")
+            for qf in "${queue_files[@]}"; do
+                if [[ -f "$qf" ]]; then
+                    process_single_queue "$qf"
+                fi
+            done
+            return $?
+            ;;
+    esac
+    
+    # Procesar cola específica del contenedor
+    if [[ -f "$queue_file" ]]; then
+        process_single_queue "$queue_file"
+    else
+        log_info "No hay cola para procesar: $queue_file"
+        return 0
+    fi
+}
+
+process_single_queue() {
+    local queue_file="$1"
+    
+    if [[ ! -f "$queue_file" ]]; then
+        return 0
+    fi
+    
+    # Contar items en cola
+    local queue_count=$(wc -l < "$queue_file" 2>/dev/null || echo "0")
+    if [[ "$queue_count" -eq 0 ]]; then
+        log_info "Cola vacía: $(basename "$queue_file")"
+        return 0
+    fi
+    
+    log_info "📋 Procesando cola: $(basename "$queue_file") ($queue_count items)"
+    
+    # Crear archivo temporal para items no procesados
+    local temp_queue="${queue_file}.tmp"
+    local processed_count=0
+    local failed_count=0
+    
+    # Procesar cada item de la cola
+    while IFS='|' read -r timestamp media_type media_path; do
+        # Validar formato de entrada
+        if [[ -z "$media_type" || -z "$media_path" ]]; then
+            log_warning "Entrada de cola inválida: $timestamp|$media_type|$media_path"
+            continue
+        fi
+        
+        log_info "🎬 Procesando desde cola: $(basename "$media_path") (tipo: $media_type)"
+        
+        # Procesar item SIN verificar cache (la cola no usa cache)
+        if process_media_item "$media_path" "$media_type"; then
+            log_debug "✓ Item procesado exitosamente desde cola: $media_path"
+            ((processed_count++))
+            # NO añadir a temp_queue = eliminar de cola
+        else
+            log_warning "❌ Error procesando item desde cola: $media_path"
+            # Añadir a temp_queue para reintentar
+            echo "${timestamp}|${media_type}|${media_path}" >> "$temp_queue"
+            ((failed_count++))
+        fi
+        
+    done < "$queue_file"
+    
+    # Reemplazar cola original con items fallidos
+    if [[ -f "$temp_queue" ]]; then
+        mv "$temp_queue" "$queue_file"
+        log_info "📋 Cola actualizada: $processed_count procesados, $failed_count pendientes"
+    else
+        # Todos los items procesados exitosamente
+        rm -f "$queue_file"
+        log_info "✅ Cola completada: $processed_count items procesados, 0 pendientes"
+    fi
+    
+    return 0
+}
+
+scan_and_queue() {
+    local media_dir="$1"
+    local media_type="$2"  # "movie" o "tvshow"
+    local force_process="$3"
+    
+    log_info "🔍 Escaneando directorio para añadir a cola: $media_dir (tipo: $media_type)"
+    
+    if [[ ! -d "$media_dir" ]]; then
+        log_warning "Directorio no encontrado: $media_dir"
+        return 1
+    fi
+    
+    # Si está en modo force, limpiar solo cache externo (EXIF se sobreescribe durante procesamiento)
+    if [[ "$force_process" == "true" ]]; then
+        log_info "🧹 Modo force: limpiando cache externo"
+        rm -f "$EXTERNAL_CACHE_FILE"
+        log_info "✅ Cache externo eliminado correctamente"
+        # NOTA: No limpiamos EXIF masivamente aquí, se sobreescribe durante el procesamiento
+    fi
+    
+    local queued_count=0
+    local skipped_count=0
+    local scanned_count=0
+    
+    log_info "🔍 Iniciando escaneo de archivos de video..."
+    
+    # Escanear archivos de video en el directorio
+    while IFS= read -r media_file; do
+        ((scanned_count++))
+        
+        # Log de progreso cada 10 archivos escaneados
+        if (( scanned_count % 10 == 0 )); then
+            log_info "📊 Progreso: $scanned_count archivos escaneados, $queued_count en cola"
+        fi
+        
+        # Filtrar trailers, extras y otros archivos secundarios que no necesitan overlays
+        if [[ "$media_file" =~ (trailer|extra|behind.the.scene|other|featurette|deleted.scene|making.of|teaser) ]]; then
+            log_debug "Saltando archivo secundario: $(basename "$media_file")"
+            continue
+        fi
+        
+        if [[ "$media_file" =~ \.(mkv|mp4|avi|m4v)$ ]]; then
+            
+            # Con force, añadir todo a la cola sin verificar cache
+            if [[ "$force_process" == "true" ]]; then
+                add_to_queue "$media_file" "$media_type"
+                ((queued_count++))
+                log_debug "Force: añadido a cola: $(basename "$media_file")"
+            else
+                # Sin force, verificar cache antes de añadir a cola
+                if needs_processing "$media_file" "$media_type" "false"; then
+                    add_to_queue "$media_file" "$media_type"
+                    ((queued_count++))
+                    log_debug "Cache MISS: añadido a cola: $(basename "$media_file")"
+                else
+                    ((skipped_count++))
+                    log_debug "Cache HIT: saltado: $(basename "$media_file")"
+                fi
+            fi
+            
+        fi
+    done < <(find "$media_dir" -type f -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" -o -name "*.m4v")
+    
+    log_info "📋 Escaneo completado: $queued_count añadidos a cola, $skipped_count saltados por cache"
+    return 0
+}
+
+process_webhook_event() {
+    # Detectar tipo de evento y archivo desde variables de entorno
+    local event_file=""
+    local media_type=""
+    
+    # Variables de Radarr
+    if [[ -n "$radarr_eventtype" && -n "$radarr_moviefile_path" ]]; then
+        event_file="$radarr_moviefile_path"
+        media_type="movie"
+        log_info "📡 Evento Radarr detectado: $radarr_eventtype"
+        log_debug "Archivo de evento: $event_file"
+    
+    # Variables de Sonarr  
+    elif [[ -n "$sonarr_eventtype" && -n "$sonarr_episodefile_path" ]]; then
+        event_file="$sonarr_episodefile_path"
+        media_type="tvshow"
+        log_info "📺 Evento Sonarr detectado: $sonarr_eventtype"
+        log_debug "Archivo de evento: $event_file"
+    
+    else
+        log_warning "No se detectaron variables de evento de webhook"
+        return 1
+    fi
+    
+    # Validar que el archivo existe
+    if [[ ! -f "$event_file" ]]; then
+        log_warning "Archivo de evento no encontrado: $event_file"
+        return 1
+    fi
+    
+    # Verificar cache antes de añadir a cola
+    if needs_processing "$event_file" "$media_type" "false"; then
+        add_to_queue "$event_file" "$media_type"
+        log_info "✓ Evento añadido a cola para procesamiento"
+    else
+        log_info "ℹ️  Evento ya procesado (cache HIT), no añadido a cola"
+    fi
+    
+    return 0
+}
+
+# =============================================================================
 # PROCESAMIENTO PRINCIPAL
 # =============================================================================
 
@@ -956,63 +1328,37 @@ process_movies() {
     local force_process="$1"
     
     log_info "Procesando películas..."
-    if [[ ! -d "$MOVIES_DIR" ]]; then
-        log_warning "Directorio de películas no encontrado: $MOVIES_DIR"
-        return 1
-    fi
     
-    local count=0
-    while IFS= read -r movie_file; do
-        if [[ "$movie_file" =~ \.(mkv|mp4|avi|m4v)$ ]]; then
-            if [[ "$force_process" == "true" ]]; then
-                log_debug "Forzando procesamiento de: $(basename "$movie_file")"
-                # Con -f, saltamos el sistema de optimización y forzamos procesamiento
-                local poster_file=$(find_poster_image "$(dirname "$movie_file")")
-                if [[ -n "$poster_file" ]]; then
-                    apply_language_overlays "$movie_file"
-                fi
-            else
-                process_media_item "$movie_file" "movie"
-            fi
-            ((count++))
-        fi
-    done < <(find "$MOVIES_DIR" -type f)
+    # Escanear y añadir a cola
+    scan_and_queue "$MOVIES_DIR" "movie" "$force_process"
     
-    log_info "Películas procesadas: $count"
+    # Procesar cola
+    process_queue
 }
 
 process_series() {
     local force_process="$1"
     
     log_info "Procesando series..."
-    if [[ ! -d "$SERIES_DIR" ]]; then
-        log_warning "Directorio de series no encontrado: $SERIES_DIR"
-        return 1
-    fi
     
-    local count=0
-    while IFS= read -r episode_file; do
-        if [[ "$episode_file" =~ \.(mkv|mp4|avi|m4v)$ ]]; then
-            if [[ "$force_process" == "true" ]]; then
-                log_debug "Forzando procesamiento de: $(basename "$episode_file")"
-                # Con -f, saltamos el sistema de optimización y forzamos procesamiento
-                apply_language_overlays "$episode_file"
-            else
-                process_media_item "$episode_file" "tvshow"
-            fi
-            ((count++))
-        fi
-    done < <(find "$SERIES_DIR" -type f)
+    # Escanear y añadir a cola
+    scan_and_queue "$SERIES_DIR" "tvshow" "$force_process"
     
-    log_info "Series procesadas: $count"
+    # Procesar cola
+    process_queue
 }
 
 process_all() {
     local force_process="$1"
     
     log_info "Procesando toda la biblioteca multimedia..."
-    process_movies "$force_process"
-    process_series "$force_process"
+    
+    # Escanear y añadir a cola ambos tipos
+    scan_and_queue "$MOVIES_DIR" "movie" "$force_process"
+    scan_and_queue "$SERIES_DIR" "tvshow" "$force_process"
+    
+    # Procesar cola
+    process_queue
 }
 
 show_usage() {
@@ -1020,27 +1366,44 @@ show_usage() {
 Uso: $(basename "$0") [COMANDO] [OPCIONES]
 
 COMANDOS:
-    movies          Procesar solo películas
-    series          Procesar solo series 
-    all             Procesar toda la biblioteca (películas + series)
+    movies          Escanear y añadir películas a cola, luego procesar cola
+    series          Escanear y añadir series a cola, luego procesar cola
+    all             Escanear y añadir toda la biblioteca a cola, luego procesar cola
+    webhook         Procesar evento específico de webhook (automático)
+    setup           Instalar dependencias necesarias (exiftool, imagemagick, etc.)
     
-    Si no se especifica comando, procesa toda la biblioteca por defecto.
+    Si no se especifica comando:
+    - Con variables de webhook: procesa evento específico
+    - Sin variables de webhook: procesa toda la biblioteca
 
 OPCIONES:
-    -f, --force     Forzar reprocesamiento ignorando cache y optimizaciones.
-                   Útil para regenerar overlays existentes.
+    -f, --force     Forzar reprocesamiento:
+                   - Limpia cache externo y EXIF
+                   - Añade todo a cola sin verificar cache
+                   - Procesa todo ignorando optimizaciones
     -h, --help      Mostrar esta ayuda
 
 EJEMPLOS:
-    $(basename "$0")                    # Procesar todo con optimizaciones
-    $(basename "$0") movies             # Solo películas con optimizaciones  
-    $(basename "$0") series -f          # Solo series, forzar reprocesamiento
-    $(basename "$0") all --force        # Todo, ignorar cache y optimizaciones
+    $(basename "$0")                    # Auto-detectar: webhook o biblioteca completa
+    $(basename "$0") movies             # Escanear películas → cola → procesar
+    $(basename "$0") series -f          # Escanear series forzado → cola → procesar
+    $(basename "$0") all --force        # Biblioteca completa forzado → cola → procesar
+    $(basename "$0") setup              # Instalar dependencias necesarias
+
+FLUJO DEL SISTEMA:
+    1. ESCANEO: Verificar cache y añadir items necesarios a cola
+    2. COLA: Items pendientes de procesamiento (sin verificación cache)
+    3. PROCESAMIENTO: Aplicar overlays y actualizar cache
+    
+    - Sin -f: Solo añade a cola items que no están en cache
+    - Con -f: Limpia cache y añade todo a cola
+    - Cola se procesa siempre sin verificar cache
+    - Items salen de cola solo tras procesamiento exitoso
 
 NOTAS:
-    - Sin -f: Usa sistema optimizado (cache externo + filtros previos)
-    - Con -f: Saltea optimizaciones y reprocesa todo forzadamente
     - Los logs se guardan en: $LOG_DIR
+    - Cache externo: $DATA_DIR/lang-flags-cache.txt
+    - Colas por contenedor: $RADARR_QUEUE / $SONARR_QUEUE
 EOF
 }
 
@@ -1055,7 +1418,7 @@ main() {
     # Parsear argumentos
     while [[ $# -gt 0 ]]; do
         case $1 in
-            movies|series|all)
+            movies|series|all|webhook|setup)
                 command="$1"
                 shift
                 ;;
@@ -1075,9 +1438,15 @@ main() {
         esac
     done
     
-    # Si no se especifica comando, usar 'all' por defecto
+    # Si no se especifica comando, detectar si es webhook o procesamiento completo
     if [[ -z "$command" ]]; then
-        command="all"
+        # Si hay variables de webhook, procesar evento específico
+        if [[ -n "$radarr_eventtype" || -n "$sonarr_eventtype" ]]; then
+            command="webhook"
+        else
+            # Sin webhook, procesar toda la biblioteca
+            command="all"
+        fi
     fi
     
     log_info "Iniciando Lang-Flags Beta - Versión $SCRIPT_VERSION"
@@ -1096,6 +1465,12 @@ main() {
     
     # Ejecutar comando correspondiente
     case "$command" in
+        webhook)
+            # Procesar evento de webhook específico
+            process_webhook_event
+            # Procesar cola inmediatamente
+            process_queue
+            ;;
         movies)
             process_movies "$force_process"
             ;;
@@ -1104,6 +1479,9 @@ main() {
             ;;
         all)
             process_all "$force_process"
+            ;;
+        setup)
+            setup_dependencies
             ;;
         *)
             log_error "Comando desconocido: $command"
