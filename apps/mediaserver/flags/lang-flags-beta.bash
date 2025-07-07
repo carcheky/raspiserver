@@ -55,9 +55,9 @@ fi
 
 detect_container_type() {
     # Detectar tipo de contenedor para locks diferenciados
-    if [[ -n "$radarr_eventtype" ]] || [[ "$(hostname)" =~ radarr ]] || [[ -f "/config/config.xml" ]] && grep -q "Radarr" "/config/config.xml" 2>/dev/null; then
+    if [[ -n "$radarr_eventtype" ]] || [[ "$(hostname)" =~ radarr ]] || ([[ -f "/config/config.xml" ]] && grep -q "Radarr" "/config/config.xml" 2>/dev/null); then
         echo "radarr"
-    elif [[ -n "$sonarr_eventtype" ]] || [[ "$(hostname)" =~ sonarr ]] || [[ -f "/config/config.xml" ]] && grep -q "Sonarr" "/config/config.xml" 2>/dev/null; then
+    elif [[ -n "$sonarr_eventtype" ]] || [[ "$(hostname)" =~ sonarr ]] || ([[ -f "/config/config.xml" ]] && grep -q "Sonarr" "/config/config.xml" 2>/dev/null); then
         echo "sonarr"
     else
         echo "unknown"
@@ -72,8 +72,12 @@ readonly SCRIPT_NAME="Lang-Flags-Beta"
 readonly SCRIPT_VERSION="3.0-beta"
 readonly DEBUG=false
 
-# Directorios principales
-readonly BASE_DIR="/flags"
+# Directorios principales - detectar entorno automáticamente
+if [[ -d "/flags" ]]; then
+    readonly BASE_DIR="/flags"
+else
+    readonly BASE_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+fi
 readonly DATA_DIR="$BASE_DIR/data"
 readonly MEDIA_ROOT="/BibliotecaMultimedia"
 readonly MOVIES_DIR="$MEDIA_ROOT/Peliculas"
@@ -120,12 +124,12 @@ log() {
     local message="$2"
     local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
     
-    echo "[$timestamp] [$level] $message" | tee -a "${LOG_FILE:-/tmp/lang-flags.log}"
-    
     # Solo mostrar DEBUG si está habilitado
     if [[ "$level" == "DEBUG" ]] && [[ "$DEBUG" != "true" ]]; then
         return
     fi
+    
+    echo "[$timestamp] [$level] $message" | tee -a "${LOG_FILE:-/tmp/lang-flags.log}"
 }
 
 log_info() { log "INFO" "$1"; }
@@ -437,7 +441,7 @@ find_poster_image() {
         
         # 2. Poster de temporada
         local season_num=$(basename "$season_dir" | grep -o '[0-9]\+' | head -1)
-        local season_poster="$series_dir/season$(printf "%02d" "$season_num")-poster.jpg"
+        local season_poster="$series_dir/season$(printf "%02d" "$((10#$season_num))")-poster.jpg"
         if [[ -f "$season_poster" ]]; then
             images_to_process+=("$season_poster")
             log_debug "Poster de temporada encontrado: $season_poster" >&2
@@ -714,6 +718,60 @@ needs_processing() {
 
 # Variables globales para cache externo
 readonly EXTERNAL_CACHE_FILE="$DATA_DIR/lang-flags-cache.txt"
+
+# Función para limpiar caché de un elemento específico (webhook events)
+remove_from_cache() {
+    local media_path="$1"
+    local media_type="$2"
+    
+    log_debug "Limpiando caché para: $media_path (tipo: $media_type)"
+    
+    # Obtener todas las imágenes asociadas al archivo
+    local poster_images_result
+    if poster_images_result=$(find_poster_image "$media_path" "$media_type" 2>/dev/null); then
+        # Convertir a array
+        local poster_images=()
+        IFS=';' read -ra poster_images <<< "$poster_images_result"
+        
+        # Limpiar caché externa para cada imagen
+        local video_basename=$(basename "$media_path")
+        local cleaned_count=0
+        
+        for image in "${poster_images[@]}"; do
+            if [[ -f "$image" ]]; then
+                local image_basename=$(basename "$image")
+                
+                # Eliminar de caché externa
+                if [[ -f "$EXTERNAL_CACHE_FILE" ]]; then
+                    local before_count=$(wc -l < "$EXTERNAL_CACHE_FILE" 2>/dev/null || echo "0")
+                    sed -i "/^${image_basename}|${video_basename}|/d" "$EXTERNAL_CACHE_FILE" 2>/dev/null
+                    local after_count=$(wc -l < "$EXTERNAL_CACHE_FILE" 2>/dev/null || echo "0")
+                    
+                    if [[ "$before_count" -gt "$after_count" ]]; then
+                        log_debug "Entrada eliminada de caché externa: $image_basename|$video_basename"
+                        ((cleaned_count++))
+                    fi
+                fi
+                
+                # Limpiar EXIF también
+                if command -v exiftool >/dev/null 2>&1; then
+                    exiftool -overwrite_original -UserComment="" "$image" 2>/dev/null || true
+                    log_debug "EXIF limpiado para: $image_basename"
+                fi
+            fi
+        done
+        
+        if [[ "$cleaned_count" -gt 0 ]]; then
+            log_info "🧹 Caché limpiada para: $(basename "$media_path") ($cleaned_count imagen(es))"
+        else
+            log_debug "No se encontraron entradas de caché para limpiar: $(basename "$media_path")"
+        fi
+    else
+        log_debug "No se encontraron imágenes asociadas para limpiar caché: $media_path"
+    fi
+    
+    return 0
+}
 
 # Función para verificar si imagen está procesada usando cache externo
 is_image_processed_external() {
@@ -1097,7 +1155,8 @@ scan_and_queue() {
         
         # Log de progreso cada 10 archivos escaneados
         if (( scanned_count % 10 == 0 )); then
-            log_info "📊 Progreso: $scanned_count archivos escaneados, $queued_count en cola"
+            local current_queue_count=$(get_total_queue_count)
+            log_info "📊 Progreso: $scanned_count archivos escaneados, $queued_count añadidos, total en cola: $current_queue_count"
         fi
         
         # Filtrar trailers, extras y otros archivos secundarios que no necesitan overlays
@@ -1162,13 +1221,14 @@ process_webhook_event() {
         return 1
     fi
     
-    # Verificar cache antes de añadir a cola
-    if needs_processing "$event_file" "$media_type" "false"; then
-        add_to_queue "$event_file" "$media_type"
-        log_info "✓ Evento añadido a cola para procesamiento"
-    else
-        log_info "ℹ️  Evento ya procesado (cache HIT), no añadido a cola"
-    fi
+    # Limpiar caché del elemento específico para TODOS los eventos webhook
+    # Esto garantiza que archivos nuevos/actualizados se reprocesen correctamente
+    log_info "🧹 Limpiando caché para evento webhook: $radarr_eventtype$sonarr_eventtype"
+    remove_from_cache "$event_file" "$media_type"
+    
+    # Añadir siempre a cola (sin verificar cache para webhooks)
+    add_to_queue "$event_file" "$media_type"
+    log_info "✓ Evento añadido a cola para procesamiento"
     
     return 0
 }
@@ -1411,6 +1471,21 @@ EOF
 # FUNCIÓN PRINCIPAL Y PARSEO DE ARGUMENTOS
 # =============================================================================
 
+get_total_queue_count() {
+    local radarr_count=0
+    local sonarr_count=0
+    
+    if [[ -f "$RADARR_QUEUE" ]]; then
+        radarr_count=$(wc -l < "$RADARR_QUEUE" 2>/dev/null || echo "0")
+    fi
+    
+    if [[ -f "$SONARR_QUEUE" ]]; then
+        sonarr_count=$(wc -l < "$SONARR_QUEUE" 2>/dev/null || echo "0")
+    fi
+    
+    echo $((radarr_count + sonarr_count))
+}
+
 main() {
     local command=""
     local force_process="false"
@@ -1449,14 +1524,14 @@ main() {
         fi
     fi
     
-    log_info "Iniciando Lang-Flags Beta - Versión $SCRIPT_VERSION"
-    log_info "Comando: $command | Forzar: $force_process"
-    
     # Crear directorios necesarios
     create_dirs
     
     # Configurar logging
     setup_logging
+    
+    log_info "Iniciando Lang-Flags Beta - Versión $SCRIPT_VERSION"
+    log_info "Comando: $command | Forzar: $force_process"
     
     # Limpiar cache externo al inicio (opcional, solo si no es force)
     if [[ "$force_process" != "true" ]]; then
@@ -1466,10 +1541,9 @@ main() {
     # Ejecutar comando correspondiente
     case "$command" in
         webhook)
-            # Procesar evento de webhook específico
+            # Procesar evento de webhook específico (SOLO añadir a cola)
             process_webhook_event
-            # Procesar cola inmediatamente
-            process_queue
+            # NO procesar cola - se procesa en otro momento
             ;;
         movies)
             process_movies "$force_process"
