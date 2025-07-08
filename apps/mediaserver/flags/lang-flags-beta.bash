@@ -1115,50 +1115,30 @@ schedule_process() {
         return 1
     fi
     
-    # MECANISMO ROBUSTO: Cancelar TODAS las tareas lang-flags existentes de forma atómica
-    log_info "🗑️ Cancelando tareas lang-flags existentes..."
+    # PASO 1: CANCELAR TODAS LAS TAREAS LANG-FLAGS EXISTENTES (OBLIGATORIO)
+    log_info "🗑️ Eliminando TODAS las programaciones lang-flags existentes..."
     
-    # Obtener lista de tareas y verificar cada una
-    local cancelled_count=0
-    while IFS= read -r job_line; do
-        if [[ -n "$job_line" ]]; then
-            local job_id=$(echo "$job_line" | awk '{print $1}')
-            
-            # Verificar si la tarea está relacionada con lang-flags de forma más específica
-            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
-                if atrm "$job_id" 2>/dev/null; then
-                    log_debug "✓ Cancelada tarea lang-flags: $job_id"
-                    ((cancelled_count++))
-                else
-                    log_warning "⚠️ No se pudo cancelar tarea: $job_id"
-                fi
-            fi
-        fi
-    done < <(atq 2>/dev/null)
+    # Usar función auxiliar para cancelar todas las tareas
+    local cancelled_count=$(cancel_all_langflags_jobs)
     
     if [[ $cancelled_count -gt 0 ]]; then
         log_info "🗑️ Canceladas $cancelled_count tarea(s) lang-flags existente(s)"
+    else
+        log_debug "✓ No se encontraron tareas lang-flags para cancelar"
     fi
     
-    # VERIFICACIÓN ADICIONAL: Asegurar que no quedan tareas lang-flags
-    local remaining_jobs=$(atq 2>/dev/null | while IFS= read -r job_line; do
-        if [[ -n "$job_line" ]]; then
-            local job_id=$(echo "$job_line" | awk '{print $1}')
-            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
-                echo "$job_id"
-            fi
-        fi
-    done)
+    # PASO 2: VERIFICACIÓN FINAL - ASEGURAR QUE NO QUEDAN TAREAS
+    local final_job_count=$(get_langflags_job_count)
     
-    if [[ -n "$remaining_jobs" ]]; then
-        log_warning "⚠️ Tareas lang-flags restantes detectadas: $remaining_jobs"
-        # Forzar cancelación de tareas restantes
-        for job_id in $remaining_jobs; do
-            atrm "$job_id" 2>/dev/null && log_debug "✓ Forzada cancelación: $job_id"
-        done
+    if [[ "$final_job_count" -gt 0 ]]; then
+        log_error "❌ ERROR CRÍTICO: Todavía quedan $final_job_count tareas lang-flags después de la limpieza"
+        log_error "❌ NO se programará nueva tarea para evitar múltiples programaciones"
+        return 1
     fi
     
-    # Programar nueva tarea ÚNICA
+    log_info "✅ Confirmado: 0 tareas lang-flags existentes, procediendo con programación"
+    
+    # PASO 3: PROGRAMAR NUEVA TAREA ÚNICA
     log_info "⏰ Programando procesamiento automático ÚNICO en ${SCHEDULE_DELAY_MINUTES} minuto(s)..."
     local schedule_time="now + ${SCHEDULE_DELAY_MINUTES} minutes"
     local script_path="/flags/lang-flags-beta.bash"
@@ -1167,26 +1147,26 @@ schedule_process() {
     local full_command="cd /flags && bash $script_path $command"
     
     # Programar tarea
+    # Programar tarea
     if echo "$full_command" | at "$schedule_time" >/dev/null 2>&1; then
-        # Verificar que la tarea se programó correctamente
-        local new_job_count=$(atq 2>/dev/null | while IFS= read -r job_line; do
-            if [[ -n "$job_line" ]]; then
-                local job_id=$(echo "$job_line" | awk '{print $1}')
-                if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
-                    echo "$job_id"
-                fi
-            fi
-        done | wc -l)
+        # PASO 4: VERIFICACIÓN POST-PROGRAMACIÓN
+        local post_job_count=$(get_langflags_job_count)
         
-        if [[ "$new_job_count" -eq 1 ]]; then
-            log_info "✅ Procesamiento programado exitosamente (1 tarea activa)"
+        if [[ "$post_job_count" -eq 1 ]]; then
+            log_info "✅ Programación exitosa: 1 tarea lang-flags activa (correcto)"
             return 0
         else
-            log_warning "⚠️ Programación exitosa pero hay $new_job_count tareas lang-flags activas"
-            return 0
+            log_error "❌ ERROR: Después de programar hay $post_job_count tareas lang-flags activas"
+            log_error "❌ Se esperaba exactamente 1 tarea, cancelando todas para evitar duplicados"
+            
+            # Cancelar todas las tareas para evitar múltiples programaciones
+            local cleanup_count=$(cancel_all_langflags_jobs)
+            log_warning "⚠️ Se cancelaron $cleanup_count tareas por seguridad"
+            
+            return 1
         fi
     else
-        log_warning "❌ Error programando procesamiento automático"
+        log_error "❌ Error programando procesamiento automático"
         return 1
     fi
 }
