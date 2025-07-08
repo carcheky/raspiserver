@@ -102,6 +102,9 @@ readonly OVERLAY_SIZE="400x300"
 readonly POSTER_MAX_SIZE="2560x1440"
 readonly PROCESSING_DELAY=10
 
+# Configuración de programación automática
+readonly SCHEDULE_DELAY_MINUTES=2  # Tiempo en minutos para programar tareas con 'at' (aumentado para evitar solapamientos)
+
 # =============================================================================
 # SISTEMA DE LOGGING
 # =============================================================================
@@ -1033,12 +1036,194 @@ setup_dependencies() {
         # Iniciar servicio atd si está disponible
         start_atd_service
         
+        # Programar escaneo inicial apropiado según el contenedor
+        local container_type=$(detect_container_type)
+        case "$container_type" in
+        "radarr")
+            log_info "🎬 Programando escaneo inicial de películas..."
+            schedule_process "movies"
+            ;;
+        "sonarr")
+            log_info "📺 Programando escaneo inicial de series..."
+            schedule_process "series"
+            ;;
+        *)
+            log_info "🎭 Programando escaneo inicial completo..."
+            schedule_process "all"
+            ;;
+        esac
+        
         log_info "🚀 Lang-Flags está listo para usar"
         return 0
     else
         log_error "❌ Algunas dependencias siguen faltando después de la instalación"
         return 1
     fi
+}
+
+# =============================================================================
+# FUNCIONES AUXILIARES PARA GESTIÓN DE PROGRAMACIONES AT
+# =============================================================================
+
+get_langflags_job_count() {
+    local job_count=0
+    while IFS= read -r job_line; do
+        if [[ -n "$job_line" ]]; then
+            local job_id=$(echo "$job_line" | awk '{print $1}')
+            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
+                ((job_count++))
+            fi
+        fi
+    done < <(atq 2>/dev/null)
+    echo "$job_count"
+}
+
+cancel_all_langflags_jobs() {
+    local cancelled_count=0
+    while IFS= read -r job_line; do
+        if [[ -n "$job_line" ]]; then
+            local job_id=$(echo "$job_line" | awk '{print $1}')
+            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
+                if atrm "$job_id" 2>/dev/null; then
+                    log_debug "✓ Cancelada tarea lang-flags: $job_id"
+                    ((cancelled_count++))
+                else
+                    log_warning "⚠️ No se pudo cancelar tarea: $job_id"
+                fi
+            fi
+        fi
+    done < <(atq 2>/dev/null)
+    echo "$cancelled_count"
+}
+
+# =============================================================================
+# SISTEMA DE PROGRAMACIÓN AUTOMÁTICA CON 'at' - VERSIÓN ROBUSTA
+# =============================================================================
+
+schedule_process() {
+    local command="$1"
+    
+    # Verificar si el comando 'at' está disponible
+    if ! command -v at >/dev/null 2>&1; then
+        log_warning "⚠️ Comando 'at' no disponible - programación automática deshabilitada"
+        return 1
+    fi
+    
+    # Verificar si el servicio atd está ejecutándose
+    if ! pgrep -x "atd" >/dev/null 2>&1; then
+        log_warning "⚠️ Servicio atd no está ejecutándose - programación automática deshabilitada"
+        return 1
+    fi
+    
+    # MECANISMO ROBUSTO: Cancelar TODAS las tareas lang-flags existentes de forma atómica
+    log_info "🗑️ Cancelando tareas lang-flags existentes..."
+    
+    # Obtener lista de tareas y verificar cada una
+    local cancelled_count=0
+    while IFS= read -r job_line; do
+        if [[ -n "$job_line" ]]; then
+            local job_id=$(echo "$job_line" | awk '{print $1}')
+            
+            # Verificar si la tarea está relacionada con lang-flags de forma más específica
+            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
+                if atrm "$job_id" 2>/dev/null; then
+                    log_debug "✓ Cancelada tarea lang-flags: $job_id"
+                    ((cancelled_count++))
+                else
+                    log_warning "⚠️ No se pudo cancelar tarea: $job_id"
+                fi
+            fi
+        fi
+    done < <(atq 2>/dev/null)
+    
+    if [[ $cancelled_count -gt 0 ]]; then
+        log_info "🗑️ Canceladas $cancelled_count tarea(s) lang-flags existente(s)"
+    fi
+    
+    # VERIFICACIÓN ADICIONAL: Asegurar que no quedan tareas lang-flags
+    local remaining_jobs=$(atq 2>/dev/null | while IFS= read -r job_line; do
+        if [[ -n "$job_line" ]]; then
+            local job_id=$(echo "$job_line" | awk '{print $1}')
+            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
+                echo "$job_id"
+            fi
+        fi
+    done)
+    
+    if [[ -n "$remaining_jobs" ]]; then
+        log_warning "⚠️ Tareas lang-flags restantes detectadas: $remaining_jobs"
+        # Forzar cancelación de tareas restantes
+        for job_id in $remaining_jobs; do
+            atrm "$job_id" 2>/dev/null && log_debug "✓ Forzada cancelación: $job_id"
+        done
+    fi
+    
+    # Programar nueva tarea ÚNICA
+    log_info "⏰ Programando procesamiento automático ÚNICO en ${SCHEDULE_DELAY_MINUTES} minuto(s)..."
+    local schedule_time="now + ${SCHEDULE_DELAY_MINUTES} minutes"
+    local script_path="/flags/lang-flags-beta.bash"
+    
+    # Crear comando completo con identificador único
+    local full_command="cd /flags && bash $script_path $command"
+    
+    # Programar tarea
+    if echo "$full_command" | at "$schedule_time" >/dev/null 2>&1; then
+        # Verificar que la tarea se programó correctamente
+        local new_job_count=$(atq 2>/dev/null | while IFS= read -r job_line; do
+            if [[ -n "$job_line" ]]; then
+                local job_id=$(echo "$job_line" | awk '{print $1}')
+                if at -c "$job_id" 2>/dev/null | grep -q "lang-flags-beta.bash"; then
+                    echo "$job_id"
+                fi
+            fi
+        done | wc -l)
+        
+        if [[ "$new_job_count" -eq 1 ]]; then
+            log_info "✅ Procesamiento programado exitosamente (1 tarea activa)"
+            return 0
+        else
+            log_warning "⚠️ Programación exitosa pero hay $new_job_count tareas lang-flags activas"
+            return 0
+        fi
+    else
+        log_warning "❌ Error programando procesamiento automático"
+        return 1
+    fi
+}
+
+is_queue_empty() {
+    local container_type=$(detect_container_type)
+    
+    # Verificar colas según el contenedor
+    case "$container_type" in
+    "radarr")
+        # Solo verificar cola de Radarr
+        if [[ -f "$RADARR_QUEUE" ]] && [[ -s "$RADARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
+        fi
+        ;;
+    "sonarr")
+        # Solo verificar cola de Sonarr
+        if [[ -f "$SONARR_QUEUE" ]] && [[ -s "$SONARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
+        fi
+        ;;
+    *)
+        # Contenedor desconocido - verificar ambas colas
+        if [[ -f "$RADARR_QUEUE" ]] && [[ -s "$RADARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
+        fi
+        if [[ -f "$SONARR_QUEUE" ]] && [[ -s "$SONARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
+        fi
+        # Verificar cola genérica también
+        if [[ -f "$QUEUE_DIR/generic.queue" ]] && [[ -s "$QUEUE_DIR/generic.queue" ]]; then
+            return 1  # Cola no vacía
+        fi
+        ;;
+    esac
+    
+    return 0  # Cola vacía
 }
 
 # =============================================================================
@@ -1103,6 +1288,14 @@ process_queue() {
                 process_single_queue "$qf"
             fi
         done
+        
+        # Después de procesar todas las colas, verificar si hay más elementos
+        if ! is_queue_empty; then
+            log_info "🔄 Cola no vacía - reprogramando siguiente procesamiento"
+            schedule_process "process"
+        else
+            log_info "✅ Cola vacía - no se requiere reprogramación"
+        fi
         return $?
         ;;
     esac
@@ -1113,6 +1306,14 @@ process_queue() {
     else
         log_info "No hay cola para procesar: $queue_file"
         return 0
+    fi
+
+    # Después de procesar, verificar si hay más elementos en cola
+    if ! is_queue_empty; then
+        log_info "🔄 Cola no vacía - reprogramando siguiente procesamiento"
+        schedule_process "process"
+    else
+        log_info "✅ Cola vacía - no se requiere reprogramación"
     fi
 }
 
@@ -1274,6 +1475,9 @@ process_webhook_event() {
     add_to_queue "$event_file" "$media_type"
     log_info "✓ Evento añadido a cola para procesamiento"
 
+    # Programar procesamiento automático
+    schedule_process "process"
+
     return 0
 }
 
@@ -1403,6 +1607,9 @@ process_movies() {
     scan_and_queue "$MOVIES_DIR" "movie" "$force_process"
 
     # NO procesar cola - solo añadir
+    
+    # Programar procesamiento automático
+    schedule_process "process"
 }
 
 process_series() {
@@ -1414,6 +1621,9 @@ process_series() {
     scan_and_queue "$SERIES_DIR" "tvshow" "$force_process"
 
     # NO procesar cola - solo añadir
+    
+    # Programar procesamiento automático
+    schedule_process "process"
 }
 
 process_all() {
@@ -1426,6 +1636,9 @@ process_all() {
     scan_and_queue "$SERIES_DIR" "tvshow" "$force_process"
 
     # NO procesar cola - solo añadir
+    
+    # Programar procesamiento automática
+    schedule_process "process"
 }
 
 show_usage() {
@@ -1451,12 +1664,38 @@ OPCIONES:
                    - Procesa todo ignorando optimizaciones
     -h, --help      Mostrar esta ayuda
 
+SISTEMA DE PROGRAMACIÓN AUTOMÁTICA:
+    - Los comandos movies, series, all, webhook programan automáticamente
+      el procesamiento usando 'at' en ${SCHEDULE_DELAY_MINUTES} minuto(s)
+    - Después de procesar, si hay más elementos en cola, se reprograma
+      automáticamente para otro ciclo de procesamiento
+    - El setup programa automáticamente un escaneo inicial apropiado
+      según el tipo de contenedor (radarr=movies, sonarr=series, otro=all)
+
+ARCHIVOS:
+    Cola Radarr:    $RADARR_QUEUE
+    Cola Sonarr:    $SONARR_QUEUE
+    Logs:           $LOG_DIR/lang-flags-YYYYMMDD.log
+    Cache:          $DATA_DIR/lang-flags-cache.txt
+    Directorio:     $BASE_DIR
+
+DEPENDENCIAS:
+    exiftool, imagemagick, rsvg-convert, ffmpeg, mediainfo, mkvtoolnix, jq, at
+
+EJEMPLOS:
+    $(basename "$0") movies -f    # Forzar reprocesamiento películas
+    $(basename "$0") setup        # Instalar dependencias + escaneo inicial
+    $(basename "$0") process      # Procesar colas existentes
+    $(basename "$0")              # Añadir toda la biblioteca a cola
+
+Para más información, revisar logs en: $LOG_DIR
+
 EJEMPLOS:
     $(basename "$0")                    # Auto-detectar: webhook o biblioteca completa (SOLO añade a cola)
     $(basename "$0") movies             # Escanear películas → añadir a cola (NO procesa)
     $(basename "$0") series -f          # Escanear series forzado → añadir a cola (NO procesa)
     $(basename "$0") all --force        # Biblioteca completa forzado → añadir a cola (NO procesa)
-    $(basename "$0") process            # Procesar solo colas existentes (sin escanear)
+    $(basename "$0") process            # Procesar colas existentes (sin escanear)
     $(basename "$0") setup              # Instalar dependencias necesarias
 
 FLUJO DEL SISTEMA:
