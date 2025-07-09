@@ -1591,8 +1591,16 @@ process_webhook_event() {
     add_to_queue "$event_file" "$media_type"
     log_info "✓ Evento añadido a cola para procesamiento"
 
-    # Borrar imágenes que se van a editar (folder, backdrop, thumbnail, etc.)
-    delete_images_for_webhook "$event_file" "$media_type"
+    # Borrar imágenes SOLO en eventos de actualización (no en nuevos downloads/imports)
+    case "${event_type,,}" in
+        *upgrade*|*update*|*replace*)
+            log_info "📝 Evento de actualización detectado: $event_type - borrando imágenes existentes"
+            delete_images_for_webhook "$event_file" "$media_type"
+            ;;
+        *)
+            log_debug "Evento de nuevo contenido: $event_type - manteniendo imágenes existentes"
+            ;;
+    esac
 
     # Usar delay específico para webhooks (mínimo 5 minutos)
     local schedule_delay="$SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK"
@@ -1601,8 +1609,8 @@ process_webhook_event() {
     # a Jellyfin para descargar/actualizar metadata e imágenes
     case "${event_type,,}" in
         *upgrade*|*update*|*replace*)
-            schedule_delay=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK))
-            log_info "📝 Evento de actualización detectado: delay extendido a ${schedule_delay} minutos"
+            schedule_delay=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK * 2))
+            log_info "📝 Evento de actualización: delay extendido a ${schedule_delay} minutos"
             ;;
         *)
             log_debug "Evento estándar: delay webhook de ${schedule_delay} minutos"
@@ -1787,8 +1795,10 @@ process_movies() {
 
     # NO procesar cola - solo añadir
     
-    # Programar procesamiento automático
+    # Programar procesamiento automático (solo programar, no ejecutar)
     schedule_process "process"
+    
+    log_info "📋 Escaneo completado. Procesamiento programado automáticamente."
 }
 
 process_series() {
@@ -1801,8 +1811,10 @@ process_series() {
 
     # NO procesar cola - solo añadir
     
-    # Programar procesamiento automático
+    # Programar procesamiento automático (solo programar, no ejecutar)
     schedule_process "process"
+    
+    log_info "📋 Escaneo completado. Procesamiento programado automáticamente."
 }
 
 process_all() {
@@ -1816,8 +1828,10 @@ process_all() {
 
     # NO procesar cola - solo añadir
     
-    # Programar procesamiento automática
+    # Programar procesamiento automático (solo programar, no ejecutar)
     schedule_process "process"
+    
+    log_info "📋 Escaneo completado. Procesamiento programado automáticamente."
 }
 
 show_usage() {
