@@ -103,8 +103,8 @@ readonly POSTER_MAX_SIZE="2560x1440"
 readonly PROCESSING_DELAY=10
 
 # Configuración de programación automática
-readonly SCHEDULE_DELAY_MINUTES=5  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
-readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=5  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
+readonly SCHEDULE_DELAY_MINUTES=1  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
+readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=1  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
 
 # =============================================================================
 # SISTEMA DE LOGGING
@@ -1063,6 +1063,50 @@ start_atd_service() {
     fi
 }
 
+setup_queue_permissions() {
+    log_info "🔐 Configurando permisos de archivos de cola..."
+    
+    # Obtener usuario actual
+    local current_user=$(whoami)
+    
+    # Lista de usuarios que deben tener acceso a los archivos de cola
+    local required_users=("root" "abc" "1000" "$current_user")
+    
+    # Crear directorio de cola si no existe
+    mkdir -p "$QUEUE_DIR"
+    
+    # Configurar permisos del directorio de cola
+    # Grupo: staff (común en Alpine/Docker) o el grupo del usuario actual
+    local target_group="staff"
+    if ! getent group "$target_group" >/dev/null 2>&1; then
+        target_group=$(id -gn "$current_user")
+    fi
+    
+    # Configurar directorio con permisos de grupo
+    chmod 775 "$QUEUE_DIR" 2>/dev/null || log_warning "⚠️ No se pudo configurar permisos del directorio de cola"
+    chgrp "$target_group" "$QUEUE_DIR" 2>/dev/null || log_warning "⚠️ No se pudo cambiar grupo del directorio de cola"
+    log_info "✅ Directorio de cola configurado con permisos compartidos"
+    
+    # Configurar permisos de archivos de cola existentes
+    local queue_files=("$RADARR_QUEUE" "$SONARR_QUEUE" "$QUEUE_DIR/generic.queue")
+    
+    for queue_file in "${queue_files[@]}"; do
+        if [[ -f "$queue_file" ]]; then
+            # Configurar permisos de archivo (rw-rw-r--)
+            chmod 664 "$queue_file" 2>/dev/null || log_warning "⚠️ No se pudo configurar permisos de $queue_file"
+            chgrp "$target_group" "$queue_file" 2>/dev/null || log_warning "⚠️ No se pudo cambiar grupo de $queue_file"
+            log_info "✅ Permisos configurados para $(basename "$queue_file")"
+        fi
+    done
+    
+    # Configurar umask para que archivos futuros tengan permisos correctos
+    # umask 002 permite rw-rw-r-- por defecto
+    umask 002
+    
+    log_info "✅ Permisos de archivos de cola configurados correctamente"
+    return 0
+}
+
 setup_dependencies() {
     log_info "🔧 Iniciando instalación de dependencias para Lang-Flags..."
 
@@ -1140,6 +1184,9 @@ setup_dependencies() {
         
         # Iniciar servicio atd si está disponible
         start_atd_service
+        
+        # Configurar permisos de archivos de cola
+        setup_queue_permissions
         
         # Programar escaneo inicial apropiado según el contenedor
         local container_type=$(detect_container_type)
@@ -1363,6 +1410,17 @@ add_to_queue() {
 
     # Añadir a la cola
     echo "$queue_entry" >>"$queue_file"
+    
+    # Configurar permisos del archivo de cola para acceso multiusuario
+    chmod 664 "$queue_file" 2>/dev/null || log_debug "⚠️ No se pudo configurar permisos de $(basename "$queue_file")"
+    
+    # Intentar cambiar grupo si es posible
+    local target_group="staff"
+    if ! getent group "$target_group" >/dev/null 2>&1; then
+        target_group=$(id -gn)
+    fi
+    chgrp "$target_group" "$queue_file" 2>/dev/null || log_debug "⚠️ No se pudo cambiar grupo de $(basename "$queue_file")"
+    
     log_info "✓ Añadido a cola: $(basename "$media_path") (tipo: $media_type)"
     return 0
 }
@@ -1591,16 +1649,35 @@ process_webhook_event() {
     add_to_queue "$event_file" "$media_type"
     log_info "✓ Evento añadido a cola para procesamiento"
 
-    # Borrar imágenes SOLO en eventos de actualización (no en nuevos downloads/imports)
+    # Borrar imágenes INMEDIATAMENTE después de añadir a cola
+    # En eventos de actualización, reemplazo O downloads que sobreescriben archivos existentes
+    local should_delete_images=false
+    
+    # Verificar tipo de evento
     case "${event_type,,}" in
         *upgrade*|*update*|*replace*)
+            should_delete_images=true
             log_info "📝 Evento de actualización detectado: $event_type - borrando imágenes existentes"
-            delete_images_for_webhook "$event_file" "$media_type"
+            ;;
+        *download*)
+            # Para eventos Download, verificar si es upgrade usando la variable específica de Radarr/Sonarr
+            if [[ "${radarr_isupgrade,,}" == "true" ]] || [[ "${sonarr_isupgrade,,}" == "true" ]]; then
+                should_delete_images=true
+                log_info "📝 Evento Download con upgrade detectado (isupgrade=true) - borrando imágenes existentes"
+            else
+                log_debug "Evento Download sin upgrade (isupgrade=false) - manteniendo imágenes existentes"
+            fi
             ;;
         *)
             log_debug "Evento de nuevo contenido: $event_type - manteniendo imágenes existentes"
             ;;
     esac
+    
+    # Ejecutar borrado si es necesario
+    if [[ "$should_delete_images" == "true" ]]; then
+        delete_images_for_webhook "$event_file" "$media_type"
+        log_debug "✅ Imágenes borradas inmediatamente después de añadir a cola"
+    fi
 
     # Usar delay específico para webhooks (mínimo 5 minutos)
     local schedule_delay="$SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK"
