@@ -103,8 +103,8 @@ readonly POSTER_MAX_SIZE="2560x1440"
 readonly PROCESSING_DELAY=10
 
 # Configuración de programación automática
-readonly SCHEDULE_DELAY_MINUTES=1  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
-readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=1  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
+readonly SCHEDULE_DELAY_MINUTES=5  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
+readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=5  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
 
 # =============================================================================
 # SISTEMA DE LOGGING
@@ -646,11 +646,18 @@ is_image_processed() {
     local video_filename=$(basename "$video_file")
     local expected_comment="LangFlags:$video_filename"
 
-    if [[ -n "$user_comment" && "$user_comment" == "$expected_comment" ]]; then
-        return 0 # Ya procesada (nombre coincide)
+    # LÓGICA CORREGIDA:
+    # - Sin EXIF o EXIF vacío: Imagen procesada por Jellyfin, lista para overlay
+    # - Con EXIF correcto: Ya procesada por lang-flags
+    # - Con EXIF incorrecto: Estado intermedio, no procesada
+    
+    if [[ -z "$user_comment" ]] || [[ "$user_comment" == "-" ]] || [[ "${user_comment// /}" == "" ]]; then
+        return 1  # Sin EXIF = Jellyfin procesó, pero lang-flags no
+    elif [[ "$user_comment" == "$expected_comment" ]]; then
+        return 0  # Ya procesada por lang-flags
+    else
+        return 1  # EXIF incorrecto = necesita procesamiento
     fi
-
-    return 1 # No procesada o nombre diferente
 }
 
 update_image_exif_filename() {
@@ -716,8 +723,8 @@ needs_processing() {
     # Buscar imágenes asociadas al archivo de medios
     local poster_result
     if ! poster_result=$(find_poster_image "$media_path" "$media_type"); then
-        log_debug "No se encontraron imágenes, necesita procesamiento: $media_path"
-        return 0
+        log_debug "Imágenes no encontradas (Jellyfin no ha procesado): $media_path"
+        return 0  # Necesita procesamiento cuando esté listo
     fi
     # Verificar cache en cada imagen usando SISTEMA UNIFICADO
     local poster_files
@@ -1594,7 +1601,7 @@ process_webhook_event() {
     # a Jellyfin para descargar/actualizar metadata e imágenes
     case "${event_type,,}" in
         *upgrade*|*update*|*replace*)
-            schedule_delay=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK * 2))
+            schedule_delay=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK))
             log_info "📝 Evento de actualización detectado: delay extendido a ${schedule_delay} minutos"
             ;;
         *)
@@ -1639,8 +1646,8 @@ process_media_item() {
     # 3. Encontrar imágenes correspondientes
     local poster_images_result
     if ! poster_images_result=$(find_poster_image "$media_path" "$media_type"); then
-        log_warning "No se encontraron imágenes poster para: $media_path"
-        return 1
+        log_info "⏳ Jellyfin aún no ha procesado las imágenes para: $(basename "$media_path")"
+        return 1  # No listo - Jellyfin no ha creado las imágenes aún
     fi
 
     # 4. Convertir resultado a array (separado por ;)
@@ -1653,13 +1660,13 @@ process_media_item() {
         if [[ -f "$image" ]]; then
             valid_images+=("$image")
         else
-            log_warning "Imagen poster no encontrada: $image"
+            log_debug "Imagen poster no encontrada (saltando): $image"
         fi
     done
 
     if [[ ${#valid_images[@]} -eq 0 ]]; then
-        log_warning "No se encontraron imágenes válidas para: $media_path"
-        return 1
+        log_info "⏳ Jellyfin aún no ha procesado las imágenes para: $(basename "$media_path")"
+        return 1  # No listo - Jellyfin no ha creado las imágenes aún
     fi
 
     # 6. Extraer idiomas del archivo de video (solo audio tracks)
@@ -1695,18 +1702,22 @@ process_media_item() {
         log_debug "EXIF Debug - Actual: '$current_exif'"
         log_debug "EXIF Debug - Esperado: '$expected_exif'"
         
-        # Considerar EXIF vacío: cadena vacía, "-", o solo espacios
-        if [[ -n "$current_exif" ]] && [[ "$current_exif" != "-" ]] && [[ "${current_exif// /}" != "" ]]; then
-            # EXIF no vacío - verificar si coincide
-            if [[ "$current_exif" != "$expected_exif" ]]; then
-                log_info "⏳ Jellyfin aún procesando imagen: $(basename "$poster_image") (EXIF: $current_exif)"
-                jellyfin_ready=false
-                break
-            else
-                log_debug "✅ Imagen ya procesada correctamente: $(basename "$poster_image")"
-            fi
+        # LÓGICA CORREGIDA: 
+        # - EXIF vacío/nulo/guión = Jellyfin ya procesó, lista para overlay
+        # - EXIF con valor correcto = Ya procesada por lang-flags, skip
+        # - EXIF con valor incorrecto = Estado intermedio, no listo
+        
+        if [[ -z "$current_exif" ]] || [[ "$current_exif" == "-" ]] || [[ "${current_exif// /}" == "" ]]; then
+            # EXIF vacío: Jellyfin ya procesó la imagen, lista para overlay
+            log_debug "✅ Imagen lista para overlay (EXIF vacío): $(basename "$poster_image")"
+        elif [[ "$current_exif" == "$expected_exif" ]]; then
+            # EXIF correcto: Ya procesada por lang-flags
+            log_debug "✅ Imagen ya procesada por lang-flags: $(basename "$poster_image")"
         else
-            log_debug "✅ Imagen lista para procesar (EXIF vacío o '-'): $(basename "$poster_image")"
+            # EXIF con valor incorrecto: Estado intermedio, Jellyfin aún procesando
+            log_info "⏳ Jellyfin aún procesando imagen: $(basename "$poster_image") (EXIF: $current_exif)"
+            jellyfin_ready=false
+            break
         fi
     done
 
