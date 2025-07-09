@@ -1,852 +1,2014 @@
 #!/bin/bash
 
+# =============================================================================
+# LANG-FLAGS - Script de Overlays de Idioma para Radarr/Sonarr
+# =============================================================================
+# Versión: 6.42.0
+# Autor: MediaCheky
+# Descripción: Detecta idiomas y aplica overlays de banderas a posters
+# =============================================================================
+
 # PROTECCIÓN: Solo ejecutar dentro de contenedores
-if [[ ! -f /.dockerenv ]] && [[ -z "$SONARR_INSTANCE_NAME" ]] && [[ -z "$RADARR_INSTANCE_NAME" ]]; then
+if [[ ! -f /.dockerenv ]] && [[ -z "$sonarr_eventtype" ]] && [[ -z "$radarr_eventtype" ]]; then
     echo "❌ ERROR: Este script SOLO debe ejecutarse dentro de contenedores Sonarr/Radarr"
     echo "❌ NO ejecutar en el host - puede dañar el sistema"
-    echo "❌ Uso correcto: ejecutar desde dentro del contenedor Docker"
-    exit 1
+
+    # Intentar autoejecución dentro del contenedor apropiado
+    echo "🔄 Intentando autoejecutar dentro del contenedor..."
+
+    # Detectar contenedor disponible
+    container_name=""
+
+    # Buscar contenedor Radarr
+    if docker ps --format "{{.Names}}" | grep -i radarr >/dev/null 2>&1; then
+        container_name=$(docker ps --format "{{.Names}}" | grep -i radarr | head -1)
+        echo "📡 Contenedor Radarr encontrado: $container_name"
+    # Buscar contenedor Sonarr si no hay Radarr
+    elif docker ps --format "{{.Names}}" | grep -i sonarr >/dev/null 2>&1; then
+        container_name=$(docker ps --format "{{.Names}}" | grep -i sonarr | head -1)
+        echo "📺 Contenedor Sonarr encontrado: $container_name"
+    fi
+
+    if [[ -n "$container_name" ]]; then
+        echo "🚀 Ejecutando script dentro del contenedor: $container_name"
+        echo "📝 Comando: docker exec $container_name /flags/lang-flags.bash $*"
+
+        # Ejecutar el script dentro del contenedor con los mismos argumentos
+        if docker exec "$container_name" /flags/lang-flags.bash "$@"; then
+            echo "✅ Script ejecutado exitosamente dentro del contenedor"
+            exit 0
+        else
+            echo "❌ Error ejecutando script dentro del contenedor"
+            exit 1
+        fi
+    else
+        echo "❌ No se encontraron contenedores Radarr/Sonarr ejecutándose"
+        echo "💡 Sugerencia: Verificar que los contenedores estén iniciados"
+        echo "💡 Comando para verificar: docker ps | grep -E '(radarr|sonarr)'"
+        exit 1
+    fi
 fi
 
-# Script para procesamiento de flags de idioma en metadatos
-# Versión: 2.1
-# Autor: MediaCheky
-# Descripción: Procesa colas de imágenes para agregar overlays de idioma
+# =============================================================================
+# DETECCIÓN DE CONTENEDOR
+# =============================================================================
 
-# ========================
-# Configurable Variables
-# ========================
-scriptName="Lang-Flags"
-scriptVersion="2.1"
-DEBUG=false
+detect_container_type() {
+    # Detectar tipo de contenedor para locks diferenciados
+    if [[ -n "$radarr_eventtype" ]] || [[ "$(hostname)" =~ radarr ]] || ([[ -f "/config/config.xml" ]] && grep -q "Radarr" "/config/config.xml" 2>/dev/null); then
+        echo "radarr"
+    elif [[ -n "$sonarr_eventtype" ]] || [[ "$(hostname)" =~ sonarr ]] || ([[ -f "/config/config.xml" ]] && grep -q "Sonarr" "/config/config.xml" 2>/dev/null); then
+        echo "sonarr"
+    else
+        echo "unknown"
+    fi
+}
 
-# ========================
-# Logging Functions
-# ========================
+# =============================================================================
+# CONFIGURACIÓN GLOBAL
+# =============================================================================
 
-# Logging estructurado con timestamps
-log_with_level() {
+readonly SCRIPT_NAME="Lang-Flags"
+readonly SCRIPT_VERSION="6.42.0"
+readonly DEBUG=false
+
+# Directorios principales - detectar entorno automáticamente
+if [[ -d "/flags" ]]; then
+    readonly BASE_DIR="/flags"
+else
+    readonly BASE_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+fi
+readonly DATA_DIR="$BASE_DIR/data"
+readonly MEDIA_ROOT="/BibliotecaMultimedia"
+readonly MOVIES_DIR="$MEDIA_ROOT/Peliculas"
+readonly SERIES_DIR="$MEDIA_ROOT/Series"
+
+# Directorios de trabajo
+readonly OVERLAY_DIR="$BASE_DIR/4x3"
+readonly QUEUE_DIR="$DATA_DIR/queue"
+readonly TMP_DIR="$DATA_DIR/tmp"
+readonly LOG_DIR="$DATA_DIR/logs"
+
+# Archivos de bloqueo (diferenciados por contenedor) - en data
+readonly SCAN_LOCK="$DATA_DIR/scan-$(detect_container_type).lock"
+readonly PROCESS_LOCK="$DATA_DIR/process-$(detect_container_type).lock"
+
+# Archivos de cola - en data
+readonly RADARR_QUEUE="$QUEUE_DIR/radarr.queue"
+readonly SONARR_QUEUE="$QUEUE_DIR/sonarr.queue"
+
+# Configuración de procesamiento
+readonly OVERLAY_SIZE="400x300"
+readonly POSTER_MAX_SIZE="2560x1440"
+readonly PROCESSING_DELAY=10
+
+# Configuración de programación automática
+readonly SCHEDULE_DELAY_MINUTES=1  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
+readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=1  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
+
+# =============================================================================
+# SISTEMA DE LOGGING
+# =============================================================================
+
+setup_logging() {
+    local log_file="$LOG_DIR/lang-flags-$(date +%Y%m%d).log"
+    mkdir -p "$LOG_DIR"
+    touch "$log_file" 2>/dev/null || log_file="/tmp/lang-flags.log"
+
+    # Rotar logs antiguos
+    find "$LOG_DIR" -name "lang-flags-*.log" -mtime +7 -delete 2>/dev/null || true
+
+    export LOG_FILE="$log_file"
+}
+
+log() {
     local level="$1"
     local message="$2"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$level] $message" | tee -a "${LOG_FILE:-/tmp/lang-flags.log}"
-}
+    local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
 
-log_info() {
-    log_with_level "INFO" "$1"
-}
-
-log_error() {
-    log_with_level "ERROR" "$1" >&2
-}
-
-log_warning() {
-    log_with_level "WARNING" "$1" >&2
-}
-
-log_debug() {
-    if [ "$DEBUG" = true ]; then
-        log_with_level "DEBUG" "$1"
-    fi
-}
-
-# Configuración del archivo de log
-logfileSetup() {
-    local log_dir="/config/logs"
-    if [ ! -d "$log_dir" ]; then
-        mkdir -p "$log_dir" 2>/dev/null || log_dir="/config"
+    # Solo mostrar DEBUG si está habilitado
+    if [[ "$level" == "DEBUG" ]] && [[ "$DEBUG" != "true" ]]; then
+        return
     fi
 
-    LOG_FILE="$log_dir/$scriptName-$(date +"%Y_%m_%d_%H_%M").log"
-
-    # Crear archivo de log si no existe
-    if [ ! -f "$LOG_FILE" ]; then
-        touch "$LOG_FILE" 2>/dev/null || LOG_FILE="/tmp/lang-flags.log"
-        chmod 666 "$LOG_FILE" 2>/dev/null || true
-    fi
-
-    # Limpiar logs antiguos (más de 5 días)
-    find "$log_dir" -type f -name "$scriptName-*.log" -mtime +5 -delete 2>/dev/null || true
-
-    log_info "Log iniciado: $LOG_FILE"
+    echo "[$timestamp] [$level] $message" | tee -a "${LOG_FILE:-/tmp/lang-flags.log}"
 }
 
-# ========================
-# Directory Management
-# ========================
+log_info() { log "INFO" "$1"; }
+log_error() { log "ERROR" "$1" >&2; }
+log_warning() { log "WARNING" "$1" >&2; }
+log_debug() { log "DEBUG" "$1"; }
 
-# Crear directorio de forma segura
-create_directory_safe() {
-    local dir="$1"
-    if [[ -n "$dir" ]] && mkdir -p "$dir" 2>/dev/null; then
-        chmod 755 "$dir" 2>/dev/null || true
-        log_debug "Directorio creado: $dir"
-        return 0
-    else
-        log_error "No se pudo crear directorio: $dir"
-        return 1
-    fi
-}
+# =============================================================================
+# SISTEMA DE BLOQUEO ROBUSTO
+# =============================================================================
 
-# ========================
-# Configuration Variables
-# ========================
+acquire_lock() {
+    local lock_file="$1"
+    local timeout="$2"
+    local process_name="${3:-unknown}"
+    local start_time=$(date +%s)
 
-# Configuración de directorios
-FLAGS_DIR="/flags"
-METADATA_CACHE_DIR="$FLAGS_DIR/cache/metadata"
-QUEUE_DIR="$FLAGS_DIR/queue"
-TMP_DIR="$FLAGS_DIR/tmp"
-OVERLAY_DIR="$FLAGS_DIR/4x3"
+    log_debug "Intentando adquirir lock: $lock_file (timeout: ${timeout}s, proceso: $process_name)"
 
-# Archivos de cola
-RADARR_QUEUE_FILE="$QUEUE_DIR/radarr_queue.txt"
-SONARR_QUEUE_FILE="$QUEUE_DIR/sonarr_queue.txt"
-QUEUE_LOCK_FILE="$QUEUE_DIR/monitor.lock"
+    # Verificar si el archivo de lock existe y es válido
+    while [[ -f "$lock_file" ]]; do
+        local current_time=$(date +%s)
+        local elapsed=$((current_time - start_time))
 
-# Configuración de medios
-MOVIES_DIR="/BibliotecaMultimedia/Peliculas"
-SERIES_DIR="/BibliotecaMultimedia/Series"
+        # Verificar timeout
+        if [[ "$elapsed" -ge "$timeout" ]]; then
+            log_error "Timeout esperando lock $lock_file después de ${timeout}s"
+            return 1
+        fi
 
-# Configuración de overlay
-flag_width=400
-flag_height=300
-poster_resize="2560x1440"
-vertical_resize="1920x2880"
-
-# Variables de optimización
-CACHE_EXPIRE_DAYS=7
-MAX_PARALLEL_JOBS=1
-MONITOR_INTERVAL=30
-IMAGEMAGICK_MEMORY_LIMIT="1GiB"
-FORCE_UPDATE=false
-NFO_WAIT_SECONDS=30
-
-# ========================
-# Queue Management
-# ========================
-
-# Limpiar duplicados de archivos de cola
-clean_queue_duplicates() {
-    local queue_file="$1"
-
-    if [ ! -f "$queue_file" ] || [ ! -s "$queue_file" ]; then
-        return 0
-    fi
-
-    log_debug "Limpiando duplicados de $(basename "$queue_file")"
-
-    local original_count=$(wc -l <"$queue_file" 2>/dev/null || echo 0)
-    local temp_file="$FLAGS_DIR/temp_clean_$$_$(date +%s).tmp"
-
-    if touch "$temp_file" 2>/dev/null; then
-        # Ordenar por path del archivo y timestamp, mantener solo la entrada más reciente por path
-        if sort -t'|' -k3,3 -k1,1r "$queue_file" 2>/dev/null | awk -F'|' '!seen[$3]++' >"$temp_file" 2>/dev/null; then
-            local clean_count=$(wc -l <"$temp_file" 2>/dev/null || echo 0)
-            local removed_count=$((original_count - clean_count))
-
-            if [ $removed_count -gt 0 ] && [ -s "$temp_file" ]; then
-                if cp "$temp_file" "$queue_file" 2>/dev/null; then
-                    log_debug "Se eliminaron $removed_count entradas duplicadas de $(basename "$queue_file")"
-                fi
+        # Verificar si el proceso que tiene el lock sigue ejecutándose
+        if [[ -s "$lock_file" ]]; then
+            local lock_pid=$(cat "$lock_file" 2>/dev/null)
+            if [[ -n "$lock_pid" ]] && ! kill -0 "$lock_pid" 2>/dev/null; then
+                log_warning "Lock obsoleto detectado (PID $lock_pid no existe), eliminando"
+                rm -f "$lock_file" 2>/dev/null
+                break
             fi
         fi
-        rm -f "$temp_file" 2>/dev/null || true
+
+        log_debug "Esperando lock $lock_file... (${elapsed}s/${timeout}s)"
+        sleep 2
+    done
+
+    # Crear el lock file con el PID actual
+    if ! echo "$$" >"$lock_file" 2>/dev/null; then
+        log_error "No se pudo crear lock file: $lock_file"
+        return 1
+    fi
+
+    log_debug "✓ Lock adquirido: $lock_file (PID: $$, proceso: $process_name)"
+    return 0
+}
+
+release_lock() {
+    local lock_file="$1"
+
+    if [[ -f "$lock_file" ]]; then
+        local lock_pid=$(cat "$lock_file" 2>/dev/null)
+        if [[ "$lock_pid" == "$$" ]]; then
+            rm -f "$lock_file" 2>/dev/null
+            log_debug "✓ Lock liberado: $lock_file"
+        else
+            log_warning "Intentando liberar lock que no nos pertenece: $lock_file (PID: $lock_pid vs $$)"
+        fi
     fi
 }
 
-# Configurar archivos de cola
-setup_queue_files() {
-    local queue_locations=(
-        "$FLAGS_DIR/queue"
-        "/tmp/lang-flags-queue"
-        "/var/tmp/lang-flags-queue"
-    )
+cleanup_locks() {
+    log_debug "Limpiando locks al salir..."
+    release_lock "$SCAN_LOCK"
+    release_lock "$PROCESS_LOCK"
+}
 
-    for queue_dir in "${queue_locations[@]}"; do
-        if create_directory_safe "$queue_dir"; then
-            QUEUE_DIR="$queue_dir"
-            RADARR_QUEUE_FILE="$QUEUE_DIR/radarr_queue.txt"
-            SONARR_QUEUE_FILE="$QUEUE_DIR/sonarr_queue.txt"
-            QUEUE_LOCK_FILE="$QUEUE_DIR/monitor.lock"
-            log_debug "Usando directorio de cola: $QUEUE_DIR"
-            break
+# =============================================================================
+# UTILIDADES
+# =============================================================================
+
+create_dirs() {
+    local dirs=("$BASE_DIR" "$DATA_DIR" "$QUEUE_DIR" "$TMP_DIR" "$LOG_DIR")
+
+    for dir in "${dirs[@]}"; do
+        if ! mkdir -p "$dir" 2>/dev/null; then
+            log_warning "No se pudo crear directorio: $dir"
+        fi
+    done
+}
+
+check_dependencies() {
+    local required=("exiftool" "jq" "convert" "ffprobe" "mediainfo" "mkvinfo" "rsvg-convert" "at")
+    local missing=()
+
+    for cmd in "${required[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing+=("$cmd")
         fi
     done
 
-    # Crear archivos de cola
-    touch "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || {
-        log_warning "No se pueden crear archivos de cola, funcionalidad limitada"
-    }
-
-    chmod 666 "$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE" 2>/dev/null || true
-
-    # Limpiar duplicados existentes
-    clean_queue_duplicates "$RADARR_QUEUE_FILE" 2>/dev/null || true
-    clean_queue_duplicates "$SONARR_QUEUE_FILE" 2>/dev/null || true
-
-    log_debug "Configuración de archivos de cola completada"
-}
-
-# ========================
-# Cron and Queue Processor
-# ========================
-
-# Configurar procesador de cola con cron permanente
-setup_queue_processor() {
-    local cron_entry="*/15 * * * * bash /flags/lang-flags.bash --process-queue >/dev/null 2>&1"
-    local crontab_file="/var/spool/cron/crontabs/root"
-    
-    # Verificar si ya existe la entrada en el crontab
-    if [[ -f "$crontab_file" ]] && grep -q "lang-flags.bash --process-queue" "$crontab_file" 2>/dev/null; then
-        log_debug "Cron job permanente ya configurado"
-        return 0
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        log_error "Dependencias críticas faltantes: ${missing[*]}"
+        return 1
     fi
-    
-    # Crear directorio si no existe
-    mkdir -p "$(dirname "$crontab_file")" 2>/dev/null || true
-    
-    # Añadir entrada al crontab de root
-    echo "$cron_entry" >> "$crontab_file" 2>/dev/null && {
-        log_info "✓ Cron job permanente configurado: cada 15 minutos"
-        # Recargar cron para aplicar cambios
-        pkill -HUP crond 2>/dev/null || true
-        log_info "🟢 Procesador de cola PERMANENTE activado"
-        return 0
-    }
-    
-    log_error "✗ No se pudo configurar el cron job permanente"
-    return 1
+
+    return 0
 }
 
-# Eliminar función start_background_queue_processor - no es necesaria
-# El cron permanente se encarga de todo
-
-# Verificar si las colas están vacías
-are_queues_empty() {
-    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
-    
-    for queue_file in "${queue_files[@]}"; do
-        if [[ -f "$queue_file" ]] && [[ -s "$queue_file" ]]; then
-            return 1  # No están vacías
-        fi
-    done
-    
-    return 0  # Están vacías
+is_video_file() {
+    local file="$1"
+    [[ "$file" =~ \.(mkv|mp4|avi|m4v)$ ]]
 }
 
-# Quitar procesador de cola - NO HACER NADA
-# El cron job es permanente y siempre está habilitado
-# Solo verificará si hay elementos y procesará si es necesario
-
-# Verificar si un archivo está listo para procesar
-is_ready_to_process() {
+is_trailer_or_extra() {
     local file_path="$1"
-    local file_dir=$(dirname "$file_path")
-    local base_name=$(basename "$file_path" | sed 's/\.[^.]*$//')
-    
-    # Determinar si es episodio de TV o película
-    local is_tv_episode=false
-    if [[ "$file_path" =~ [Ss][0-9]+[Ee][0-9]+ ]] || [[ "$file_path" =~ Season ]]; then
-        is_tv_episode=true
+
+    # Verificar rutas que contengan directorios de extras
+    if [[ "$file_path" =~ .*/trailers/.* ]] ||
+        [[ "$file_path" =~ .*/extras/.* ]] ||
+        [[ "$file_path" =~ .*/behind.the.scenes/.* ]] ||
+        [[ "$file_path" =~ .*/deleted.scenes/.* ]] ||
+        [[ "$file_path" =~ .*/featurettes/.* ]] ||
+        [[ "$file_path" =~ .*/interviews/.* ]] ||
+        [[ "$file_path" =~ .*/scenes/.* ]] ||
+        [[ "$file_path" =~ .*/shorts/.* ]] ||
+        [[ "$file_path" =~ .*/other/.* ]]; then
+        return 0 # Es trailer/extra
     fi
-    
-    # Buscar archivo NFO apropiado
-    local nfo_file=""
-    if [[ "$is_tv_episode" == true ]]; then
-        # Para episodios de TV, buscar season.nfo o cualquier NFO en el directorio
-        for nfo in "$file_dir"/season.nfo "$file_dir"/*.nfo; do
-            if [[ -f "$nfo" ]]; then
-                nfo_file="$nfo"
-                log_debug "NFO encontrado para episodio: $nfo"
-                break
-            fi
-        done
-    else
-        # Para películas, buscar NFO específico del archivo
-        for nfo in "$file_dir"/"${base_name}.nfo" "$file_dir"/*.nfo; do
-            if [[ -f "$nfo" ]]; then
-                nfo_file="$nfo"
-                log_debug "NFO encontrado para película: $nfo"
-                break
-            fi
-        done
+
+    # Verificar nombres de archivo que contengan palabras clave
+    local filename=$(basename "$file_path")
+    if [[ "$filename" =~ .*[Tt]railer.* ]] ||
+        [[ "$filename" =~ .*TRAILER.* ]] ||
+        [[ "$filename" =~ .*[Pp]review.* ]] ||
+        [[ "$filename" =~ .*[Tt]easer.* ]] ||
+        [[ "$filename" =~ .*-trailer\..* ]] ||
+        [[ "$filename" =~ .*_trailer\..* ]]; then
+        return 0 # Es trailer/extra
     fi
-    
-    # Si no hay NFO, esperar un poco más
-    if [[ -z "$nfo_file" ]]; then
-        log_debug "NFO no encontrado para: $file_path - esperando que Jellyfin procese"
+
+    return 1 # No es trailer/extra
+}
+
+# =============================================================================
+# DETECCIÓN DE IDIOMAS
+# =============================================================================
+
+detect_languages_from_video() {
+    local video_file="$1"
+
+    if [[ ! -f "$video_file" ]]; then
         return 1
     fi
-    
-    # Buscar imágenes de poster existentes (más permisivo para episodios)
-    local poster_found=false
-    if [[ "$is_tv_episode" == true ]]; then
-        # Para episodios, buscar posters a nivel de temporada o serie
-        local season_dir="$file_dir"
-        local series_dir=$(dirname "$season_dir")
-        
-        for ext in jpg jpeg png; do
-            for dir in "$season_dir" "$series_dir"; do
-                for pattern in "poster" "folder" "season" "banner" "thumb"; do
-                    if [[ -f "$dir/${pattern}.${ext}" ]]; then
-                        poster_found=true
-                        log_debug "Poster encontrado para episodio: $dir/${pattern}.${ext}"
-                        break 3
+
+    # Usar ffprobe como en el script original (solo audio tracks)
+    local languages=$(ffprobe -v quiet -show_entries stream=index:stream_tags=language -select_streams a -of json "$video_file" 2>/dev/null | jq --raw-output '.streams[].tags.language' 2>/dev/null | grep -v "^null$" | sort -u | tr '\n' ' ')
+
+    # Si ffprobe no funciona, intentar con mediainfo (solo audio)
+    if [[ -z "$languages" ]] && command -v mediainfo >/dev/null 2>&1; then
+        local audio_langs=$(mediainfo --Output="Audio;%Language/String3%" "$video_file" 2>/dev/null | grep -v "^$")
+        # Separar idiomas concatenados (ej: "spaeng" -> "spa eng")
+        if [[ -n "$audio_langs" ]]; then
+            languages=""
+            for lang_string in $audio_langs; do
+                # Separar códigos de 3 caracteres
+                local len=${#lang_string}
+                for ((i = 0; i < len; i += 3)); do
+                    local lang_code="${lang_string:$i:3}"
+                    if [[ ${#lang_code} -eq 3 ]]; then
+                        languages+="$lang_code "
                     fi
                 done
             done
-        done
-    else
-        # Para películas, buscar poster específico
-        for ext in jpg jpeg png; do
-            for pattern in "poster" "folder" "${base_name}"; do
-                if [[ -f "$file_dir/${pattern}.${ext}" ]]; then
-                    poster_found=true
-                    log_debug "Poster encontrado para película: $file_dir/${pattern}.${ext}"
-                    break 2
-                fi
-            done
-        done
-    fi
-    
-    # Si no hay poster, esperar un poco más (pero ser más permisivo para episodios antiguos)
-    if [[ "$poster_found" == false ]]; then
-        local file_age=$(( $(date +%s) - $(stat -c %Y "$file_path" 2>/dev/null || echo 0) ))
-        if [[ "$is_tv_episode" == true ]] && [[ $file_age -gt 3600 ]]; then
-            # Para episodios de más de 1 hora, procesar aunque no haya poster
-            log_debug "Episodio antiguo sin poster, procesando de todas formas: $file_path"
-        else
-            log_debug "Poster no encontrado para: $file_path - esperando que Jellyfin genere imágenes"
-            return 1
         fi
     fi
-    
-    # Verificar que el archivo no sea demasiado reciente (dar tiempo a Jellyfin)
-    local file_age=$(( $(date +%s) - $(stat -c %Y "$file_path" 2>/dev/null || echo 0) ))
-    local min_age=${NFO_WAIT_SECONDS:-30}
-    
-    if [[ $file_age -lt $min_age ]]; then
-        log_debug "Archivo muy reciente ($file_age s), esperando $min_age s mínimo: $file_path"
+
+    # Limpiar y normalizar idiomas
+    languages=$(echo "$languages" | tr ' ' '\n' | grep -v "^$" | sort -u | tr '\n' ' ')
+
+    # Si no hay idiomas, usar español por defecto
+    if [[ -z "$languages" ]]; then
+        languages="spa"
+    fi
+
+    # Retornar solo los códigos de idioma, SIN logs
+    echo "$languages" | sed 's/ $//'
+}
+
+detect_languages_from_nfo() {
+    local media_dir="$1"
+    local -n nfo_languages=$2
+
+    # Buscar archivos NFO
+    local nfo_files=$(find "$media_dir" -name "*.nfo" -type f 2>/dev/null)
+
+    if [[ -z "$nfo_files" ]]; then
         return 1
     fi
-    
-    log_debug "✓ Archivo listo para procesar: NFO encontrado, criterios cumplidos"
-    return 0
-}
 
-# ========================
-# Standard Queue Processing
-# ========================
+    # Extraer idiomas de archivos NFO
+    while IFS= read -r nfo_file; do
+        if [[ -f "$nfo_file" ]]; then
+            # Buscar tags de idioma en XML
+            local langs=$(grep -i "<language>" "$nfo_file" 2>/dev/null | sed 's/<[^>]*>//g' | tr '[:upper:]' '[:lower:]' | tr -d ' ')
 
-# Función estandarizada para procesar la cola (simplificada)
-# El cron es permanente, solo procesa la cola sin gestión automática
-standard_queue_processing() {
-    local context="${1:-general}"
-    
-    log_debug "Procesando cola (contexto: $context)"
-    
-    # Verificar si las colas están vacías antes de procesar
-    if are_queues_empty; then
-        log_debug "Colas vacías - terminando inmediatamente"
-        return 0
-    fi
-    
-    log_info "Procesando elementos en cola..."
-    
-    # Procesar la cola
-    process_queue_files
-    
-    log_debug "Procesamiento de cola completado (contexto: $context)"
-}
-
-# Procesar archivos de cola
-process_queue_files() {
-    local queue_files=("$RADARR_QUEUE_FILE" "$SONARR_QUEUE_FILE")
-
-    for queue_file in "${queue_files[@]}"; do
-        if [ -f "$queue_file" ] && [ -s "$queue_file" ]; then
-            local temp_file="${queue_file}.tmp.$$"
-            local processed_any=false
-            
-            # Leer la cola y procesar elemento por elemento
-            while IFS='|' read -r timestamp event_type file_path; do
-                if [[ -n "$file_path" ]] && [[ -f "$file_path" ]]; then
-                    log_info "Verificando desde cola: $file_path"
-                    
-                    # Verificar si el archivo está listo para procesar (NFO existe, etc.)
-                    if is_ready_to_process "$file_path"; then
-                        log_info "Procesando desde cola: $file_path"
-                        if process_single_item "$file_path"; then
-                            log_info "✓ Procesado exitosamente: $file_path"
-                            processed_any=true
-                        else
-                            log_warning "Error procesando, mantener en cola: $file_path"
-                            echo "$timestamp|$event_type|$file_path" >> "$temp_file"
-                        fi
-                    else
-                        log_debug "No listo para procesar, mantener en cola: $file_path"
-                        echo "$timestamp|$event_type|$file_path" >> "$temp_file"
-                    fi
-                else
-                    log_warning "Archivo no encontrado, removiendo de cola: $file_path"
-                fi
-            done < "$queue_file"
-            
-            # Reemplazar la cola con solo los elementos no procesados
-            if [[ -f "$temp_file" ]]; then
-                mv "$temp_file" "$queue_file"
-                log_debug "Cola actualizada: $(wc -l < "$queue_file" 2>/dev/null || echo 0) elementos pendientes"
-            else
-                > "$queue_file"  # Vaciar si no hay elementos pendientes
-                log_debug "Cola vacía: todos los elementos procesados"
+            if [[ -n "$langs" ]]; then
+                nfo_languages+=("$langs")
             fi
         fi
-    done
-}
+    done <<<"$nfo_files"
 
-# ========================
-# Setup and Initialization
-# ========================
-
-# Asegurar que todos los directorios requeridos existan
-ensure_directories_exist() {
-    local required_dirs=(
-        "$FLAGS_DIR"
-        "$METADATA_CACHE_DIR"
-        "$QUEUE_DIR"
-        "$TMP_DIR"
-        "$OVERLAY_DIR"
-        "$TMP_DIR/processed"
-        "$TMP_DIR/logs"
-    )
-
-    for dir in "${required_dirs[@]}"; do
-        create_directory_safe "$dir" || {
-            log_warning "No se pudo crear directorio: $dir"
-        }
-    done
-}
-
-# Instalación de dependencias (simplificada y sin sudo)
-install_deps() {
-    log_info "Instalando dependencias..."
-
-    # Instalar dependencias de forma desatendida
-    export DEBIAN_FRONTEND=noninteractive
-
-    if command -v apt-get >/dev/null 2>&1; then
-        apt-get update -qq >/dev/null 2>&1
-        apt-get install -y -qq \
-            imagemagick \
-            libimage-exiftool-perl \
-            jq \
-            ffmpeg \
-            curl \
-            wget \
-            bc \
-            >/dev/null 2>&1
-    elif command -v apk >/dev/null 2>&1; then
-        apk add --no-cache \
-            imagemagick \
-            exiftool \
-            jq \
-            ffmpeg \
-            curl \
-            wget \
-            bc \
-            bash \
-            >/dev/null 2>&1
-    fi
-
-    # Crear estructura de directorios
-    mkdir -p /flags/queue /flags/cache/metadata /flags/tmp /flags/cron /flags/4x3 2>/dev/null
-    chmod -R 755 /flags 2>/dev/null
-
-    # Verificar instalación
-    return $(check_dependencies_quiet)
-}
-
-# Verificar dependencias silenciosamente
-check_dependencies_quiet() {
-    local required_commands=("exiftool" "jq" "convert" "ffmpeg")
-    
-    for cmd in "${required_commands[@]}"; do
-        if ! command -v "$cmd" >/dev/null 2>&1; then
-            return 1
-        fi
-    done
     return 0
 }
 
-# ========================
-# Main Processing Functions
-# ========================
+# =============================================================================
+# GESTIÓN DE OVERLAYS
+# =============================================================================
 
-# Verificar si un video ya fue procesado
-is_video_processed() {
-    local video_file="$1"
+normalize_language_code() {
+    local lang="$1"
 
-    if [ "$FORCE_UPDATE" = true ]; then
-        log_debug "Actualización forzada habilitada para: $video_file"
-        return 1
-    fi
+    # Convertir códigos de idioma a códigos de país para banderas
+    case "${lang,,}" in
+    "es" | "spa" | "spanish" | "español") echo "es" ;;
+    "en" | "eng" | "english" | "inglés") echo "gb" ;;
+    "fr" | "fre" | "french" | "francés") echo "fr" ;;
+    "de" | "ger" | "german" | "alemán") echo "de" ;;
+    "it" | "ita" | "italian" | "italiano") echo "it" ;;
+    "pt" | "por" | "portuguese" | "portugués") echo "pt" ;;
+    "ja" | "jpn" | "japanese" | "japonés") echo "jp" ;;
+    "ko" | "kor" | "korean" | "coreano") echo "kr" ;;
+    "zh" | "chi" | "chinese" | "chino") echo "cn" ;;
+    "ru" | "rus" | "russian" | "ruso") echo "ru" ;;
+    *) echo "es" ;; # Por defecto español
+    esac
+}
 
-    if [ ! -f "$video_file" ]; then
-        log_debug "Archivo de video no encontrado: $video_file"
-        return 1
-    fi
+find_poster_image() {
+    local media_path="$1"
+    local media_type="$2" # "movie" o "tvshow"
 
-    # Verificar cache de metadatos
-    local cache_file="$METADATA_CACHE_DIR/$(basename "$video_file").processed"
-    if [ -f "$cache_file" ]; then
-        local cache_time=$(stat -c %Y "$cache_file" 2>/dev/null || echo 0)
-        local video_time=$(stat -c %Y "$video_file" 2>/dev/null || echo 0)
+    if [[ "$media_type" == "movie" ]]; then
+        # Para películas: buscar TODOS los archivos poster/folder que existan
+        local movie_dir=$(dirname "$media_path")
 
-        if [ "$cache_time" -gt "$video_time" ]; then
-            log_debug "Video ya procesado (cache válido): $video_file"
+        # Lista de nombres de imagen posibles
+        local poster_names=("poster.jpg" "folder.jpg" "poster.png" "folder.png")
+        local found_images=()
+
+        # Buscar en directorio actual
+        for poster_name in "${poster_names[@]}"; do
+            local poster_file="$movie_dir/$poster_name"
+            if [[ -f "$poster_file" ]]; then
+                found_images+=("$poster_file")
+                log_debug "Poster encontrado: $poster_file" >&2
+            fi
+        done
+
+        # Si no se encuentra ninguno en el directorio actual, buscar en el directorio padre
+        # (para casos como trailers/, extras/, etc.)
+        if [[ ${#found_images[@]} -eq 0 ]]; then
+            local parent_dir=$(dirname "$movie_dir")
+            for poster_name in "${poster_names[@]}"; do
+                local parent_poster="$parent_dir/$poster_name"
+                if [[ -f "$parent_poster" ]]; then
+                    found_images+=("$parent_poster")
+                    log_debug "Poster encontrado en directorio padre: $parent_poster" >&2
+                fi
+            done
+        fi
+
+        # Retornar todas las imágenes encontradas (separadas por ;)
+        if [[ ${#found_images[@]} -gt 0 ]]; then
+            local result=$(
+                IFS=';'
+                echo "${found_images[*]}"
+            )
+            echo "$result"
             return 0
         fi
+
+        log_warning "Poster de película no encontrado en: $movie_dir (probados: ${poster_names[*]})" >&2
+        return 1
+
+    elif [[ "$media_type" == "tvshow" ]]; then
+        # Para series: procesar TODAS las imágenes (episodio + temporada + serie)
+        local episode_path="$media_path"
+        local season_dir=$(dirname "$episode_path")
+        local series_dir=$(dirname "$season_dir")
+        local episode_basename=$(basename "$episode_path" | sed 's/\.[^.]*$//')
+
+        # Lista de imágenes a procesar (orden de prioridad)
+        local images_to_process=()
+
+        # 1. Thumbnail del episodio específico
+        local episode_thumb="$season_dir/${episode_basename}-thumb.jpg"
+        if [[ -f "$episode_thumb" ]]; then
+            images_to_process+=("$episode_thumb")
+            log_debug "Imagen de episodio encontrada: $episode_thumb" >&2
+        fi
+
+        # 2. Poster de temporada
+        local season_num=$(basename "$season_dir" | grep -o '[0-9]\+' | head -1)
+        local season_poster="$series_dir/season$(printf "%02d" "$((10#$season_num))")-poster.jpg"
+        if [[ -f "$season_poster" ]]; then
+            images_to_process+=("$season_poster")
+            log_debug "Poster de temporada encontrado: $season_poster" >&2
+        fi
+
+        # 3. Poster de serie (buscar TODOS los poster.jpg Y folder.jpg que existan)
+        local series_poster_names=("poster.jpg" "folder.jpg" "poster.png" "folder.png")
+        for poster_name in "${series_poster_names[@]}"; do
+            local series_poster="$series_dir/$poster_name"
+            if [[ -f "$series_poster" ]]; then
+                images_to_process+=("$series_poster")
+                log_debug "Poster de serie encontrado: $series_poster" >&2
+                # NO hacer break - agregar TODOS los que encuentre
+            fi
+        done
+
+        # Retornar todas las imágenes encontradas (separadas por ;)
+        if [[ ${#images_to_process[@]} -gt 0 ]]; then
+            local result=$(
+                IFS=';'
+                echo "${images_to_process[*]}"
+            )
+            echo "$result"
+            return 0
+        fi
+
+        log_warning "No se encontraron imágenes para serie/temporada/episodio: $series_dir" >&2
+        return 1
     fi
 
     return 1
 }
 
-# Procesar un elemento individual
-process_single_item() {
-    local item_path="$1"
+apply_language_overlays() {
+    local poster_file="$1"
+    local -a languages=("${@:2}")
 
-    if [ ! -e "$item_path" ]; then
-        log_warning "Elemento no encontrado: $item_path"
+    # Verificar que el archivo existe
+    if [[ ! -f "$poster_file" ]]; then
+        log_warning "Archivo no encontrado: $poster_file"
         return 1
     fi
 
-    log_info "Procesando: $item_path"
+    # Crear copia de seguridad SOLO si DEBUG está activado
+    if [[ "$DEBUG" == "true" ]]; then
+        local backup_file="${poster_file}.original"
+        if [[ ! -f "$backup_file" ]]; then
+            cp "$poster_file" "$backup_file" 2>/dev/null || {
+                log_error "No se pudo crear backup de: $poster_file"
+                return 1
+            }
+            log_debug "Backup creado: $backup_file"
+        fi
+    fi
 
-    # Determinar si es película o serie
-    if [[ "$item_path" == *"$MOVIES_DIR"* ]]; then
-        process_movie "$item_path"
-    elif [[ "$item_path" == *"$SERIES_DIR"* ]]; then
-        process_tv_show "$item_path"
+    # Obtener dimensiones del poster con múltiples métodos
+    local poster_width=$(exiftool -f -s3 -"ImageWidth" "$poster_file" 2>/dev/null)
+    local poster_height=$(exiftool -f -s3 -"ImageHeight" "$poster_file" 2>/dev/null)
+
+    # Si exiftool falla, intentar con identify de ImageMagick
+    if [[ ! "$poster_width" =~ ^[0-9]+$ ]] || [[ ! "$poster_height" =~ ^[0-9]+$ ]]; then
+        local dimensions=$(identify -format "%w %h" "$poster_file" 2>/dev/null)
+        if [[ -n "$dimensions" ]]; then
+            poster_width=$(echo "$dimensions" | cut -d' ' -f1)
+            poster_height=$(echo "$dimensions" | cut -d' ' -f2)
+        fi
+    fi
+
+    # Validar que las dimensiones son números válidos
+    if [[ ! "$poster_width" =~ ^[0-9]+$ ]] || [[ ! "$poster_height" =~ ^[0-9]+$ ]] || [[ "$poster_width" -eq 0 ]] || [[ "$poster_height" -eq 0 ]]; then
+        log_warning "No se pudieron obtener dimensiones válidas de imagen: $poster_file (width: $poster_width, height: $poster_height)"
+        return 1
+    fi
+    log_debug "Dimensiones originales del poster: ${poster_width}x${poster_height}px"
+
+    # REDIMENSIONAR A ALTURA ESTÁNDAR para consistencia visual
+    # Altura estándar objetivo (ajustable según necesidades)
+    local target_height=1000
+
+    # Calcular nuevo ancho manteniendo proporción usando aritmética entera
+    # aspect_ratio = width / height * 1000 (para precisión)
+    local aspect_ratio_x1000=$((poster_width * 1000 / poster_height))
+    local new_width=$((target_height * aspect_ratio_x1000 / 1000))
+
+    # Redimensionar imagen si es necesario
+    if [[ "$poster_height" -ne "$target_height" ]]; then
+        log_info "📏 Redimensionando ${poster_width}x${poster_height} → ${new_width}x${target_height}: $(basename "$poster_file")"
+
+        if ! convert "$poster_file" -resize "${new_width}x${target_height}!" "$poster_file" 2>/dev/null; then
+            log_warning "Error redimensionando imagen: $poster_file"
+            return 1
+        fi
+
+        # Actualizar dimensiones para cálculos posteriores
+        poster_width="$new_width"
+        poster_height="$target_height"
+        log_debug "Imagen redimensionada exitosamente"
     else
-        log_warning "Tipo de contenido no reconocido: $item_path"
-        return 1
-    fi
-}
-
-# Procesar película
-process_movie() {
-    local movie_path="$1"
-    log_info "Procesando película: $movie_path"
-
-    # Buscar archivos de video
-    local video_files=$(find "$(dirname "$movie_path")" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" 2>/dev/null)
-
-    if [ -z "$video_files" ]; then
-        log_warning "No se encontraron archivos de video en: $(dirname "$movie_path")"
-        return 1
+        log_debug "Imagen ya tiene la altura objetivo: ${target_height}px"
     fi
 
-    # Procesar cada archivo de video
-    echo "$video_files" | while read -r video_file; do
-        if [ -f "$video_file" ]; then
-            if ! is_video_processed "$video_file"; then
-                log_debug "Procesando archivo de video: $video_file"
-                # Aquí iría la lógica de procesamiento de overlays
-                mark_video_processed "$video_file"
-            fi
+    # Tamaño proporcional de bandera (8% de la altura estándar)
+    # Esto asegura que las banderas se vean del mismo tamaño visual en todas las imágenes
+    local flag_height=$((target_height * 8 / 100))
+    local flag_width=$((flag_height * 4 / 3)) # Mantener proporción 4:3
+
+    # Procesar idiomas uno por uno
+    local applied_overlays=0
+
+    for lang in "${languages[@]}"; do
+        local country_code=$(normalize_language_code "$lang")
+        local flag_file="$OVERLAY_DIR/${country_code}.svg"
+
+        if [[ ! -f "$flag_file" ]]; then
+            log_debug "Bandera no encontrada: $flag_file"
+            continue
         fi
+
+        log_debug "Aplicando overlay: $lang → $country_code (${flag_width}px)"
+
+        # Crear overlay transparente del tamaño del poster
+        local temp_overlay="$TMP_DIR/${country_code}_overlay_tmp_$$.png"
+        local temp_flag="$TMP_DIR/${country_code}_flag_tmp_$$.png"
+
+        # Paso 1: Convertir SVG a PNG con tamaño fijo (120x90px) y color explícito
+        if ! rsvg-convert -w "$flag_width" -h "$flag_height" --format=png --background-color=transparent "$flag_file" -o "$temp_flag" 2>/dev/null; then
+            log_warning "Error convirtiendo SVG: $flag_file"
+            continue
+        fi
+
+        # Paso 2: Crear overlay transparente del tamaño del poster (forzar color)
+        if ! convert -size "${poster_width}x${poster_height}" xc:transparent -colorspace sRGB "$temp_overlay" 2>/dev/null; then
+            log_warning "Error creando canvas transparente"
+            rm -f "$temp_flag"
+            continue
+        fi
+
+        # Paso 3: Aplicar transparencia y posicionar bandera abajo al centro
+        # Aplicar 70% de transparencia a la bandera
+        if ! convert "$temp_flag" -alpha set -channel A -evaluate multiply 0.7 +channel "$temp_flag" 2>/dev/null; then
+            log_warning "Error aplicando transparencia a bandera"
+            rm -f "$temp_flag" "$temp_overlay"
+            continue
+        fi
+
+        # Calcular posición: banderas alineadas horizontalmente en la parte inferior central
+        # Calcular ancho total necesario para todas las banderas
+        local total_flags=${#languages[@]}
+        local total_width=$((total_flags * flag_width + (total_flags - 1) * 5)) # 5px separación entre banderas
+        local start_x=$(((poster_width - total_width) / 2))
+
+        # Posición X para esta bandera específica
+        local x_offset=$((start_x + applied_overlays * (flag_width + 5)))
+        # Posición Y fija en la parte inferior
+        local y_offset=$((poster_height - flag_height - 10))
+
+        if ! convert "$temp_overlay" "$temp_flag" -colorspace sRGB -geometry "+${x_offset}+${y_offset}" -composite "$temp_overlay" 2>/dev/null; then
+            log_warning "Error posicionando bandera"
+            rm -f "$temp_flag" "$temp_overlay"
+            continue
+        fi
+
+        # Paso 4: Aplicar overlay al poster (preservar color)
+        if convert "$poster_file" "$temp_overlay" -colorspace sRGB -flatten "$poster_file" 2>/dev/null; then
+            log_info "✓ Overlay aplicado: $lang → $(basename "$poster_file")"
+            ((applied_overlays++))
+            # Las banderas se alinean horizontalmente en la parte inferior central
+        else
+            log_warning "Error aplicando overlay $lang a: $(basename "$poster_file")"
+        fi
+
+        # Limpiar archivos temporales
+        rm -f "$temp_flag" "$temp_overlay"
     done
-}
 
-# Procesar serie de TV
-process_tv_show() {
-    local series_path="$1"
-    log_info "Procesando serie: $series_path"
-
-    # Buscar archivos de video en temporadas
-    local video_files=$(find "$(dirname "$series_path")" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" 2>/dev/null)
-
-    if [ -z "$video_files" ]; then
-        log_warning "No se encontraron archivos de video en: $(dirname "$series_path")"
+    if [[ $applied_overlays -gt 0 ]]; then
+        log_info "✓ $(basename "$poster_file") procesado con $applied_overlays overlay(s)"
+        return 0
+    else
+        log_warning "No se aplicaron overlays a: $(basename "$poster_file")"
         return 1
     fi
-
-    # Procesar cada archivo de video
-    echo "$video_files" | while read -r video_file; do
-        if [ -f "$video_file" ]; then
-            if ! is_video_processed "$video_file"; then
-                log_debug "Procesando episodio: $video_file"
-                # Aquí iría la lógica de procesamiento de overlays
-                mark_video_processed "$video_file"
-            fi
-        fi
-    done
 }
 
-# Marcar video como procesado
-mark_video_processed() {
+# =============================================================================
+# GESTIÓN DE CACHE BASADO EN EXIF
+# =============================================================================
+
+get_video_identifier() {
     local video_file="$1"
-    local cache_file="$METADATA_CACHE_DIR/$(basename "$video_file").processed"
 
-    create_directory_safe "$(dirname "$cache_file")"
-    touch "$cache_file" 2>/dev/null || {
-        log_warning "No se pudo crear archivo de cache: $cache_file"
-    }
-}
-
-# ========================
-# Event Handling
-# ========================
-
-# Manejar eventos de Sonarr/Radarr
-handle_events() {
-    # Verificar eventos de prueba
-    if [ "$radarr_eventtype" = "Test" ] || [ "$sonarr_eventtype" = "Test" ]; then
-        log_info "Evento de prueba recibido - Script funcionando correctamente"
-        exit 0
+    if [[ ! -f "$video_file" ]]; then
+        return 1
     fi
 
-    # Procesar eventos de Radarr
-    if [ -n "$radarr_eventtype" ] && [ -n "$radarr_movie_path" ]; then
-        log_info "Evento Radarr: $radarr_eventtype para $radarr_movie_path"
-        echo "$(date '+%Y-%m-%d %H:%M:%S')|$radarr_eventtype|$radarr_movie_path" >>"$RADARR_QUEUE_FILE"
+    # Retornar solo el nombre del archivo (sin ruta)
+    basename "$video_file"
+}
+
+is_image_processed() {
+    local image_file="$1"
+    local video_file="$2" # Recibe la ruta completa del video
+
+    if [[ ! -f "$image_file" || -z "$video_file" ]]; then
+        return 1
+    fi
+
+    # SISTEMA SIMPLIFICADO: Verificar UserComment con nombre del archivo (sin ruta)
+    local user_comment=$(exiftool -f -s3 -"UserComment" "$image_file" 2>/dev/null)
+    local video_filename=$(basename "$video_file")
+    local expected_comment="LangFlags:$video_filename"
+
+    if [[ -n "$user_comment" && "$user_comment" == "$expected_comment" ]]; then
+        return 0 # Ya procesada (nombre coincide)
+    fi
+
+    return 1 # No procesada o nombre diferente
+}
+
+update_image_exif_filename() {
+    local image_file="$1"
+    local video_file="$2" # Recibe la ruta completa del video
+
+    if [[ ! -f "$image_file" || -z "$video_file" ]]; then
+        return 1
+    fi
+
+    # SISTEMA SIMPLIFICADO: Solo UserComment con nombre del archivo (sin ruta)
+    local video_filename=$(basename "$video_file")
+    if exiftool -overwrite_original -UserComment="LangFlags:$video_filename" "$image_file" >/dev/null 2>&1; then
+        log_debug "Cache EXIF actualizado en: $(basename "$image_file") (UserComment=LangFlags:$video_filename)"
+        return 0
+    else
+        log_warning "No se pudo actualizar UserComment en: $(basename "$image_file")"
+        return 1
+    fi
+}
+
+get_image_exif_video_path() {
+    local image_file="$1"
+
+    if [[ ! -f "$image_file" ]]; then
+        return 1
+    fi
+
+    # Extraer ruta del archivo del campo UserComment
+    local video_path=$(exiftool -f -s3 -"UserComment" "$image_file" 2>/dev/null | grep "LangFlags:" | cut -d: -f2-)
+
+    if [[ -n "$video_path" ]]; then
+        echo "$video_path"
+        return 0
+    else
+        return 1
+    fi
+}
+
+get_video_identifier_cached() {
+    local video_file="$1"
+
+    if [[ ! -f "$video_file" ]]; then
+        return 1
+    fi
+
+    # SISTEMA SIMPLIFICADO: Solo retornar la ruta del archivo directamente
+    echo "$video_file"
+    return 0
+}
+
+needs_processing() {
+    local media_path="$1"
+    local media_type="$2"
+    local force_mode="${3:-false}"
+
+    # Si está en modo force, siempre procesar
+    if [[ "$force_mode" == "true" ]]; then
+        log_debug "Modo force activado, procesando: $media_path"
         return 0
     fi
 
-    # Procesar eventos de Sonarr
-    if [ -n "$sonarr_eventtype" ] && [ -n "$sonarr_episodefile_path" ]; then
-        log_info "Evento Sonarr: $sonarr_eventtype para $sonarr_episodefile_path"
-        echo "$(date '+%Y-%m-%d %H:%M:%S')|$sonarr_eventtype|$sonarr_episodefile_path" >>"$SONARR_QUEUE_FILE"
+    # Buscar imágenes asociadas al archivo de medios
+    local poster_result
+    if ! poster_result=$(find_poster_image "$media_path" "$media_type"); then
+        log_debug "No se encontraron imágenes, necesita procesamiento: $media_path"
         return 0
     fi
+    # Verificar cache en cada imagen usando SISTEMA UNIFICADO
+    local poster_files
+    if [[ "$media_type" == "movie" ]]; then
+        IFS=';' read -ra poster_files <<<"$poster_result"
+    else
+        IFS=';' read -ra poster_files <<<"$poster_result"
+    fi
 
-    return 1
-}
+    # Obtener identificador actual del archivo de video (ruta completa)
+    local current_video_path
+    current_video_path=$(get_video_identifier_cached "$media_path" 2>/dev/null || echo "")
 
-# ========================
-# Argument Parsing
-# ========================
-
-# Parsear argumentos
-parse_arguments() {
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in
-        -v | --verbose)
-            DEBUG=true
-            ;;
-        -f | --force)
-            FORCE_UPDATE=true
-            ;;
-        -q | --queue)
-            MODE="queue"
-            if [[ "$2" =~ ^[0-9]+$ ]]; then
-                shift
-                NFO_WAIT_SECONDS=$1
-            fi
-            ;;
-        -m | --monitor)
-            shift
-            MONITOR_INTERVAL=$1
-            MODE="monitor"
-            ;;
-        -j | --jobs)
-            shift
-            MAX_PARALLEL_JOBS=$1
-            ;;
-        --process-queue)
-            MODE="process_queue"
-            ;;
-        --init)
-            MODE="init"
-            ;;
-        --setup-cron)
-            setup_queue_processor
-            exit 0
-            ;;
-        --install-deps)
-            install_deps
-            exit $?
-            ;;
-        all)
-            MODE="all"
-            ;;
-        movies)
-            MODE="movies"
-            ;;
-        tvshows)
-            MODE="tvshows"
-            ;;
-        *)
-            log_warning "Argumento desconocido: $1"
-            ;;
-        esac
-        shift
+    for poster_file in "${poster_files[@]}"; do
+        # MÉTODO SIMPLIFICADO: Solo verificar EXIF
+        if is_image_processed "$poster_file" "$current_video_path"; then
+            log_debug "Cache HIT: $(basename "$poster_file") ruta coincide ($current_video_path)"
+            continue # Esta imagen está actualizada
+        else
+            log_debug "Cache MISS: $(basename "$poster_file") ruta diferente o no procesada"
+            return 0 # Necesita procesamiento
+        fi
     done
+
+    # Si llegamos aquí, todas las imágenes tienen el identificador correcto
+    log_debug "Cache HIT: Todas las imágenes actualizadas para: $media_path"
+    return 1 # No necesita procesamiento
 }
 
-# ========================
-# Generar script de inicialización del contenedor (LO PRIMERO)
-generate_container_init_script() {
-    local init_script="/custom-cont-init.d/lang_flags-install_deps.sh"
+# =============================================================================
+# FUNCIONES DE VERIFICACIÓN DE PROCESAMIENTO
+# =============================================================================
 
-    # Solo generar si no existe o si es más antiguo que este script
-    if [[ -f "$init_script" ]] && [[ "$init_script" -nt "$0" ]]; then
-        log_debug "Script de inicialización ya existe y está actualizado"
-        return 0
+# Función para limpiar caché de un elemento específico (webhook events)
+remove_from_cache() {
+    local media_path="$1"
+    local media_type="$2"
+
+    log_debug "Limpiando caché EXIF para: $media_path (tipo: $media_type)"
+
+    # Obtener todas las imágenes asociadas al archivo
+    local poster_images_result
+    if poster_images_result=$(find_poster_image "$media_path" "$media_type" 2>/dev/null); then
+        # Convertir a array
+        local poster_images=()
+        IFS=';' read -ra poster_images <<<"$poster_images_result"
+
+        # Limpiar caché EXIF para cada imagen
+        local cleaned_count=0
+
+        for image in "${poster_images[@]}"; do
+            if [[ -f "$image" ]]; then
+                local image_basename=$(basename "$image")
+
+                # Limpiar EXIF
+                if command -v exiftool >/dev/null 2>&1; then
+                    exiftool -overwrite_original -UserComment="" "$image" 2>/dev/null || true
+                    log_debug "EXIF limpiado para: $image_basename"
+                    ((cleaned_count++))
+                fi
+            fi
+        done
+
+        if [[ "$cleaned_count" -gt 0 ]]; then
+            log_info "🧹 Caché EXIF limpiada para: $(basename "$media_path") ($cleaned_count imagen(es))"
+        else
+            log_debug "No se encontraron imágenes para limpiar caché: $(basename "$media_path")"
+        fi
+    else
+        log_debug "No se encontraron imágenes asociadas para limpiar caché: $media_path"
     fi
 
-    log_debug "Generando script de inicialización del contenedor..."
+    return 0
+}
+
+delete_images_for_webhook() {
+    local media_path="$1"
+    local media_type="$2"
+
+    log_debug "Borrando imágenes para webhook: $media_path (tipo: $media_type)"
+
+    # Obtener todas las imágenes asociadas al archivo
+    local poster_images_result
+    if poster_images_result=$(find_poster_image "$media_path" "$media_type" 2>/dev/null); then
+        # Convertir a array
+        local poster_images=()
+        IFS=';' read -ra poster_images <<<"$poster_images_result"
+
+        # Borrar cada imagen encontrada
+        local deleted_count=0
+
+        for image in "${poster_images[@]}"; do
+            if [[ -f "$image" ]]; then
+                local image_basename=$(basename "$image")
+                
+                # Borrar el archivo de imagen
+                if rm -f "$image" 2>/dev/null; then
+                    log_debug "Imagen borrada: $image_basename"
+                    ((deleted_count++))
+                else
+                    log_warning "No se pudo borrar imagen: $image_basename"
+                fi
+            fi
+        done
+
+        if [[ "$deleted_count" -gt 0 ]]; then
+            log_info "🗑️ Imágenes borradas para webhook: $(basename "$media_path") ($deleted_count imagen(es))"
+        else
+            log_debug "No se encontraron imágenes para borrar: $(basename "$media_path")"
+        fi
+    else
+        log_debug "No se encontraron imágenes asociadas para borrar: $media_path"
+    fi
+
+    return 0
+}
+
+# =============================================================================
+# FUNCIONES DE PROCESAMIENTO POR TIPO
+# =============================================================================
+
+# =============================================================================
+# INSTALACIÓN DE DEPENDENCIAS
+# =============================================================================
+
+create_autosetup_script() {
+    local init_dir="/custom-cont-init.d"
+    local init_script="$init_dir/99-lang-flags-setup.sh"
+
+    log_info "📝 Creando script de auto-setup en: $init_script"
 
     # Crear directorio si no existe
-    mkdir -p "/custom-cont-init.d" 2>/dev/null || {
-        log_debug "No se pudo crear /custom-cont-init.d"
+    if ! mkdir -p "$init_dir" 2>/dev/null; then
+        log_warning "⚠️ No se pudo crear directorio $init_dir (puede requerir permisos root)"
         return 1
-    }
+    fi
 
-    # Borrar archivo existente si existe
-    rm -f "$init_script" 2>/dev/null || true
-
-    # Generar script simplificado que llama al principal
-    cat > "$init_script" << 'EOF'
+    # Crear script de inicialización ultra-simple
+    cat >"$init_script" <<'EOF'
 #!/bin/bash
+# Auto-setup para Lang-Flags - Ejecutado al inicio del contenedor
+# Generado automáticamente por lang-flags.bash
 
-echo "[$(date)] Lang-Flags: Inicializando sistema..."
-
-# Llamar al script principal para inicialización
 if [[ -f "/flags/lang-flags.bash" ]]; then
-    bash /flags/lang-flags.bash --init
-else
-    echo "[$(date)] Lang-Flags: ERROR - Script principal no encontrado"
-    exit 1
+    bash /flags/lang-flags.bash setup
 fi
-
-echo "[$(date)] Lang-Flags: Inicialización completada"
 EOF
 
-    chmod +x "$init_script" 2>/dev/null || true
-
-    if [[ -f "$init_script" ]]; then
-        log_info "✓ Script de inicialización generado: $init_script"
+    # Hacer ejecutable
+    if chmod +x "$init_script" 2>/dev/null; then
+        log_info "✅ Script de auto-setup creado: $init_script"
+        log_info "🔄 Se ejecutará automáticamente al iniciar el contenedor"
         return 0
     else
-        log_error "✗ Error generando script de inicialización"
+        log_warning "⚠️ No se pudo hacer ejecutable: $init_script"
         return 1
     fi
 }
 
-# ========================
-# Main Execution
-# ========================
-
-# Función principal
-main() {
-    # Configuración inicial
-    logfileSetup
-    ensure_directories_exist
-    setup_queue_files
-
-    log_info "=== $scriptName v$scriptVersion iniciado ==="
-    log_info "Usuario: $(whoami), PID: $$"
-
-    # Parsear argumentos
-    parse_arguments "$@"
-
-    # Solo generar script de inicialización si no estamos en modo init
-    if [[ "$MODE" != "init" ]]; then
-        generate_container_init_script
+stop_lang_flags_processes() {
+    log_info "🛑 Verificando procesos lang-flags en curso..."
+    
+    # Buscar procesos con lang-flags.bash (excluyendo el proceso actual)
+    local current_pid=$$
+    local processes=$(pgrep -f "lang-flags.bash" 2>/dev/null || true)
+    
+    # Filtrar el proceso actual
+    if [[ -n "$processes" ]]; then
+        local filtered_processes=""
+        for pid in $processes; do
+            if [[ "$pid" != "$current_pid" ]]; then
+                filtered_processes="$filtered_processes $pid"
+            fi
+        done
+        processes=$(echo "$filtered_processes" | xargs)
     fi
-
-    # Verificar dependencias solo si no estamos en modo init
-    if [[ "$MODE" != "init" ]] && ! check_dependencies_quiet; then
-        log_warning "Algunas dependencias pueden estar faltantes"
-    fi
-
-    # Manejar eventos de Sonarr/Radarr
-    if handle_events; then
-        log_info "Evento añadido a la cola"
-        exit 0
-    fi
-
-    # Determinar modo de ejecución
-    if [ -z "$MODE" ]; then
-        if [ -n "$sonarr_eventtype" ] || [ -n "$radarr_eventtype" ]; then
-            MODE="queue_only"
-        else
-            MODE="all"
-        fi
-    fi
-
-    log_info "Modo de ejecución: $MODE"
-
-    # Ejecutar según el modo
-    case "$MODE" in
-    "init")
-        log_info "Modo inicialización - instalando dependencias y configurando cron"
-        # Instalar dependencias
-        if install_deps; then
-            log_info "✓ Dependencias instaladas correctamente"
-        else
-            log_error "✗ Error instalando dependencias"
+    
+    if [[ -n "$processes" ]]; then
+        log_info "🔍 Encontrados procesos lang-flags en curso: $processes"
+        
+        # Intentar terminar graciosamente primero
+        for pid in $processes; do
+            if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+                log_info "🛑 Terminando proceso graciosamente: $pid"
+                kill -TERM "$pid" 2>/dev/null || true
+            fi
+        done
+        
+        # Esperar un poco para terminación gracil
+        log_info "⏱️ Esperando terminación gracil..."
+        sleep 3
+        
+        # Verificar si siguen activos y forzar terminación
+        local remaining=$(pgrep -f "lang-flags.bash" 2>/dev/null || true)
+        if [[ -n "$remaining" ]]; then
+            # Filtrar el proceso actual nuevamente
+            local filtered_remaining=""
+            for pid in $remaining; do
+                if [[ "$pid" != "$current_pid" ]]; then
+                    filtered_remaining="$filtered_remaining $pid"
+                fi
+            done
+            remaining=$(echo "$filtered_remaining" | xargs)
         fi
         
-        # Configurar cron permanente
-        if setup_queue_processor; then
-            log_info "✓ Sistema inicializado correctamente"
-        else
-            log_error "✗ Error configurando cron permanente"
+        if [[ -n "$remaining" ]]; then
+            log_warning "⚠️ Forzando terminación de procesos restantes: $remaining"
+            for pid in $remaining; do
+                if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+                    log_warning "💀 Terminando proceso forzosamente: $pid"
+                    kill -KILL "$pid" 2>/dev/null || true
+                fi
+            done
         fi
-        ;;
-    "process_queue")
-        standard_queue_processing "cron-job"
-        ;;
-    "monitor")
-        log_info "Monitor iniciado (intervalo: ${MONITOR_INTERVAL}s)"
-        # Asegurar que el cron permanente esté configurado
-        setup_queue_processor
-        # El monitor solo reporta, no procesa automáticamente
-        while true; do
-            log_info "Monitor activo - cron permanente procesando cada 15 minutos"
-            sleep "$MONITOR_INTERVAL"
-        done
-        ;;
-    "queue_only")
-        log_info "Modo solo cola - evento ya procesado"
-        # Solo añadir a cola, el cron permanente se encarga del resto
-        ;;
-    "all" | "movies" | "tvshows")
-        log_info "Procesando todo el contenido disponible"
-        # Procesar todo el contenido
-        if [[ "$MODE" == "all" || "$MODE" == "movies" ]]; then
-            if [ -d "$MOVIES_DIR" ]; then
-                find "$MOVIES_DIR" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" | while read -r video_file; do
-                    process_single_item "$video_file"
-                done
+        
+        # Verificación final
+        sleep 1
+        local final_check=$(pgrep -f "lang-flags.bash" 2>/dev/null || true)
+        if [[ -n "$final_check" ]]; then
+            # Filtrar el proceso actual nuevamente
+            local filtered_final=""
+            for pid in $final_check; do
+                if [[ "$pid" != "$current_pid" ]]; then
+                    filtered_final="$filtered_final $pid"
+                fi
+            done
+            final_check=$(echo "$filtered_final" | xargs)
+        fi
+        
+        if [[ -z "$final_check" ]]; then
+            log_info "✅ Todos los procesos lang-flags han sido detenidos"
+        else
+            log_warning "⚠️ Algunos procesos podrían seguir activos: $final_check"
+        fi
+    else
+        log_info "✅ No se encontraron procesos lang-flags en curso"
+    fi
+    
+    # Limpiar archivos lock si existen
+    if [[ -f "$SCAN_LOCK" ]]; then
+        log_info "🔒 Eliminando lock de escaneo: $SCAN_LOCK"
+        rm -f "$SCAN_LOCK"
+    fi
+    
+    if [[ -f "$PROCESS_LOCK" ]]; then
+        log_info "🔒 Eliminando lock de procesamiento: $PROCESS_LOCK"
+        rm -f "$PROCESS_LOCK"
+    fi
+}
+
+start_atd_service() {
+    log_info "🚀 Iniciando servicio atd..."
+    
+    # Verificar si at está instalado
+    if ! command -v at >/dev/null 2>&1; then
+        log_warning "⚠️ Comando 'at' no encontrado, saltando inicio de atd"
+        return 1
+    fi
+    
+    # Configurar permisos de at para usuarios críticos (root, abc, 1000)
+    local current_user=$(whoami)
+    log_info "🔑 Configurando permisos de 'at' para usuario: $current_user"
+    
+    # Lista de usuarios que deben tener acceso a at
+    local required_users=("root" "abc" "1000" "$current_user")
+    
+    # Asegurar que los usuarios críticos tienen permisos para usar at
+    if [[ -f "/etc/at.allow" ]]; then
+        # Si existe at.allow, añadir usuarios que falten
+        for user in "${required_users[@]}"; do
+            if ! grep -q "^${user}$" /etc/at.allow 2>/dev/null; then
+                echo "$user" >> /etc/at.allow 2>/dev/null || log_warning "⚠️ No se pudo añadir $user a /etc/at.allow"
+                log_info "✅ Usuario $user añadido a /etc/at.allow"
             fi
+        done
+    else
+        # Si no existe at.allow, crearlo con los usuarios críticos
+        {
+            echo "root"
+            echo "abc"
+            echo "1000"
+            echo "$current_user"
+        } > /etc/at.allow 2>/dev/null || log_warning "⚠️ No se pudo crear /etc/at.allow"
+        log_info "✅ Creado /etc/at.allow con usuarios críticos"
+    fi
+    
+    # Remover usuarios críticos de at.deny si existen
+    if [[ -f "/etc/at.deny" ]]; then
+        for user in "${required_users[@]}"; do
+            if grep -q "^${user}$" /etc/at.deny 2>/dev/null; then
+                sed -i "/^${user}$/d" /etc/at.deny 2>/dev/null || log_warning "⚠️ No se pudo modificar /etc/at.deny para $user"
+                log_info "✅ Usuario $user removido de /etc/at.deny"
+            fi
+        done
+    fi
+    
+    # Verificar si atd ya está corriendo
+    if pgrep -x "atd" >/dev/null 2>&1; then
+        log_info "✅ Servicio atd ya está corriendo"
+    else
+        # Intentar iniciar atd
+        if atd >/dev/null 2>&1; then
+            log_info "✅ Servicio atd iniciado exitosamente"
+            
+            # Verificar que efectivamente está corriendo
+            if pgrep -x "atd" >/dev/null 2>&1; then
+                log_info "✅ Servicio atd confirmado en ejecución"
+            else
+                log_error "❌ Servicio atd no se pudo iniciar correctamente"
+                return 1
+            fi
+        else
+            log_error "❌ Error al intentar iniciar servicio atd"
+            return 1
+        fi
+    fi
+    
+    # Test de permisos de at
+    log_info "🧪 Verificando permisos de 'at'..."
+    local test_output
+    test_output=$(echo "echo 'test'" | at "now + 1 minute" 2>&1)
+    local test_exit_code=$?
+    
+    if [[ $test_exit_code -eq 0 ]]; then
+        log_info "✅ Permisos de 'at' verificados correctamente"
+        # Limpiar la tarea de test
+        local job_id=$(echo "$test_output" | grep -o "job [0-9]*" | grep -o "[0-9]*")
+        if [[ -n "$job_id" ]]; then
+            atrm "$job_id" 2>/dev/null
+            log_debug "🧹 Tarea de test $job_id eliminada"
+        fi
+        return 0
+    else
+        log_error "❌ Test de permisos de 'at' falló: $test_output"
+        return 1
+    fi
+}
+
+setup_dependencies() {
+    log_info "🔧 Iniciando instalación de dependencias para Lang-Flags..."
+
+    # Detener procesos lang-flags en curso antes de continuar
+    stop_lang_flags_processes
+
+    # Crear script de auto-setup primero
+    create_autosetup_script
+
+    # Detectar el gestor de paquetes disponible
+    local package_manager=""
+    if command -v apt-get >/dev/null 2>&1; then
+        package_manager="apt"
+    elif command -v apk >/dev/null 2>&1; then
+        package_manager="apk"
+    elif command -v yum >/dev/null 2>&1; then
+        package_manager="yum"
+    else
+        log_error "❌ No se detectó un gestor de paquetes compatible (apt, apk, yum)"
+        return 1
+    fi
+
+    log_info "📦 Gestor de paquetes detectado: $package_manager"
+
+    # Lista de paquetes necesarios por gestor
+    local packages_apt="libimage-exiftool-perl imagemagick librsvg2-bin ffmpeg mediainfo mkvtoolnix jq at"
+    local packages_apk="exiftool imagemagick librsvg rsvg-convert ffmpeg mediainfo mkvtoolnix jq at"
+    local packages_yum="perl-Image-ExifTool ImageMagick librsvg2-tools ffmpeg mediainfo mkvtoolnix jq at"
+
+    # Instalar según el gestor de paquetes
+    case "$package_manager" in
+    "apt")
+        log_info "🔄 Actualizando repositorios apt..."
+        if ! apt-get update >/dev/null 2>&1; then
+            log_warning "⚠️ No se pudo actualizar repositorios (puede ser por permisos)"
         fi
 
-        if [[ "$MODE" == "all" || "$MODE" == "tvshows" ]]; then
-            if [ -d "$SERIES_DIR" ]; then
-                find "$SERIES_DIR" -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" | while read -r video_file; do
-                    process_single_item "$video_file"
-                done
+        log_info "📥 Instalando paquetes: $packages_apt"
+        if apt-get install -y $packages_apt >/dev/null 2>&1; then
+            log_info "✅ Paquetes APT instalados exitosamente"
+        else
+            log_error "❌ Error instalando paquetes APT"
+            return 1
+        fi
+        ;;
+    "apk")
+        log_info "🔄 Actualizando repositorios apk..."
+        if ! apk update >/dev/null 2>&1; then
+            log_warning "⚠️ No se pudo actualizar repositorios (puede ser por permisos)"
+        fi
+
+        log_info "📥 Instalando paquetes: $packages_apk"
+        if apk add $packages_apk >/dev/null 2>&1; then
+            log_info "✅ Paquetes APK instalados exitosamente"
+        else
+            log_error "❌ Error instalando paquetes APK"
+            return 1
+        fi
+        ;;
+    "yum")
+        log_info "📥 Instalando paquetes: $packages_yum"
+        if yum install -y $packages_yum >/dev/null 2>&1; then
+            log_info "✅ Paquetes YUM instalados exitosamente"
+        else
+            log_error "❌ Error instalando paquetes YUM"
+            return 1
+        fi
+        ;;
+    esac
+
+    # Verificar instalación
+    log_info "🔍 Verificando dependencias instaladas..."
+    if check_dependencies; then
+        log_info "✅ ¡Todas las dependencias están correctamente instaladas!"
+        
+        # Iniciar servicio atd si está disponible
+        start_atd_service
+        
+        # Programar escaneo inicial apropiado según el contenedor
+        local container_type=$(detect_container_type)
+        case "$container_type" in
+        "radarr")
+            log_info "🎬 Programando escaneo inicial de películas..."
+            schedule_process "movies"
+            ;;
+        "sonarr")
+            log_info "📺 Programando escaneo inicial de series..."
+            schedule_process "series"
+            ;;
+        *)
+            log_info "🎭 Programando escaneo inicial completo..."
+            schedule_process "all"
+            ;;
+        esac
+        
+        log_info "🚀 Lang-Flags está listo para usar"
+        return 0
+    else
+        log_error "❌ Algunas dependencias siguen faltando después de la instalación"
+        return 1
+    fi
+}
+
+# =============================================================================
+# FUNCIONES AUXILIARES PARA GESTIÓN DE PROGRAMACIONES AT
+# =============================================================================
+
+get_langflags_job_count() {
+    local job_count=0
+    while IFS= read -r job_line; do
+        if [[ -n "$job_line" ]]; then
+            local job_id=$(echo "$job_line" | awk '{print $1}')
+            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags.bash"; then
+                ((job_count++))
             fi
+        fi
+    done < <(atq 2>/dev/null)
+    echo "$job_count"
+}
+
+cancel_all_langflags_jobs() {
+    local cancelled_count=0
+    while IFS= read -r job_line; do
+        if [[ -n "$job_line" ]]; then
+            local job_id=$(echo "$job_line" | awk '{print $1}')
+            if at -c "$job_id" 2>/dev/null | grep -q "lang-flags.bash"; then
+                if atrm "$job_id" 2>/dev/null; then
+                    log_debug "✓ Cancelada tarea lang-flags: $job_id"
+                    ((cancelled_count++))
+                else
+                    log_warning "⚠️ No se pudo cancelar tarea: $job_id"
+                fi
+            fi
+        fi
+    done < <(atq 2>/dev/null)
+    echo "$cancelled_count"
+}
+
+# =============================================================================
+# SISTEMA DE PROGRAMACIÓN AUTOMÁTICA CON 'at' - VERSIÓN ROBUSTA
+# =============================================================================
+
+schedule_process() {
+    local command="$1"
+    local custom_delay="${2:-$SCHEDULE_DELAY_MINUTES}"  # Usar delay personalizado o el por defecto
+    
+    # Verificar si el comando 'at' está disponible
+    if ! command -v at >/dev/null 2>&1; then
+        log_warning "⚠️ Comando 'at' no disponible - programación automática deshabilitada"
+        return 1
+    fi
+    
+    # Verificar si el servicio atd está ejecutándose
+    if ! pgrep -x "atd" >/dev/null 2>&1; then
+        log_warning "⚠️ Servicio atd no está ejecutándose - programación automática deshabilitada"
+        return 1
+    fi
+    
+    # PASO 1: CANCELAR TODAS LAS TAREAS LANG-FLAGS EXISTENTES (OBLIGATORIO)
+    log_info "🗑️ Eliminando TODAS las programaciones lang-flags existentes..."
+    
+    # Usar función auxiliar para cancelar todas las tareas
+    local cancelled_count=$(cancel_all_langflags_jobs)
+    
+    if [[ $cancelled_count -gt 0 ]]; then
+        log_info "🗑️ Canceladas $cancelled_count tarea(s) lang-flags existente(s)"
+    else
+        log_debug "✓ No se encontraron tareas lang-flags para cancelar"
+    fi
+    
+    # PASO 2: VERIFICACIÓN FINAL - ASEGURAR QUE NO QUEDAN TAREAS
+    local final_job_count=$(get_langflags_job_count)
+    
+    if [[ "$final_job_count" -gt 0 ]]; then
+        log_error "❌ ERROR CRÍTICO: Todavía quedan $final_job_count tareas lang-flags después de la limpieza"
+        log_error "❌ NO se programará nueva tarea para evitar múltiples programaciones"
+        return 1
+    fi
+    
+    log_info "✅ Confirmado: 0 tareas lang-flags existentes, procediendo con programación"
+    
+    # PASO 3: PROGRAMAR NUEVA TAREA ÚNICA
+    log_info "⏰ Programando procesamiento automático ÚNICO en ${custom_delay} minuto(s)..."
+    local schedule_time="now + ${custom_delay} minutes"
+    local script_path="/flags/lang-flags.bash"
+    
+    # Crear comando completo con identificador único
+    local full_command="cd /flags && bash $script_path $command"
+    
+    log_debug "DEBUG: Comando a programar: $full_command"
+    log_debug "DEBUG: Tiempo programado: $schedule_time"
+    
+    # Programar tarea - capturar stderr para debug
+    local at_output
+    local at_exit_code
+    at_output=$(echo "$full_command" | at "$schedule_time" 2>&1)
+    at_exit_code=$?
+    
+    log_debug "DEBUG: Salida de at: $at_output"
+    log_debug "DEBUG: Exit code de at: $at_exit_code"
+    
+    if [[ $at_exit_code -eq 0 ]]; then
+        log_debug "DEBUG: Comando at ejecutado exitosamente"
+        # PASO 4: VERIFICACIÓN POST-PROGRAMACIÓN
+        local post_job_count=$(get_langflags_job_count)
+        
+        if [[ "$post_job_count" -eq 1 ]]; then
+            log_info "✅ Programación exitosa: 1 tarea lang-flags activa (correcto)"
+            return 0
+        else
+            log_error "❌ ERROR: Después de programar hay $post_job_count tareas lang-flags activas"
+            log_error "❌ Se esperaba exactamente 1 tarea, cancelando todas para evitar duplicados"
+            
+            # Cancelar todas las tareas para evitar múltiples programaciones
+            local cleanup_count=$(cancel_all_langflags_jobs)
+            log_warning "⚠️ Se cancelaron $cleanup_count tareas por seguridad"
+            
+            return 1
+        fi
+    else
+        log_error "❌ Error programando procesamiento automático (exit code: $at_exit_code)"
+        log_error "❌ Salida de at: $at_output"
+        log_debug "DEBUG: Comando fallido: echo '$full_command' | at '$schedule_time'"
+        return 1
+    fi
+}
+
+is_queue_empty() {
+    local container_type=$(detect_container_type)
+    
+    # Verificar colas según el contenedor
+    case "$container_type" in
+    "radarr")
+        # Solo verificar cola de Radarr
+        if [[ -f "$RADARR_QUEUE" ]] && [[ -s "$RADARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
+        fi
+        ;;
+    "sonarr")
+        # Solo verificar cola de Sonarr
+        if [[ -f "$SONARR_QUEUE" ]] && [[ -s "$SONARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
         fi
         ;;
     *)
-        log_error "Modo desconocido: $MODE"
+        # Contenedor desconocido - verificar ambas colas
+        if [[ -f "$RADARR_QUEUE" ]] && [[ -s "$RADARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
+        fi
+        if [[ -f "$SONARR_QUEUE" ]] && [[ -s "$SONARR_QUEUE" ]]; then
+            return 1  # Cola no vacía
+        fi
+        # Verificar cola genérica también
+        if [[ -f "$QUEUE_DIR/generic.queue" ]] && [[ -s "$QUEUE_DIR/generic.queue" ]]; then
+            return 1  # Cola no vacía
+        fi
+        ;;
+    esac
+    
+    return 0  # Cola vacía
+}
+
+# =============================================================================
+# SISTEMA DE GESTIÓN DE COLAS
+# =============================================================================
+
+add_to_queue() {
+    local media_path="$1"
+    local media_type="$2" # "movie" o "tvshow"
+
+    # Determinar archivo de cola según el TIPO DE MEDIA, no el contenedor
+    local queue_file=""
+    case "$media_type" in
+    "movie")
+        queue_file="$RADARR_QUEUE"
+        ;;
+    "tvshow")
+        queue_file="$SONARR_QUEUE"
+        ;;
+    *)
+        # Tipo desconocido, usar cola genérica
+        queue_file="$QUEUE_DIR/generic.queue"
+        ;;
+    esac
+
+    # Crear directorio de cola si no existe
+    mkdir -p "$QUEUE_DIR"
+
+    # Formato: timestamp|media_type|media_path
+    local timestamp=$(date +%s)
+    local queue_entry="${timestamp}|${media_type}|${media_path}"
+
+    # Verificar si el item ya está en la cola (verificación exacta por ruta completa)
+    if [[ -f "$queue_file" ]] && grep -Fxq "${media_type}|${media_path}" <(cut -d'|' -f2,3 "$queue_file") 2>/dev/null; then
+        log_debug "Item ya en cola: $media_path"
+        return 0
+    fi
+
+    # Añadir a la cola
+    echo "$queue_entry" >>"$queue_file"
+    log_info "✓ Añadido a cola: $(basename "$media_path") (tipo: $media_type)"
+    return 0
+}
+
+process_queue() {
+    local container_type=$(detect_container_type)
+
+    # Determinar archivo de cola según el contenedor
+    local queue_file=""
+    case "$container_type" in
+    "radarr")
+        queue_file="$RADARR_QUEUE"
+        ;;
+    "sonarr")
+        queue_file="$SONARR_QUEUE"
+        ;;
+    *)
+        # Procesar todas las colas disponibles
+        local queue_files=("$RADARR_QUEUE" "$SONARR_QUEUE" "$QUEUE_DIR/generic.queue")
+        for qf in "${queue_files[@]}"; do
+            if [[ -f "$qf" ]]; then
+                process_single_queue "$qf"
+            fi
+        done
+        
+        # Después de procesar todas las colas, verificar si hay más elementos
+        if ! is_queue_empty; then
+            log_info "🔄 Cola no vacía - reprogramando siguiente procesamiento"
+            schedule_process "process"
+        else
+            log_info "✅ Cola vacía - no se requiere reprogramación"
+        fi
+        return $?
+        ;;
+    esac
+
+    # Procesar cola específica del contenedor
+    if [[ -f "$queue_file" ]]; then
+        process_single_queue "$queue_file"
+    else
+        log_info "No hay cola para procesar: $queue_file"
+        return 0
+    fi
+
+    # Después de procesar, verificar si hay más elementos en cola
+    if ! is_queue_empty; then
+        log_info "🔄 Cola no vacía - reprogramando siguiente procesamiento"
+        schedule_process "process"
+    else
+        log_info "✅ Cola vacía - no se requiere reprogramación"
+    fi
+}
+
+process_single_queue() {
+    local queue_file="$1"
+
+    if [[ ! -f "$queue_file" ]]; then
+        return 0
+    fi
+
+    # Contar items en cola
+    local queue_count=$(wc -l <"$queue_file" 2>/dev/null || echo "0")
+    if [[ "$queue_count" -eq 0 ]]; then
+        log_info "Cola vacía: $(basename "$queue_file")"
+        return 0
+    fi
+
+    log_info "📋 Procesando cola: $(basename "$queue_file") ($queue_count items)"
+
+    local processed_count=0
+    local skipped_count=0
+    local max_attempts="$queue_count"  # Evitar bucles infinitos
+    local attempts=0
+
+    # Crear archivo temporal para items que no están listos
+    local temp_queue="$queue_file.tmp.$$"
+    
+    # Procesar línea por línea, manejando items no listos apropiadamente
+    while [[ -s "$queue_file" ]] && [[ "$attempts" -lt "$max_attempts" ]]; do
+        # Leer primera línea
+        local line=$(head -n 1 "$queue_file")
+        
+        # Eliminar primera línea del archivo
+        sed -i '1d' "$queue_file"
+        
+        # Parsear línea
+        IFS='|' read -r timestamp media_type media_path <<< "$line"
+        
+        # Validar formato de entrada
+        if [[ -z "$media_type" || -z "$media_path" ]]; then
+            log_warning "Entrada de cola inválida: $line"
+            ((attempts++))
+            continue
+        fi
+
+        log_info "🎬 Procesando desde cola: $(basename "$media_path") (tipo: $media_type)"
+
+        # Procesar item
+        if process_media_item "$media_path" "$media_type"; then
+            log_debug "✓ Item procesado exitosamente: $media_path"
+            ((processed_count++))
+        else
+            log_info "⏭️ Item no listo - saltando temporalmente: $(basename "$media_path")"
+            # Guardar en archivo temporal para reintento posterior
+            echo "$line" >> "$temp_queue"
+            ((skipped_count++))
+        fi
+        
+        ((attempts++))
+    done
+
+    # Si hay items no listos, devolverlos a la cola original
+    if [[ -f "$temp_queue" ]] && [[ -s "$temp_queue" ]]; then
+        cat "$temp_queue" >> "$queue_file"
+        rm -f "$temp_queue"
+        log_info "📝 $skipped_count item(s) no listos - permanecen en cola para reintento posterior"
+    else
+        rm -f "$temp_queue" 2>/dev/null
+    fi
+
+    log_info "✅ Procesamiento completado: $processed_count procesados, $skipped_count saltados"
+    return 0
+}
+
+scan_and_queue() {
+    local media_dir="$1"
+    local media_type="$2" # "movie" o "tvshow"
+    local force_process="$3"
+
+    log_info "🔍 Escaneando directorio para añadir a cola: $media_dir (tipo: $media_type)"
+
+    if [[ ! -d "$media_dir" ]]; then
+        log_warning "Directorio no encontrado: $media_dir"
+        return 1
+    fi
+
+    # Si está en modo force, solo limpiar EXIF (durante procesamiento)
+    if [[ "$force_process" == "true" ]]; then
+        log_info "🧹 Modo force: EXIF se limpiará durante el procesamiento"
+        # NOTA: No limpiamos EXIF masivamente aquí, se sobreescribe durante el procesamiento
+    fi
+
+    local queued_count=0
+    local skipped_count=0
+    local scanned_count=0
+
+    log_info "🔍 Iniciando escaneo de archivos de video..."
+
+    # Escanear archivos de video en el directorio
+    while IFS= read -r media_file; do
+        ((scanned_count++))
+
+        # Log de progreso cada 10 archivos escaneados
+        if ((scanned_count % 10 == 0)); then
+            local current_queue_count=$(get_total_queue_count)
+            log_info "📊 Progreso: $scanned_count archivos escaneados, $queued_count añadidos, total en cola: $current_queue_count"
+        fi
+
+        # Filtrar trailers, extras y otros archivos secundarios que no necesitan overlays
+        if [[ "$media_file" =~ (trailer|extra|behind.the.scene|other|featurette|deleted.scene|making.of|teaser) ]]; then
+            log_debug "Saltando archivo secundario: $(basename "$media_file")"
+            continue
+        fi
+
+        if [[ "$media_file" =~ \.(mkv|mp4|avi|m4v)$ ]]; then
+
+            # Con force, añadir todo a la cola sin verificar cache
+            if [[ "$force_process" == "true" ]]; then
+                add_to_queue "$media_file" "$media_type"
+                ((queued_count++))
+                log_debug "Force: añadido a cola: $(basename "$media_file")"
+            else
+                # Sin force, verificar cache antes de añadir a cola
+                if needs_processing "$media_file" "$media_type" "false"; then
+                    add_to_queue "$media_file" "$media_type"
+                    ((queued_count++))
+                    log_debug "Cache MISS: añadido a cola: $(basename "$media_file")"
+                else
+                    ((skipped_count++))
+                    log_debug "Cache HIT: saltado: $(basename "$media_file")"
+                fi
+            fi
+
+        fi
+    done < <(find "$media_dir" -type f -name "*.mkv" -o -name "*.mp4" -o -name "*.avi" -o -name "*.m4v")
+
+    log_info "📋 Escaneo completado: $queued_count añadidos a cola, $skipped_count saltados por cache"
+    return 0
+}
+
+process_webhook_event() {
+    # Detectar tipo de evento y archivo desde variables de entorno
+    local event_file=""
+    local media_type=""
+    local event_type=""
+
+    # Variables de Radarr
+    if [[ -n "$radarr_eventtype" && -n "$radarr_moviefile_path" ]]; then
+        event_file="$radarr_moviefile_path"
+        media_type="movie"
+        event_type="$radarr_eventtype"
+        log_info "📡 Evento Radarr detectado: $radarr_eventtype"
+        log_debug "Archivo de evento: $event_file"
+
+    # Variables de Sonarr
+    elif [[ -n "$sonarr_eventtype" && -n "$sonarr_episodefile_path" ]]; then
+        event_file="$sonarr_episodefile_path"
+        media_type="tvshow"
+        event_type="$sonarr_eventtype"
+        log_info "📺 Evento Sonarr detectado: $sonarr_eventtype"
+        log_debug "Archivo de evento: $event_file"
+
+    else
+        log_warning "No se detectaron variables de evento de webhook"
+        return 1
+    fi
+
+    # Validar que el archivo existe
+    if [[ ! -f "$event_file" ]]; then
+        log_warning "Archivo de evento no encontrado: $event_file"
+        return 1
+    fi
+
+    # Añadir siempre a cola (sin verificar cache para webhooks)
+    # La lógica EXIF inteligente en process_media_item() determinará si procesar o esperar
+    add_to_queue "$event_file" "$media_type"
+    log_info "✓ Evento añadido a cola para procesamiento"
+
+    # Borrar imágenes que se van a editar (folder, backdrop, thumbnail, etc.)
+    delete_images_for_webhook "$event_file" "$media_type"
+
+    # Usar delay específico para webhooks (mínimo 5 minutos)
+    local schedule_delay="$SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK"
+    
+    # Incrementar delay para eventos de actualización/upgrade para dar aún más tiempo
+    # a Jellyfin para descargar/actualizar metadata e imágenes
+    case "${event_type,,}" in
+        *upgrade*|*update*|*replace*)
+            schedule_delay=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK * 2))
+            log_info "📝 Evento de actualización detectado: delay extendido a ${schedule_delay} minutos"
+            ;;
+        *)
+            log_debug "Evento estándar: delay webhook de ${schedule_delay} minutos"
+            ;;
+    esac
+
+    # Programar procesamiento automático con delay apropiado
+    log_debug "DEBUG WEBHOOK: Antes de llamar schedule_process (delay: ${schedule_delay}m)"
+    if schedule_process "process" "$schedule_delay"; then
+        log_debug "DEBUG WEBHOOK: schedule_process exitoso"
+    else
+        log_error "DEBUG WEBHOOK: schedule_process FALLÓ"
+    fi
+    log_debug "DEBUG WEBHOOK: Después de llamar schedule_process"
+
+    return 0
+}
+
+# =============================================================================
+# PROCESAMIENTO PRINCIPAL
+# =============================================================================
+
+process_media_item() {
+    local media_path="$1"
+    local media_type="$2" # "movie" o "tvshow"
+
+    log_info "Procesando $media_type: $media_path"
+
+    # 1. Verificar que no sea trailer o contenido extra
+    if is_trailer_or_extra "$media_path"; then
+        log_debug "Omitiendo trailer/extra: $(basename "$media_path")"
+        return 0 # Retornar éxito pero no procesar
+    fi
+
+    # 2. Verificar que exista el archivo de video
+    if [[ ! -f "$media_path" ]]; then
+        log_warning "Archivo de video no encontrado: $media_path"
+        return 1
+    fi
+
+    # 3. Encontrar imágenes correspondientes
+    local poster_images_result
+    if ! poster_images_result=$(find_poster_image "$media_path" "$media_type"); then
+        log_warning "No se encontraron imágenes poster para: $media_path"
+        return 1
+    fi
+
+    # 4. Convertir resultado a array (separado por ;)
+    local poster_images=()
+    IFS=';' read -ra poster_images <<<"$poster_images_result"
+
+    # 5. Verificar que al menos una imagen existe
+    local valid_images=()
+    for image in "${poster_images[@]}"; do
+        if [[ -f "$image" ]]; then
+            valid_images+=("$image")
+        else
+            log_warning "Imagen poster no encontrada: $image"
+        fi
+    done
+
+    if [[ ${#valid_images[@]} -eq 0 ]]; then
+        log_warning "No se encontraron imágenes válidas para: $media_path"
+        return 1
+    fi
+
+    # 6. Extraer idiomas del archivo de video (solo audio tracks)
+    log_debug "Extrayendo idiomas de: $media_path"
+    local detected_langs
+    if ! detected_langs=$(detect_languages_from_video "$media_path"); then
+        log_warning "No se pudieron detectar idiomas para: $media_path"
+        return 1
+    fi
+
+    # 7. Convertir string de idiomas a array
+    local languages=()
+    read -ra languages <<<"$detected_langs"
+
+    if [[ ${#languages[@]} -eq 0 ]]; then
+        log_warning "No se detectaron idiomas para procesar: $media_path"
+        return 1
+    fi
+
+    log_info "Aplicando overlays para idiomas: ${languages[*]} en ${#valid_images[@]} imagen(es) (${media_type})"
+
+    # VERIFICACIÓN CRÍTICA: Comprobar que Jellyfin haya terminado de procesar las imágenes
+    log_debug "🔍 Verificando estado de imágenes para Jellyfin..."
+    
+    local video_filename=$(basename "$media_path")
+    local jellyfin_ready=true
+
+    for poster_image in "${valid_images[@]}"; do
+        local current_exif=$(exiftool -f -s3 -"UserComment" "$poster_image" 2>/dev/null)
+        local expected_exif="LangFlags:$video_filename"
+        
+        log_debug "EXIF Debug - Archivo: $(basename "$poster_image")"
+        log_debug "EXIF Debug - Actual: '$current_exif'"
+        log_debug "EXIF Debug - Esperado: '$expected_exif'"
+        
+        # Considerar EXIF vacío: cadena vacía, "-", o solo espacios
+        if [[ -n "$current_exif" ]] && [[ "$current_exif" != "-" ]] && [[ "${current_exif// /}" != "" ]]; then
+            # EXIF no vacío - verificar si coincide
+            if [[ "$current_exif" != "$expected_exif" ]]; then
+                log_info "⏳ Jellyfin aún procesando imagen: $(basename "$poster_image") (EXIF: $current_exif)"
+                jellyfin_ready=false
+                break
+            else
+                log_debug "✅ Imagen ya procesada correctamente: $(basename "$poster_image")"
+            fi
+        else
+            log_debug "✅ Imagen lista para procesar (EXIF vacío o '-'): $(basename "$poster_image")"
+        fi
+    done
+
+    # Si Jellyfin aún está procesando, devolver error temporal para reintentar después
+    if [[ "$jellyfin_ready" == "false" ]]; then
+        log_info "🔄 Jellyfin aún procesando imágenes - item permanece en cola para reintento"
+        return 1  # Error temporal - item permanece en cola
+    fi
+
+    # Obtener identificador del video para marcar en las imágenes (usando cache optimizado)
+    local video_identifier
+    video_identifier=$(get_video_identifier_cached "$media_path" 2>/dev/null)
+    if [[ -z "$video_identifier" ]]; then
+        log_warning "No se pudo obtener identificador del video: $media_path"
+        video_identifier=""
+    fi
+
+    # 8. Aplicar overlays a cada imagen válida
+    local success_count=0
+    for poster_image in "${valid_images[@]}"; do
+        log_debug "Procesando imagen: $poster_image"
+
+        if apply_language_overlays "$poster_image" "${languages[@]}"; then
+            # Marcar imagen como procesada guardando la ruta del archivo de video
+            if [[ -n "$video_identifier" ]]; then
+                if update_image_exif_filename "$poster_image" "$video_identifier"; then
+                    log_debug "Identificador guardado en EXIF: $poster_image"
+                else
+                    log_warning "No se pudo guardar identificador en: $poster_image"
+                fi
+            else
+                log_warning "No hay identificador del video para guardar"
+            fi
+            ((success_count++))
+            log_debug "✓ Overlay aplicado exitosamente: $poster_image"
+        else
+            log_warning "Error aplicando overlay: $poster_image"
+        fi
+    done
+
+    # 9. Verificar resultado final
+    if [[ $success_count -gt 0 ]]; then
+        log_info "✓ Procesamiento completado para: $media_path ($success_count/${#valid_images[@]} imágenes procesadas)"
+        return 0
+    else
+        log_warning "Error: No se pudo procesar ninguna imagen para: $media_path"
+        return 1
+    fi
+}
+
+# =============================================================================
+# FUNCIONES OPTIMIZADAS
+# =============================================================================
+
+# Función optimizada con filtros previos + cache externo
+# =============================================================================
+# FUNCIONES DE PROCESAMIENTO POR TIPO
+# =============================================================================
+
+process_movies() {
+    local force_process="$1"
+
+    log_info "Procesando películas..."
+
+    # Escanear y añadir a cola SOLAMENTE
+    scan_and_queue "$MOVIES_DIR" "movie" "$force_process"
+
+    # NO procesar cola - solo añadir
+    
+    # Programar procesamiento automático
+    schedule_process "process"
+}
+
+process_series() {
+    local force_process="$1"
+
+    log_info "Procesando series..."
+
+    # Escanear y añadir a cola SOLAMENTE
+    scan_and_queue "$SERIES_DIR" "tvshow" "$force_process"
+
+    # NO procesar cola - solo añadir
+    
+    # Programar procesamiento automático
+    schedule_process "process"
+}
+
+process_all() {
+    local force_process="$1"
+
+    log_info "Procesando toda la biblioteca multimedia..."
+
+    # Escanear y añadir a cola ambos tipos SOLAMENTE
+    scan_and_queue "$MOVIES_DIR" "movie" "$force_process"
+    scan_and_queue "$SERIES_DIR" "tvshow" "$force_process"
+
+    # NO procesar cola - solo añadir
+    
+    # Programar procesamiento automática
+    schedule_process "process"
+}
+
+show_usage() {
+    cat <<EOF
+Uso: $(basename "$0") [COMANDO] [OPCIONES]
+
+COMANDOS:
+    movies          Escanear y añadir películas a cola (NO procesa)
+    series          Escanear y añadir series a cola (NO procesa)
+    all             Escanear y añadir toda la biblioteca a cola (NO procesa)
+    process         Procesar colas existentes SIN escanear nuevos archivos
+    webhook         Procesar evento específico de webhook (SOLO añade a cola)
+    setup           Instalar dependencias necesarias (exiftool, imagemagick, etc.)
+    
+    Si no se especifica comando:
+    - Con variables de webhook: añade evento específico a cola
+    - Sin variables de webhook: añade toda la biblioteca a cola
+
+OPCIONES:
+    -f, --force     Forzar reprocesamiento:
+                   - Limpia cache EXIF
+                   - Añade todo a cola sin verificar cache
+                   - Procesa todo ignorando optimizaciones
+    -h, --help      Mostrar esta ayuda
+
+SISTEMA DE PROGRAMACIÓN AUTOMÁTICA:
+    - Los comandos movies, series, all programan automáticamente
+      el procesamiento usando 'at' en ${SCHEDULE_DELAY_MINUTES} minuto(s)
+    - Los webhooks programan automáticamente el procesamiento con delay
+      específico de ${SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK} minutos (mínimo 5 min)
+    - Para eventos de actualización/upgrade, el delay se duplica automáticamente
+      (webhooks: ${SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK}×2=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK * 2)) min)
+    - Webhooks borran automáticamente las imágenes que se van a editar
+      (folder, backdrop, thumbnail, etc.) antes de programar el procesamiento
+    - Después de procesar, si hay más elementos en cola, se reprograma
+      automáticamente para otro ciclo de procesamiento
+    - El setup programa automáticamente un escaneo inicial apropiado
+      según el tipo de contenedor (radarr=movies, sonarr=series, otro=all)
+
+ARCHIVOS:
+    Cola Radarr:    $RADARR_QUEUE
+    Cola Sonarr:    $SONARR_QUEUE
+    Logs:           $LOG_DIR/lang-flags-YYYYMMDD.log
+    Cache:          $DATA_DIR/lang-flags-cache.txt
+    Directorio:     $BASE_DIR
+
+DEPENDENCIAS:
+    exiftool, imagemagick, rsvg-convert, ffmpeg, mediainfo, mkvtoolnix, jq, at
+
+EJEMPLOS:
+    $(basename "$0") movies -f    # Forzar reprocesamiento películas
+    $(basename "$0") setup        # Instalar dependencias + escaneo inicial
+    $(basename "$0") process      # Procesar colas existentes
+    $(basename "$0")              # Añadir toda la biblioteca a cola
+
+Para más información, revisar logs en: $LOG_DIR
+
+EJEMPLOS:
+    $(basename "$0")                    # Auto-detectar: webhook o biblioteca completa (SOLO añade a cola)
+    $(basename "$0") movies             # Escanear películas → añadir a cola (NO procesa)
+    $(basename "$0") series -f          # Escanear series forzado → añadir a cola (NO procesa)
+    $(basename "$0") all --force        # Biblioteca completa forzado → añadir a cola (NO procesa)
+    $(basename "$0") process            # Procesar colas existentes (sin escanear)
+    $(basename "$0") setup              # Instalar dependencias necesarias
+
+FLUJO DEL SISTEMA:
+    1. ESCANEO: Verificar cache y añadir items necesarios a cola
+    2. COLA: Items pendientes de procesamiento
+    3. PROCESAMIENTO: Solo con comando 'process' - aplicar overlays y actualizar cache
+    
+    - Sin -f: Solo añade a cola items que no están en cache
+    - Con -f: Añade TODO a cola sin verificar cache
+    - Webhook: Añade SIEMPRE a cola sin verificar cache
+    - Solo 'process' procesa la cola
+
+NOTAS:
+    - Los logs se guardan en: $LOG_DIR
+    - Cache EXIF: UserComment en metadatos de imagen
+    - Colas por contenedor: $RADARR_QUEUE / $SONARR_QUEUE
+EOF
+}
+
+# =============================================================================
+# FUNCIÓN PRINCIPAL Y PARSEO DE ARGUMENTOS
+# =============================================================================
+
+get_total_queue_count() {
+    local radarr_count=0
+    local sonarr_count=0
+
+    if [[ -f "$RADARR_QUEUE" ]]; then
+        radarr_count=$(wc -l <"$RADARR_QUEUE" 2>/dev/null || echo "0")
+    fi
+
+    if [[ -f "$SONARR_QUEUE" ]]; then
+        sonarr_count=$(wc -l <"$SONARR_QUEUE" 2>/dev/null || echo "0")
+    fi
+
+    echo $((radarr_count + sonarr_count))
+}
+
+main() {
+    local command=""
+    local force_process="false"
+
+    # Parsear argumentos
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+        movies | series | all | webhook | setup | process)
+            command="$1"
+            shift
+            ;;
+        -f | --force)
+            force_process="true"
+            shift
+            ;;
+        -h | --help)
+            show_usage
+            exit 0
+            ;;
+        *)
+            log_error "Argumento desconocido: $1"
+            show_usage
+            exit 1
+            ;;
+        esac
+    done
+
+    # Si no se especifica comando, detectar si es webhook o procesamiento completo
+    if [[ -z "$command" ]]; then
+        # Si hay variables de webhook, procesar evento específico
+        if [[ -n "$radarr_eventtype" || -n "$sonarr_eventtype" ]]; then
+            command="webhook"
+        else
+            # Sin webhook, procesar toda la biblioteca
+            command="all"
+        fi
+    fi
+
+    # Crear directorios necesarios
+    create_dirs
+
+    # Configurar logging
+    setup_logging
+
+    log_info "Iniciando Lang-Flags - Versión $SCRIPT_VERSION"
+    log_info "Comando: $command | Forzar: $force_process"
+
+    # BLOQUEO: Solo una instancia por contenedor (excepto setup que maneja sus propios locks)
+    if [[ "$command" != "setup" ]]; then
+        log_info "🔒 Verificando bloqueo de instancia única..."
+        log_info "⏳ Esperando indefinidamente a que termine la ejecución anterior (si existe)..."
+        
+        # Esperar indefinidamente hasta obtener el lock (bloqueo)
+        if ! acquire_lock "$PROCESS_LOCK" 86400 "lang-flags-main"; then
+            log_error "❌ No se pudo obtener el bloqueo después de 24 horas"
+            log_error "❌ Proceso abortado por timeout"
+            exit 1
+        fi
+        
+        # Configurar limpieza automática al salir
+        trap cleanup_locks EXIT
+        log_info "✅ Bloqueo adquirido - instancia única confirmada"
+    fi
+
+    # Ejecutar comando correspondiente
+    case "$command" in
+    webhook)
+        # Procesar evento de webhook específico (SOLO añadir a cola)
+        process_webhook_event
+        # NO procesar cola - se procesa en otro momento
+        ;;
+    process)
+        # Procesar colas existentes SIN escanear nuevos archivos
+        log_info "🔄 Procesando colas existentes..."
+        process_queue
+        ;;
+    movies)
+        process_movies "$force_process"
+        ;;
+    series)
+        process_series "$force_process"
+        ;;
+    all)
+        process_all "$force_process"
+        ;;
+    setup)
+        setup_dependencies
+        ;;
+    *)
+        log_error "Comando desconocido: $command"
+        show_usage
         exit 1
         ;;
     esac
 
-    log_info "=== $scriptName completado ==="
+    log_info "Proceso completado. Revisar logs en $LOG_DIR"
 }
 
-# ========================
-# Script Execution
-# ========================
-
-# Manejar interrupciones
-trap 'log_info "Script interrumpido - limpiando..."; exit 1' INT TERM
+# =============================================================================
+# EJECUCIÓN PRINCIPAL
+# =============================================================================
 
 # Ejecutar función principal con todos los argumentos
 main "$@"
