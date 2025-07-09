@@ -103,7 +103,8 @@ readonly POSTER_MAX_SIZE="2560x1440"
 readonly PROCESSING_DELAY=10
 
 # Configuración de programación automática
-readonly SCHEDULE_DELAY_MINUTES=2  # Tiempo en minutos para programar tareas con 'at' (aumentado para evitar solapamientos)
+readonly SCHEDULE_DELAY_MINUTES=1  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
+readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=1  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
 
 # =============================================================================
 # SISTEMA DE LOGGING
@@ -510,7 +511,7 @@ apply_language_overlays() {
 
     # REDIMENSIONAR A ALTURA ESTÁNDAR para consistencia visual
     # Altura estándar objetivo (ajustable según necesidades)
-    local target_height=1200
+    local target_height=1000
 
     # Calcular nuevo ancho manteniendo proporción usando aritmética entera
     # aspect_ratio = width / height * 1000 (para precisión)
@@ -792,6 +793,48 @@ remove_from_cache() {
     return 0
 }
 
+delete_images_for_webhook() {
+    local media_path="$1"
+    local media_type="$2"
+
+    log_debug "Borrando imágenes para webhook: $media_path (tipo: $media_type)"
+
+    # Obtener todas las imágenes asociadas al archivo
+    local poster_images_result
+    if poster_images_result=$(find_poster_image "$media_path" "$media_type" 2>/dev/null); then
+        # Convertir a array
+        local poster_images=()
+        IFS=';' read -ra poster_images <<<"$poster_images_result"
+
+        # Borrar cada imagen encontrada
+        local deleted_count=0
+
+        for image in "${poster_images[@]}"; do
+            if [[ -f "$image" ]]; then
+                local image_basename=$(basename "$image")
+                
+                # Borrar el archivo de imagen
+                if rm -f "$image" 2>/dev/null; then
+                    log_debug "Imagen borrada: $image_basename"
+                    ((deleted_count++))
+                else
+                    log_warning "No se pudo borrar imagen: $image_basename"
+                fi
+            fi
+        done
+
+        if [[ "$deleted_count" -gt 0 ]]; then
+            log_info "🗑️ Imágenes borradas para webhook: $(basename "$media_path") ($deleted_count imagen(es))"
+        else
+            log_debug "No se encontraron imágenes para borrar: $(basename "$media_path")"
+        fi
+    else
+        log_debug "No se encontraron imágenes asociadas para borrar: $media_path"
+    fi
+
+    return 0
+}
+
 # =============================================================================
 # FUNCIONES DE PROCESAMIENTO POR TIPO
 # =============================================================================
@@ -934,26 +977,81 @@ start_atd_service() {
         return 1
     fi
     
+    # Configurar permisos de at para usuarios críticos (root, abc, 1000)
+    local current_user=$(whoami)
+    log_info "🔑 Configurando permisos de 'at' para usuario: $current_user"
+    
+    # Lista de usuarios que deben tener acceso a at
+    local required_users=("root" "abc" "1000" "$current_user")
+    
+    # Asegurar que los usuarios críticos tienen permisos para usar at
+    if [[ -f "/etc/at.allow" ]]; then
+        # Si existe at.allow, añadir usuarios que falten
+        for user in "${required_users[@]}"; do
+            if ! grep -q "^${user}$" /etc/at.allow 2>/dev/null; then
+                echo "$user" >> /etc/at.allow 2>/dev/null || log_warning "⚠️ No se pudo añadir $user a /etc/at.allow"
+                log_info "✅ Usuario $user añadido a /etc/at.allow"
+            fi
+        done
+    else
+        # Si no existe at.allow, crearlo con los usuarios críticos
+        {
+            echo "root"
+            echo "abc"
+            echo "1000"
+            echo "$current_user"
+        } > /etc/at.allow 2>/dev/null || log_warning "⚠️ No se pudo crear /etc/at.allow"
+        log_info "✅ Creado /etc/at.allow con usuarios críticos"
+    fi
+    
+    # Remover usuarios críticos de at.deny si existen
+    if [[ -f "/etc/at.deny" ]]; then
+        for user in "${required_users[@]}"; do
+            if grep -q "^${user}$" /etc/at.deny 2>/dev/null; then
+                sed -i "/^${user}$/d" /etc/at.deny 2>/dev/null || log_warning "⚠️ No se pudo modificar /etc/at.deny para $user"
+                log_info "✅ Usuario $user removido de /etc/at.deny"
+            fi
+        done
+    fi
+    
     # Verificar si atd ya está corriendo
     if pgrep -x "atd" >/dev/null 2>&1; then
         log_info "✅ Servicio atd ya está corriendo"
-        return 0
-    fi
-    
-    # Intentar iniciar atd
-    if atd >/dev/null 2>&1; then
-        log_info "✅ Servicio atd iniciado exitosamente"
-        
-        # Verificar que efectivamente está corriendo
-        if pgrep -x "atd" >/dev/null 2>&1; then
-            log_info "✅ Servicio atd confirmado en ejecución"
-            return 0
+    else
+        # Intentar iniciar atd
+        if atd >/dev/null 2>&1; then
+            log_info "✅ Servicio atd iniciado exitosamente"
+            
+            # Verificar que efectivamente está corriendo
+            if pgrep -x "atd" >/dev/null 2>&1; then
+                log_info "✅ Servicio atd confirmado en ejecución"
+            else
+                log_error "❌ Servicio atd no se pudo iniciar correctamente"
+                return 1
+            fi
         else
-            log_error "❌ Servicio atd no se pudo iniciar correctamente"
+            log_error "❌ Error al intentar iniciar servicio atd"
             return 1
         fi
+    fi
+    
+    # Test de permisos de at
+    log_info "🧪 Verificando permisos de 'at'..."
+    local test_output
+    test_output=$(echo "echo 'test'" | at "now + 1 minute" 2>&1)
+    local test_exit_code=$?
+    
+    if [[ $test_exit_code -eq 0 ]]; then
+        log_info "✅ Permisos de 'at' verificados correctamente"
+        # Limpiar la tarea de test
+        local job_id=$(echo "$test_output" | grep -o "job [0-9]*" | grep -o "[0-9]*")
+        if [[ -n "$job_id" ]]; then
+            atrm "$job_id" 2>/dev/null
+            log_debug "🧹 Tarea de test $job_id eliminada"
+        fi
+        return 0
     else
-        log_error "❌ Error al intentar iniciar servicio atd"
+        log_error "❌ Test de permisos de 'at' falló: $test_output"
         return 1
     fi
 }
@@ -1102,6 +1200,7 @@ cancel_all_langflags_jobs() {
 
 schedule_process() {
     local command="$1"
+    local custom_delay="${2:-$SCHEDULE_DELAY_MINUTES}"  # Usar delay personalizado o el por defecto
     
     # Verificar si el comando 'at' está disponible
     if ! command -v at >/dev/null 2>&1; then
@@ -1139,16 +1238,27 @@ schedule_process() {
     log_info "✅ Confirmado: 0 tareas lang-flags existentes, procediendo con programación"
     
     # PASO 3: PROGRAMAR NUEVA TAREA ÚNICA
-    log_info "⏰ Programando procesamiento automático ÚNICO en ${SCHEDULE_DELAY_MINUTES} minuto(s)..."
-    local schedule_time="now + ${SCHEDULE_DELAY_MINUTES} minutes"
+    log_info "⏰ Programando procesamiento automático ÚNICO en ${custom_delay} minuto(s)..."
+    local schedule_time="now + ${custom_delay} minutes"
     local script_path="/flags/lang-flags-beta.bash"
     
     # Crear comando completo con identificador único
     local full_command="cd /flags && bash $script_path $command"
     
-    # Programar tarea
-    # Programar tarea
-    if echo "$full_command" | at "$schedule_time" >/dev/null 2>&1; then
+    log_debug "DEBUG: Comando a programar: $full_command"
+    log_debug "DEBUG: Tiempo programado: $schedule_time"
+    
+    # Programar tarea - capturar stderr para debug
+    local at_output
+    local at_exit_code
+    at_output=$(echo "$full_command" | at "$schedule_time" 2>&1)
+    at_exit_code=$?
+    
+    log_debug "DEBUG: Salida de at: $at_output"
+    log_debug "DEBUG: Exit code de at: $at_exit_code"
+    
+    if [[ $at_exit_code -eq 0 ]]; then
+        log_debug "DEBUG: Comando at ejecutado exitosamente"
         # PASO 4: VERIFICACIÓN POST-PROGRAMACIÓN
         local post_job_count=$(get_langflags_job_count)
         
@@ -1166,7 +1276,9 @@ schedule_process() {
             return 1
         fi
     else
-        log_error "❌ Error programando procesamiento automático"
+        log_error "❌ Error programando procesamiento automático (exit code: $at_exit_code)"
+        log_error "❌ Salida de at: $at_output"
+        log_debug "DEBUG: Comando fallido: echo '$full_command' | at '$schedule_time'"
         return 1
     fi
 }
@@ -1314,9 +1426,15 @@ process_single_queue() {
     log_info "📋 Procesando cola: $(basename "$queue_file") ($queue_count items)"
 
     local processed_count=0
+    local skipped_count=0
+    local max_attempts="$queue_count"  # Evitar bucles infinitos
+    local attempts=0
 
-    # Procesar línea por línea, eliminando las procesadas exitosamente
-    while [[ -s "$queue_file" ]]; do
+    # Crear archivo temporal para items que no están listos
+    local temp_queue="$queue_file.tmp.$$"
+    
+    # Procesar línea por línea, manejando items no listos apropiadamente
+    while [[ -s "$queue_file" ]] && [[ "$attempts" -lt "$max_attempts" ]]; do
         # Leer primera línea
         local line=$(head -n 1 "$queue_file")
         
@@ -1329,6 +1447,7 @@ process_single_queue() {
         # Validar formato de entrada
         if [[ -z "$media_type" || -z "$media_path" ]]; then
             log_warning "Entrada de cola inválida: $line"
+            ((attempts++))
             continue
         fi
 
@@ -1336,17 +1455,28 @@ process_single_queue() {
 
         # Procesar item
         if process_media_item "$media_path" "$media_type"; then
-            log_debug "✓ Item procesado exitosamente - BORRADO DE COLA: $media_path"
+            log_debug "✓ Item procesado exitosamente: $media_path"
             ((processed_count++))
-            # Línea ya eliminada - NO hacer nada más
         else
-            log_warning "❌ Error procesando item - DEVOLVER A COLA: $media_path"
-            # Añadir de vuelta al final de la cola
-            echo "$line" >> "$queue_file"
+            log_info "⏭️ Item no listo - saltando temporalmente: $(basename "$media_path")"
+            # Guardar en archivo temporal para reintento posterior
+            echo "$line" >> "$temp_queue"
+            ((skipped_count++))
         fi
+        
+        ((attempts++))
     done
 
-    log_info "✅ Procesamiento completado: $processed_count items procesados exitosamente"
+    # Si hay items no listos, devolverlos a la cola original
+    if [[ -f "$temp_queue" ]] && [[ -s "$temp_queue" ]]; then
+        cat "$temp_queue" >> "$queue_file"
+        rm -f "$temp_queue"
+        log_info "📝 $skipped_count item(s) no listos - permanecen en cola para reintento posterior"
+    else
+        rm -f "$temp_queue" 2>/dev/null
+    fi
+
+    log_info "✅ Procesamiento completado: $processed_count procesados, $skipped_count saltados"
     return 0
 }
 
@@ -1420,11 +1550,13 @@ process_webhook_event() {
     # Detectar tipo de evento y archivo desde variables de entorno
     local event_file=""
     local media_type=""
+    local event_type=""
 
     # Variables de Radarr
     if [[ -n "$radarr_eventtype" && -n "$radarr_moviefile_path" ]]; then
         event_file="$radarr_moviefile_path"
         media_type="movie"
+        event_type="$radarr_eventtype"
         log_info "📡 Evento Radarr detectado: $radarr_eventtype"
         log_debug "Archivo de evento: $event_file"
 
@@ -1432,6 +1564,7 @@ process_webhook_event() {
     elif [[ -n "$sonarr_eventtype" && -n "$sonarr_episodefile_path" ]]; then
         event_file="$sonarr_episodefile_path"
         media_type="tvshow"
+        event_type="$sonarr_eventtype"
         log_info "📺 Evento Sonarr detectado: $sonarr_eventtype"
         log_debug "Archivo de evento: $event_file"
 
@@ -1446,17 +1579,37 @@ process_webhook_event() {
         return 1
     fi
 
-    # Limpiar caché del elemento específico para TODOS los eventos webhook
-    # Esto garantiza que archivos nuevos/actualizados se reprocesen correctamente
-    log_info "🧹 Limpiando caché para evento webhook: $radarr_eventtype$sonarr_eventtype"
-    remove_from_cache "$event_file" "$media_type"
-
     # Añadir siempre a cola (sin verificar cache para webhooks)
+    # La lógica EXIF inteligente en process_media_item() determinará si procesar o esperar
     add_to_queue "$event_file" "$media_type"
     log_info "✓ Evento añadido a cola para procesamiento"
 
-    # Programar procesamiento automático
-    schedule_process "process"
+    # Borrar imágenes que se van a editar (folder, backdrop, thumbnail, etc.)
+    delete_images_for_webhook "$event_file" "$media_type"
+
+    # Usar delay específico para webhooks (mínimo 5 minutos)
+    local schedule_delay="$SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK"
+    
+    # Incrementar delay para eventos de actualización/upgrade para dar aún más tiempo
+    # a Jellyfin para descargar/actualizar metadata e imágenes
+    case "${event_type,,}" in
+        *upgrade*|*update*|*replace*)
+            schedule_delay=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK))
+            log_info "📝 Evento de actualización detectado: delay extendido a ${schedule_delay} minutos"
+            ;;
+        *)
+            log_debug "Evento estándar: delay webhook de ${schedule_delay} minutos"
+            ;;
+    esac
+
+    # Programar procesamiento automático con delay apropiado
+    log_debug "DEBUG WEBHOOK: Antes de llamar schedule_process (delay: ${schedule_delay}m)"
+    if schedule_process "process" "$schedule_delay"; then
+        log_debug "DEBUG WEBHOOK: schedule_process exitoso"
+    else
+        log_error "DEBUG WEBHOOK: schedule_process FALLÓ"
+    fi
+    log_debug "DEBUG WEBHOOK: Después de llamar schedule_process"
 
     return 0
 }
@@ -1527,6 +1680,41 @@ process_media_item() {
     fi
 
     log_info "Aplicando overlays para idiomas: ${languages[*]} en ${#valid_images[@]} imagen(es) (${media_type})"
+
+    # VERIFICACIÓN CRÍTICA: Comprobar que Jellyfin haya terminado de procesar las imágenes
+    log_debug "🔍 Verificando estado de imágenes para Jellyfin..."
+    
+    local video_filename=$(basename "$media_path")
+    local jellyfin_ready=true
+
+    for poster_image in "${valid_images[@]}"; do
+        local current_exif=$(exiftool -f -s3 -"UserComment" "$poster_image" 2>/dev/null)
+        local expected_exif="LangFlags:$video_filename"
+        
+        log_debug "EXIF Debug - Archivo: $(basename "$poster_image")"
+        log_debug "EXIF Debug - Actual: '$current_exif'"
+        log_debug "EXIF Debug - Esperado: '$expected_exif'"
+        
+        # Considerar EXIF vacío: cadena vacía, "-", o solo espacios
+        if [[ -n "$current_exif" ]] && [[ "$current_exif" != "-" ]] && [[ "${current_exif// /}" != "" ]]; then
+            # EXIF no vacío - verificar si coincide
+            if [[ "$current_exif" != "$expected_exif" ]]; then
+                log_info "⏳ Jellyfin aún procesando imagen: $(basename "$poster_image") (EXIF: $current_exif)"
+                jellyfin_ready=false
+                break
+            else
+                log_debug "✅ Imagen ya procesada correctamente: $(basename "$poster_image")"
+            fi
+        else
+            log_debug "✅ Imagen lista para procesar (EXIF vacío o '-'): $(basename "$poster_image")"
+        fi
+    done
+
+    # Si Jellyfin aún está procesando, devolver error temporal para reintentar después
+    if [[ "$jellyfin_ready" == "false" ]]; then
+        log_info "🔄 Jellyfin aún procesando imágenes - item permanece en cola para reintento"
+        return 1  # Error temporal - item permanece en cola
+    fi
 
     # Obtener identificador del video para marcar en las imágenes (usando cache optimizado)
     local video_identifier
@@ -1645,8 +1833,14 @@ OPCIONES:
     -h, --help      Mostrar esta ayuda
 
 SISTEMA DE PROGRAMACIÓN AUTOMÁTICA:
-    - Los comandos movies, series, all, webhook programan automáticamente
+    - Los comandos movies, series, all programan automáticamente
       el procesamiento usando 'at' en ${SCHEDULE_DELAY_MINUTES} minuto(s)
+    - Los webhooks programan automáticamente el procesamiento con delay
+      específico de ${SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK} minutos (mínimo 5 min)
+    - Para eventos de actualización/upgrade, el delay se duplica automáticamente
+      (webhooks: ${SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK}×2=$((SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK * 2)) min)
+    - Webhooks borran automáticamente las imágenes que se van a editar
+      (folder, backdrop, thumbnail, etc.) antes de programar el procesamiento
     - Después de procesar, si hay más elementos en cola, se reprograma
       automáticamente para otro ciclo de procesamiento
     - El setup programa automáticamente un escaneo inicial apropiado
