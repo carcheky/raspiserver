@@ -646,15 +646,17 @@ is_image_processed() {
     local video_filename=$(basename "$video_file")
     local expected_comment="LangFlags:$video_filename"
 
-    # LÓGICA CORREGIDA:
+    # LÓGICA CORREGIDA PARA SERIES:
     # - Sin EXIF o EXIF vacío: Imagen procesada por Jellyfin, lista para overlay
-    # - Con EXIF correcto: Ya procesada por lang-flags
-    # - Con EXIF incorrecto: Estado intermedio, no procesada
+    # - Con EXIF "LangFlags:" (cualquier episodio): Imagen ya procesada, procesar
+    # - Con otro EXIF: Estado intermedio, no procesada
     
     if [[ -z "$user_comment" ]] || [[ "$user_comment" == "-" ]] || [[ "${user_comment// /}" == "" ]]; then
         return 1  # Sin EXIF = Jellyfin procesó, pero lang-flags no
     elif [[ "$user_comment" == "$expected_comment" ]]; then
-        return 0  # Ya procesada por lang-flags
+        return 0  # Ya procesada por lang-flags para este episodio específico
+    elif [[ "$user_comment" == LangFlags:* ]]; then
+        return 1  # EXIF de otro episodio, procesar para actualizar
     else
         return 1  # EXIF incorrecto = necesita procesamiento
     fi
@@ -1491,20 +1493,19 @@ process_single_queue() {
     log_info "📋 Procesando cola: $(basename "$queue_file") ($queue_count items)"
 
     local processed_count=0
-    local skipped_count=0
-    local max_attempts="$queue_count"  # Evitar bucles infinitos
-    local attempts=0
+    local failed_count=0
+    local current_line_number=1
 
-    # Crear archivo temporal para items que no están listos
-    local temp_queue="$queue_file.tmp.$$"
-    
-    # Procesar línea por línea, manejando items no listos apropiadamente
-    while [[ -s "$queue_file" ]] && [[ "$attempts" -lt "$max_attempts" ]]; do
-        # Leer primera línea
-        local line=$(head -n 1 "$queue_file")
+    # PROCESAMIENTO DIRECTO SIN ARCHIVOS TEMPORALES
+    # Procesar línea por línea, solo eliminar si el procesamiento fue exitoso
+    while [[ -s "$queue_file" ]]; do
+        # Leer la línea actual (línea número $current_line_number)
+        local line=$(sed -n "${current_line_number}p" "$queue_file")
         
-        # Eliminar primera línea del archivo
-        sed -i '1d' "$queue_file"
+        # Si no hay más líneas, terminar
+        if [[ -z "$line" ]]; then
+            break
+        fi
         
         # Parsear línea
         IFS='|' read -r timestamp media_type media_path <<< "$line"
@@ -1512,36 +1513,30 @@ process_single_queue() {
         # Validar formato de entrada
         if [[ -z "$media_type" || -z "$media_path" ]]; then
             log_warning "Entrada de cola inválida: $line"
-            ((attempts++))
+            # Eliminar línea inválida
+            sed -i "${current_line_number}d" "$queue_file"
+            ((failed_count++))
             continue
         fi
 
         log_info "🎬 Procesando desde cola: $(basename "$media_path") (tipo: $media_type)"
 
-        # Procesar item
+        # LÓGICA CRÍTICA: Solo eliminar de la cola SI el procesamiento fue exitoso
         if process_media_item "$media_path" "$media_type"; then
             log_debug "✓ Item procesado exitosamente: $media_path"
+            # ÉXITO: Eliminar línea de la cola
+            sed -i "${current_line_number}d" "$queue_file"
             ((processed_count++))
+            # NO incrementar current_line_number porque eliminamos la línea actual
         else
-            log_info "⏭️ Item no listo - saltando temporalmente: $(basename "$media_path")"
-            # Guardar en archivo temporal para reintento posterior
-            echo "$line" >> "$temp_queue"
-            ((skipped_count++))
+            log_warning "❌ Item falló procesamiento (permanece en cola): $(basename "$media_path")"
+            ((failed_count++))
+            # FALLO: Dejar item en cola y avanzar a la siguiente línea
+            ((current_line_number++))
         fi
-        
-        ((attempts++))
     done
 
-    # Si hay items no listos, devolverlos a la cola original
-    if [[ -f "$temp_queue" ]] && [[ -s "$temp_queue" ]]; then
-        cat "$temp_queue" >> "$queue_file"
-        rm -f "$temp_queue"
-        log_info "📝 $skipped_count item(s) no listos - permanecen en cola para reintento posterior"
-    else
-        rm -f "$temp_queue" 2>/dev/null
-    fi
-
-    log_info "✅ Procesamiento completado: $processed_count procesados, $skipped_count saltados"
+    log_info "✅ Procesamiento completado: $processed_count procesados, $failed_count permanecen en cola"
     return 0
 }
 
@@ -1724,8 +1719,8 @@ process_media_item() {
 
     # 2. Verificar que exista el archivo de video
     if [[ ! -f "$media_path" ]]; then
-        log_warning "Archivo de video no encontrado: $media_path"
-        return 1
+        log_warning "Archivo de video no encontrado, eliminando de cola: $media_path"
+        return 0  # Retornar éxito para que se elimine de la cola
     fi
 
     # 3. Encontrar imágenes correspondientes
@@ -1787,17 +1782,20 @@ process_media_item() {
         log_debug "EXIF Debug - Actual: '$current_exif'"
         log_debug "EXIF Debug - Esperado: '$expected_exif'"
         
-        # LÓGICA CORREGIDA: 
+        # LÓGICA CORREGIDA PARA SERIES:
         # - EXIF vacío/nulo/guión = Jellyfin ya procesó, lista para overlay
-        # - EXIF con valor correcto = Ya procesada por lang-flags, skip
-        # - EXIF con valor incorrecto = Estado intermedio, no listo
+        # - EXIF con "LangFlags:" = Ya procesada por lang-flags (cualquier episodio), procesar
+        # - EXIF con otro valor = Estado intermedio, no listo
         
         if [[ -z "$current_exif" ]] || [[ "$current_exif" == "-" ]] || [[ "${current_exif// /}" == "" ]]; then
             # EXIF vacío: Jellyfin ya procesó la imagen, lista para overlay
             log_debug "✅ Imagen lista para overlay (EXIF vacío): $(basename "$poster_image")"
         elif [[ "$current_exif" == "$expected_exif" ]]; then
-            # EXIF correcto: Ya procesada por lang-flags
-            log_debug "✅ Imagen ya procesada por lang-flags: $(basename "$poster_image")"
+            # EXIF correcto para este episodio específico: Ya procesada
+            log_debug "✅ Imagen ya procesada por lang-flags para este episodio: $(basename "$poster_image")"
+        elif [[ "$current_exif" == LangFlags:* ]]; then
+            # EXIF de otro episodio: Consideramos la imagen como procesada y lista para overlay
+            log_debug "✅ Imagen procesada por lang-flags (otro episodio, reusando): $(basename "$poster_image")"
         else
             # EXIF con valor incorrecto: Estado intermedio, Jellyfin aún procesando
             log_info "⏳ Jellyfin aún procesando imagen: $(basename "$poster_image") (EXIF: $current_exif)"
