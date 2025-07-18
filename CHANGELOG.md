@@ -1,5 +1,28 @@
 # CHANGELOG
 
+# [6.42.0](https://gitlab.com/carcheky/raspiserver/compare/v6.41.0...v6.42.0) (2025-05-02)
+
+
+### Bug Fixes
+
+* configs ([bf58cea](https://gitlab.com/carcheky/raspiserver/commit/bf58ceabd6fe6c01f964eddec2dd9a9abe6a040c))
+
+
+### Features
+
+* actualizar intervalo del script autoExtras a 1 día ([f33f9dc](https://gitlab.com/carcheky/raspiserver/commit/f33f9dc11330c662e063ee5976e4e312fbe6ae7b))
+* actualizar intervalos de scripts y deshabilitar configuración de proveedor de metadatos ([005ddb2](https://gitlab.com/carcheky/raspiserver/commit/005ddb28ef10071095acee1b3395fe12054b4d0e))
+* agregar gestión de logs y configuración de salida para el script lang-flags ([3edf598](https://gitlab.com/carcheky/raspiserver/commit/3edf59891f37a64adb2727247daa7676e686bb92))
+* agregar pausa de 5 minutos antes de procesar imágenes en los scripts de instalación de dependencias para Radarr y Sonarr ([ad1be80](https://gitlab.com/carcheky/raspiserver/commit/ad1be8033e737e6985067d5d5667c7c7d30cb5e1))
+* agregar soporte para la limpieza de procesos secundarios y mejorar la visualización del estado en terminales interactivas ([a01f6eb](https://gitlab.com/carcheky/raspiserver/commit/a01f6ebe135395d59b8837a98663702313b4675b))
+* ajustar la gestión de hilos y mejorar la detección automática en los scripts de instalación de dependencias para Radarr y Sonarr ([662fc47](https://gitlab.com/carcheky/raspiserver/commit/662fc47eafcb93d95498e581fa6fa973a809fa47))
+* deshabilitar formatos personalizados en la configuración de Radarr y Sonarr ([5749f43](https://gitlab.com/carcheky/raspiserver/commit/5749f4332323297f611b80c61b27eccaf8f6ac9a))
+* deshabilitar scripts personalizados en la configuración de AutoConfig para Radarr y Sonarr ([72fbfff](https://gitlab.com/carcheky/raspiserver/commit/72fbfffaef1b384d08b4241458403c88e87c7585))
+* eliminar el script z-lang-overlay.bash y sus funciones asociadas ([3c5e901](https://gitlab.com/carcheky/raspiserver/commit/3c5e901fe3b11127fd25d4593b9a7b513098cc88))
+* mejorar mensajes de salida en el script de instalación de dependencias para Radarr y Sonarr ([dc5d47c](https://gitlab.com/carcheky/raspiserver/commit/dc5d47c46d50846e9c619585a10e75588eb5e49e))
+* reducir el tiempo de espera a 2 minutos antes de procesar imágenes en los scripts de instalación de dependencias para Radarr y Sonarr ([9316d9d](https://gitlab.com/carcheky/raspiserver/commit/9316d9da149bb0c1b52dd46337cba898ab29cdbe))
+* reestructurar la configuración del servidor de medios y agregar nuevos servicios ([c84677a](https://gitlab.com/carcheky/raspiserver/commit/c84677a0c15c7782d775de7afdc9e1cbc7d8e8b0))
+
 # [6.41.0](https://gitlab.com/carcheky/raspiserver/compare/v6.40.2...v6.41.0) (2025-04-22)
 
 
