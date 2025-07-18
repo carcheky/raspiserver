@@ -104,7 +104,7 @@ readonly PROCESSING_DELAY=10
 
 # Configuración de programación automática
 readonly SCHEDULE_DELAY_MINUTES=2  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
-readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=2  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
+readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=5  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
 
 # =============================================================================
 # SISTEMA DE LOGGING
@@ -1405,7 +1405,7 @@ add_to_queue() {
     # Verificar si el item ya está en la cola (verificación exacta por ruta completa)
     if [[ -f "$queue_file" ]] && grep -Fxq "${media_type}|${media_path}" <(cut -d'|' -f2,3 "$queue_file") 2>/dev/null; then
         log_debug "Item ya en cola: $media_path"
-        return 0
+        return 1  # Retorna 1 si ya existe
     fi
 
     # Añadir a la cola
@@ -1582,15 +1582,21 @@ scan_and_queue() {
 
             # Con force, añadir todo a la cola sin verificar cache
             if [[ "$force_process" == "true" ]]; then
-                add_to_queue "$media_file" "$media_type"
-                ((queued_count++))
-                log_debug "Force: añadido a cola: $(basename "$media_file")"
+                if add_to_queue "$media_file" "$media_type"; then
+                    ((queued_count++))
+                    log_debug "Force: añadido a cola: $(basename "$media_file")"
+                else
+                    log_debug "Force: ya en cola: $(basename "$media_file")"
+                fi
             else
                 # Sin force, verificar cache antes de añadir a cola
                 if needs_processing "$media_file" "$media_type" "false"; then
-                    add_to_queue "$media_file" "$media_type"
-                    ((queued_count++))
-                    log_debug "Cache MISS: añadido a cola: $(basename "$media_file")"
+                    if add_to_queue "$media_file" "$media_type"; then
+                        ((queued_count++))
+                        log_debug "Cache MISS: añadido a cola: $(basename "$media_file")"
+                    else
+                        log_debug "Cache MISS: ya en cola: $(basename "$media_file")"
+                    fi
                 else
                     ((skipped_count++))
                     log_debug "Cache HIT: saltado: $(basename "$media_file")"
