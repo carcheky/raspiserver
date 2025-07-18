@@ -103,8 +103,8 @@ readonly POSTER_MAX_SIZE="2560x1440"
 readonly PROCESSING_DELAY=10
 
 # Configuración de programación automática
-readonly SCHEDULE_DELAY_MINUTES=1  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
-readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=1  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
+readonly SCHEDULE_DELAY_MINUTES=2  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
+readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=2  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
 
 # =============================================================================
 # SISTEMA DE LOGGING
