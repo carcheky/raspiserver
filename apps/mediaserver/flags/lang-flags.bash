@@ -1398,9 +1398,9 @@ add_to_queue() {
     # Crear directorio de cola si no existe
     mkdir -p "$QUEUE_DIR"
 
-    # Formato: timestamp|media_type|media_path
+    # Formato: timestamp|media_type|media_path|status
     local timestamp=$(date +%s)
-    local queue_entry="${timestamp}|${media_type}|${media_path}"
+    local queue_entry="${timestamp}|${media_type}|${media_path}|ready"
 
     # Verificar si el item ya está en la cola (verificación exacta por ruta completa)
     if [[ -f "$queue_file" ]] && grep -Fxq "${media_type}|${media_path}" <(cut -d'|' -f2,3 "$queue_file") 2>/dev/null; then
@@ -1506,7 +1506,13 @@ process_single_queue() {
         fi
         
         # Parsear línea
-        IFS='|' read -r timestamp media_type media_path <<< "$line"
+        IFS='|' read -r timestamp media_type media_path status <<< "$line"
+        
+        # CHECK SIMPLE: Si no es ready, saltar
+        if [[ "$status" != "ready" ]]; then
+            ((current_line_number++))
+            continue
+        fi
         
         # Validar formato de entrada
         if [[ -z "$media_type" || -z "$media_path" ]]; then
