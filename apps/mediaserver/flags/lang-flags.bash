@@ -511,7 +511,7 @@ apply_language_overlays() {
 
     # REDIMENSIONAR A ALTURA ESTÁNDAR para consistencia visual
     # Altura estándar objetivo (ajustable según necesidades)
-    local target_height=1000
+    local target_height=700
 
     # Calcular nuevo ancho manteniendo proporción usando aritmética entera
     # aspect_ratio = width / height * 1000 (para precisión)
@@ -648,15 +648,13 @@ is_image_processed() {
 
     # LÓGICA CORREGIDA PARA SERIES:
     # - Sin EXIF o EXIF vacío: Imagen procesada por Jellyfin, lista para overlay
-    # - Con EXIF "LangFlags:" (cualquier episodio): Imagen ya procesada, procesar
+    # - Con EXIF "LangFlags:" (cualquier episodio): Imagen YA procesada, NO procesar
     # - Con otro EXIF: Estado intermedio, no procesada
     
     if [[ -z "$user_comment" ]] || [[ "$user_comment" == "-" ]] || [[ "${user_comment// /}" == "" ]]; then
         return 1  # Sin EXIF = Jellyfin procesó, pero lang-flags no
-    elif [[ "$user_comment" == "$expected_comment" ]]; then
-        return 0  # Ya procesada por lang-flags para este episodio específico
     elif [[ "$user_comment" == LangFlags:* ]]; then
-        return 1  # EXIF de otro episodio, procesar para actualizar
+        return 0  # CUALQUIER EXIF LangFlags = YA PROCESADA, no añadir a cola
     else
         return 1  # EXIF incorrecto = necesita procesamiento
     fi
@@ -1790,12 +1788,15 @@ process_media_item() {
         if [[ -z "$current_exif" ]] || [[ "$current_exif" == "-" ]] || [[ "${current_exif// /}" == "" ]]; then
             # EXIF vacío: Jellyfin ya procesó la imagen, lista para overlay
             log_debug "✅ Imagen lista para overlay (EXIF vacío): $(basename "$poster_image")"
+            # CONTINUAR - imagen lista para procesar
         elif [[ "$current_exif" == "$expected_exif" ]]; then
-            # EXIF correcto para este episodio específico: Ya procesada
-            log_debug "✅ Imagen ya procesada por lang-flags para este episodio: $(basename "$poster_image")"
+            # EXIF correcto para este episodio específico: Ya procesada, pero reprocesar
+            log_debug "✅ Imagen ya procesada por lang-flags para este episodio, reprocesando: $(basename "$poster_image")"
+            # CONTINUAR - reprocesar imagen
         elif [[ "$current_exif" == LangFlags:* ]]; then
-            # EXIF de otro episodio: Consideramos la imagen como procesada y lista para overlay
-            log_debug "✅ Imagen procesada por lang-flags (otro episodio, reusando): $(basename "$poster_image")"
+            # EXIF de otro episodio: Reprocesar para actualizar
+            log_debug "✅ Imagen procesada por lang-flags (otro episodio), reprocesando: $(basename "$poster_image")"
+            # CONTINUAR - reprocesar imagen
         else
             # EXIF con valor incorrecto: Estado intermedio, Jellyfin aún procesando
             log_info "⏳ Jellyfin aún procesando imagen: $(basename "$poster_image") (EXIF: $current_exif)"
