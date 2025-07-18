@@ -103,8 +103,8 @@ readonly POSTER_MAX_SIZE="2560x1440"
 readonly PROCESSING_DELAY=10
 
 # Configuración de programación automática
-readonly SCHEDULE_DELAY_MINUTES=1  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
-readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=1  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
+readonly SCHEDULE_DELAY_MINUTES=5  # Tiempo en minutos para programar tareas con 'at' (fácil de cambiar)
+readonly SCHEDULE_DELAY_MINUTES_FROM_WEBHOOK=5  # Tiempo en minutos para programar después de webhook (mínimo 5 min)
 
 # =============================================================================
 # SISTEMA DE LOGGING
@@ -1780,11 +1780,10 @@ process_media_item() {
 
     log_info "Aplicando overlays para idiomas: ${languages[*]} en ${#valid_images[@]} imagen(es) (${media_type})"
 
-    # VERIFICACIÓN CRÍTICA: Comprobar que Jellyfin haya terminado de procesar las imágenes
-    log_debug "🔍 Verificando estado de imágenes para Jellyfin..."
+    # VERIFICACIÓN: Comprobar EXIF de imágenes para debug
+    log_debug "🔍 Verificando estado de imágenes..."
     
     local video_filename=$(basename "$media_path")
-    local jellyfin_ready=true
 
     for poster_image in "${valid_images[@]}"; do
         local current_exif=$(exiftool -f -s3 -"UserComment" "$poster_image" 2>/dev/null)
@@ -1795,35 +1794,26 @@ process_media_item() {
         log_debug "EXIF Debug - Esperado: '$expected_exif'"
         
         # LÓGICA CORREGIDA PARA SERIES:
-        # - EXIF vacío/nulo/guión = Jellyfin ya procesó, lista para overlay
-        # - EXIF con "LangFlags:" = Ya procesada por lang-flags (cualquier episodio), procesar
-        # - EXIF con otro valor = Estado intermedio, no listo
+        # - CUALQUIER EXIF que NO sea "LangFlags:" = Imagen lista para procesar
+        # - EXIF con "LangFlags:" = Ya procesada por lang-flags, decidir si reprocesar
         
-        if [[ -z "$current_exif" ]] || [[ "$current_exif" == "-" ]] || [[ "${current_exif// /}" == "" ]]; then
-            # EXIF vacío: Jellyfin ya procesó la imagen, lista para overlay
-            log_debug "✅ Imagen lista para overlay (EXIF vacío): $(basename "$poster_image")"
-            # CONTINUAR - imagen lista para procesar
-        elif [[ "$current_exif" == "$expected_exif" ]]; then
-            # EXIF correcto para este episodio específico: Ya procesada, pero reprocesar
-            log_debug "✅ Imagen ya procesada por lang-flags para este episodio, reprocesando: $(basename "$poster_image")"
-            # CONTINUAR - reprocesar imagen
-        elif [[ "$current_exif" == LangFlags:* ]]; then
-            # EXIF de otro episodio: Reprocesar para actualizar
-            log_debug "✅ Imagen procesada por lang-flags (otro episodio), reprocesando: $(basename "$poster_image")"
-            # CONTINUAR - reprocesar imagen
+        if [[ "$current_exif" == LangFlags:* ]]; then
+            # Imagen ya procesada por lang-flags
+            if [[ "$current_exif" == "$expected_exif" ]]; then
+                # EXIF correcto para este episodio específico: Ya procesada, pero reprocesar
+                log_debug "✅ Imagen ya procesada por lang-flags para este episodio, reprocesando: $(basename "$poster_image")"
+                # CONTINUAR - reprocesar imagen
+            else
+                # EXIF de otro episodio: Reprocesar para actualizar
+                log_debug "✅ Imagen procesada por lang-flags (otro episodio), reprocesando: $(basename "$poster_image")"
+                # CONTINUAR - reprocesar imagen
+            fi
         else
-            # EXIF con valor incorrecto: Estado intermedio, Jellyfin aún procesando
-            log_info "⏳ Jellyfin aún procesando imagen: $(basename "$poster_image") (EXIF: $current_exif)"
-            jellyfin_ready=false
-            break
+            # CUALQUIER otro EXIF (vacío, IJG, CREATOR, JSON, etc.) = Imagen lista para procesar
+            log_debug "✅ Imagen lista para overlay (EXIF: $(echo "$current_exif" | head -c 50)...): $(basename "$poster_image")"
+            # CONTINUAR - imagen lista para procesar
         fi
     done
-
-    # Si Jellyfin aún está procesando, devolver error temporal para reintentar después
-    if [[ "$jellyfin_ready" == "false" ]]; then
-        log_info "🔄 Jellyfin aún procesando imágenes - item permanece en cola para reintento"
-        return 1  # Error temporal - item permanece en cola
-    fi
 
     # Obtener identificador del video para marcar en las imágenes (usando cache optimizado)
     local video_identifier
