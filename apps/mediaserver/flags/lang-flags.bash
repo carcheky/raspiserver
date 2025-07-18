@@ -1568,7 +1568,7 @@ scan_and_queue() {
 
         # Log de progreso cada 10 archivos escaneados
         if ((scanned_count % 10 == 0)); then
-            local current_queue_count=$(get_total_queue_count)
+            local current_queue_count=$(get_specific_queue_count "$media_type")
             log_info "📊 Progreso: $scanned_count archivos escaneados, $queued_count añadidos, total en cola: $current_queue_count"
         fi
 
@@ -2013,6 +2013,31 @@ get_total_queue_count() {
     fi
 
     echo $((radarr_count + sonarr_count))
+}
+
+get_specific_queue_count() {
+    local media_type="$1"
+    local queue_file=""
+    
+    case "$media_type" in
+    "movie")
+        queue_file="$RADARR_QUEUE"
+        ;;
+    "tvshow")
+        queue_file="$SONARR_QUEUE"
+        ;;
+    *)
+        # Para tipos desconocidos, usar la cuenta total
+        get_total_queue_count
+        return
+        ;;
+    esac
+
+    if [[ -f "$queue_file" ]]; then
+        wc -l <"$queue_file" 2>/dev/null || echo "0"
+    else
+        echo "0"
+    fi
 }
 
 main() {
