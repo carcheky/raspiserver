@@ -1573,7 +1573,9 @@ scan_and_queue() {
         fi
 
         # Filtrar trailers, extras y otros archivos secundarios que no necesitan overlays
-        if [[ "$media_file" =~ (trailer|extra|behind.the.scene|other|featurette|deleted.scene|making.of|teaser) ]]; then
+        if [[ "$media_file" =~ \.(trailer|extra|behind\.the\.scene|other|featurette|deleted\.scene|making\.of|teaser)\. ]] || 
+           [[ "$(basename "$media_file")" =~ ^(trailer|extra|behind\.the\.scene|other|featurette|deleted\.scene|making\.of|teaser)[\.\-] ]] ||
+           [[ "$media_file" =~ /trailers/ ]]; then
             log_debug "Saltando archivo secundario: $(basename "$media_file")"
             continue
         fi
