@@ -5,7 +5,7 @@
 # Usage: make <target>
 # =============================================================================
 
-.PHONY: help setup up down restart logs status clean backup health update docs
+.PHONY: help setup up down restart logs status clean backup health update sync-submodules docs
 
 # Default target
 .DEFAULT_GOAL := help
@@ -101,6 +101,11 @@ update: check-env ## Update and restart services
 	@docker-compose pull
 	@docker-compose up -d --remove-orphans
 	@echo "✅ Services updated successfully"
+
+sync-submodules: ## Sync arr-scripts submodule with upstream
+	@echo "🔄 Syncing arr-scripts submodule with upstream..."
+	@./scripts/sync-arr-scripts.sh
+	@echo "✅ Submodule synchronization complete"
 
 # =============================================================================
 # MONITORING & MAINTENANCE
