@@ -1,6 +1,6 @@
 services:
   soulseek:
-    image: realies/soulseek
+    image: realies/soulseek:latest
     container_name: soulseek
     restart: unless-stopped
     volumes:
@@ -11,7 +11,29 @@ services:
     environment:
       - PGID=${PGID}
       - PUID=${PUID}
+      - TZ=${TIMEZONE}
+      - SOULSEEK_USER=${SOULSEEK_USER:-}
+      - SOULSEEK_PASS=${SOULSEEK_PASS:-}
     ports:
       - ${SOULSEEK_WEB_PORT:-6080}:6080
-      - ${SOULSEEK_LISTEN_PORT:-61122}:61122 # example listening port, check Options -> Login
-      - ${SOULSEEK_OBS_PORT:-61123}:61123 # example obfuscated port, check Options -> Login
+      - ${SOULSEEK_LISTEN_PORT:-61122}:61122 # listening port, check Options -> Login
+      - ${SOULSEEK_OBS_PORT:-61123}:61123 # obfuscated port, check Options -> Login
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6080/"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=p2p-sharing"
+      - "raspiserver.description=Soulseek music sharing and download client"
