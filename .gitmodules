@@ -1,0 +1,3 @@
+[submodule "arr-scripts"]
+	path = arr-scripts
+	url = https://github.com/carcheky/arr-scripts.git

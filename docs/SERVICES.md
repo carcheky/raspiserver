@@ -65,7 +65,7 @@ Comprehensive guide for configuring and managing individual services in the Rasp
    - Create custom profiles
    - Set size limits
 
-**Custom Scripts** (in `apps/mediaserver/sonarr-arr-scripts/`):
+**Custom Scripts** (in `arr-scripts/sonarr/`):
 - Post-processing scripts
 - Notification scripts
 - Custom actions
@@ -91,7 +91,7 @@ Comprehensive guide for configuring and managing individual services in the Rasp
 4. **Indexers**: Connect via Prowlarr
 5. **Quality Profiles**: Configure preferred qualities
 
-**Custom Scripts** (in `apps/mediaserver/radarr-arr-scripts/`):
+**Custom Scripts** (in `arr-scripts/radarr/`):
 - Movie processing enhancements
 - Metadata enrichment
 

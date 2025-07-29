@@ -14,7 +14,7 @@ services:
       - ${MEDIA_DIR}:/media
       - ${DOWNLOADS_DIR:-./downloads}:/downloads
       - ${VOLUMES_DIR}/sonarr-custom-services.d:/custom-services.d
-      - ./apps/mediaserver/sonarr-arr-scripts:/custom-cont-init.d:ro
+      - ../../arr-scripts/sonarr:/custom-cont-init.d:ro
       - ./flags:/flags:ro
     ports:
       - ${SONARR_PORT:-8989}:8989

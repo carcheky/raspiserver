@@ -61,6 +61,9 @@ cd ~/mediacheky
 # Clone repository
 git clone https://github.com/your-username/raspiserver.git
 cd raspiserver
+
+# Initialize submodules (required for arr-scripts)
+git submodule update --init --recursive
 ```
 
 ### Step 3: Configure Environment
