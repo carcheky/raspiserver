@@ -2,24 +2,40 @@ services:
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
-    restart: always
+    restart: unless-stopped
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}    
-      - UMASK=${UMASK}
+      - UMASK=${UMASK:-022}
       - LANG_FLAGS_WAIT_SECONDS=${LANG_FLAGS_WAIT_SECONDS:-30}
     volumes:
       - ${VOLUMES_DIR}/sonarr-config:/config
-      - ${MEDIA_DIR}:/BibliotecaMultimedia
+      - ${MEDIA_DIR}:/media
+      - ${DOWNLOADS_DIR:-./downloads}:/downloads
       - ${VOLUMES_DIR}/sonarr-custom-services.d:/custom-services.d
-      - ../../apps/mediaserver/sonarr-arr-scripts:/custom-cont-init.d:rw
-      - ../../flags:/flags:rw
-      - ${VOLUMES_DIR}/jellyfin-config/:/jellyfin-config:rw
+      - ./apps/mediaserver/sonarr-arr-scripts:/custom-cont-init.d:ro
+      - ./flags:/flags:ro
     ports:
       - ${SONARR_PORT:-8989}:8989
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/api/v3/system/status?apikey=$$(cat /config/config.xml | grep -oP '(?<=<ApiKey>)[^<]+')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - qbittorrent
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1G
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=media-management"
+      - "raspiserver.description=TV series automation and management"
