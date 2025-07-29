@@ -59,7 +59,7 @@ mkdir -p ~/mediacheky
 cd ~/mediacheky
 
 # Clone repository
-git clone https://github.com/your-username/raspiserver.git
+git clone https://github.com/carcheky/raspiserver.git
 cd raspiserver
 
 # Initialize submodules (required for arr-scripts)
@@ -362,9 +362,9 @@ Service logs: ./volumes/service-name/logs/
 After installation:
 
 1. [Configure individual services](SERVICES.md)
-2. [Set up automation](AUTOMATION.md)
-3. [Configure monitoring](MONITORING.md)
-4. [Implement backups](BACKUP.md)
+2. [Set up home automation](SERVICES.md#home-automation)
+3. [Configure monitoring tools](SERVICES.md#monitoring--management)
+4. [Review backup procedures](TROUBLESHOOTING.md#backup-recovery)
 
 ## 🆘 Getting Help
 

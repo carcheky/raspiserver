@@ -93,7 +93,7 @@ We welcome contributions in several areas:
 2. **Set Up Development Environment**
    ```bash
    # Add upstream remote
-   git remote add upstream https://github.com/original-owner/raspiserver.git
+   git remote add upstream https://github.com/carcheky/raspiserver.git
    
    # Copy configuration files
    cp .env.dist .env

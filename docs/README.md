@@ -6,7 +6,7 @@ A comprehensive Docker-based server solution featuring multimedia streaming, hom
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/raspiserver.git
+git clone https://github.com/carcheky/raspiserver.git
 cd raspiserver
 
 # 2. Copy and configure environment
