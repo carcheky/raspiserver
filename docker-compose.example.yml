@@ -1,67 +1,119 @@
-# 1 copy this file to docker-compose.yml
-# 2 copy .env.dist to .env and edit 
-# 3 uncomment services and run
-# 4 docker-compose up -d
+# RaspiServer - Docker Compose Configuration Template
+#
+# Instructions:
+# 1. Copy this file to docker-compose.yml: cp docker-compose.example.yml docker-compose.yml
+# 2. Copy environment file: cp .env.dist .env  
+# 3. Edit .env with your settings
+# 4. Uncomment the services you want to run below
+# 5. Start services: docker-compose up -d
+#
+# For detailed setup instructions, see: docs/SETUP.md
 
 include:
-  # # Dev Pack
-  # - services/multimedia/jellyfin.yml
-  # - services/multimedia/sonarr.yml
-  # - services/multimedia/radarr.yml
-  # - services/multimedia/jellyseerr.yml
-  # - services/multimedia/jellystat.yml
-  # - services/others/qbittorrent.yml
+  # =============================================================================
+  # QUICK START - Basic Media Server Stack
+  # =============================================================================
+  # Uncomment these for a basic working media server
+  # - services/multimedia/jellyfin.yml          # Media streaming server
+  # - services/multimedia/sonarr.yml            # TV series management
+  # - services/multimedia/radarr.yml            # Movie management
+  # - services/multimedia/jellyseerr.yml        # Media request interface
+  # - services/others/qbittorrent.yml           # Torrent client (VPN protected)
 
-  # # Servicios Multimedia
-  # - services/multimedia/jellyfin.yml
-  # - services/multimedia/plex.yml
-  # - services/multimedia/sonarr.yml
-  # - services/multimedia/radarr.yml
-  # - services/multimedia/bazarr.yml
-  # - services/multimedia/prowlarr.yml
-  # - services/multimedia/readarr.yml
-  # - services/multimedia/mylar3.yml
-  # - services/multimedia/lidarr.yml
-  # - services/multimedia/jellyseerr.yml
-  # - services/multimedia/wizarr.yml
-  # - services/multimedia/jellystat.yml
-  # - services/multimedia/janitorr.yml
-  # - services/multimedia/soulseekqt.yml
+  # =============================================================================
+  # MULTIMEDIA SERVICES - Media Streaming & Management
+  # =============================================================================
+  
+  # Core Media Services
+  # - services/multimedia/jellyfin.yml          # Media streaming server (Plex alternative)
+  # - services/multimedia/plex.yml              # Plex media server
+  
+  # Media Management (*arr stack)
+  # - services/multimedia/sonarr.yml            # TV series automation
+  # - services/multimedia/radarr.yml            # Movie automation  
+  # - services/multimedia/bazarr.yml            # Subtitle management
+  # - services/multimedia/prowlarr.yml          # Indexer management
+  # - services/multimedia/readarr.yml           # eBook & audiobook management
+  # - services/multimedia/lidarr.yml            # Music management
+  # - services/multimedia/mylar3.yml            # Comic book management
+  
+  # Media Requests & Analytics
+  # - services/multimedia/jellyseerr.yml        # Media request management
+  # - services/multimedia/wizarr.yml            # User invitation system
+  # - services/multimedia/jellystat.yml         # Jellyfin analytics
+  # - services/multimedia/janitorr.yml          # Media cleanup automation
+  
+  # Music & Audio
+  # - services/multimedia/soulseekqt.yml        # P2P music sharing
 
-  # # Servicios de Red y Seguridad
-  # - services/network/pihole.yml
-  # - services/network/adguardhome.yml
-  # - services/network/nordvpn.yml
-  # - services/network/cloudflared.yml
-  # - services/network/meshnet.yml
-  # - services/network/wireward.yml
-  # - services/network/authelia.yml
+  # =============================================================================
+  # NETWORK & SECURITY SERVICES
+  # =============================================================================
+  
+  # DNS & Ad Blocking
+  # - services/network/pihole.yml               # Network-wide ad blocker
+  # - services/network/adguardhome.yml          # Alternative DNS filtering
+  
+  # VPN & Security
+  # - services/network/nordvpn.yml              # VPN protection
+  # - services/network/cloudflared.yml          # Cloudflare tunnel
+  # - services/network/authelia.yml             # Authentication gateway
+  # - services/network/wireward.yml             # Wireguard VPN manager
+  
+  # Network Tools
+  # - services/network/meshnet.yml              # Mesh networking
 
-  # # Servicios de Automatización y Monitoreo
-  # - services/automation/homeassistant.yml
-  # - services/automation/esphome.yml
-  # - services/automation/netdata.yml
-  # - services/automation/uptime-kuma.yml
-  # - services/automation/kener.yml
-  # - services/automation/mqtt.yml
+  # =============================================================================
+  # HOME AUTOMATION & MONITORING
+  # =============================================================================
+  
+  # Smart Home
+  # - services/automation/homeassistant.yml     # Smart home hub
+  # - services/automation/esphome.yml           # ESP device management
+  # - services/automation/mqtt.yml              # IoT messaging broker
+  
+  # System Monitoring
+  # - services/automation/netdata.yml           # Real-time system monitoring
+  # - services/automation/uptime-kuma.yml       # Service uptime monitoring
+  # - services/automation/kener.yml             # Status page generator
 
-  # # Servicios de Productividad
-  # - services/productivity/nextcloud.yml
-  # - services/productivity/nextcloud-docker-socket-proxy.yml
-  # - services/productivity/telegram.yml
-  # - services/productivity/n8n.yml
-  # - services/productivity/activepieces.yml
+  # =============================================================================
+  # PRODUCTIVITY & COLLABORATION
+  # =============================================================================
+  
+  # Cloud Storage & Office
+  # - services/productivity/nextcloud.yml       # Self-hosted cloud storage
+  # - services/productivity/nextcloud-docker-socket-proxy.yml  # Docker API proxy
+  
+  # Automation & Workflows
+  # - services/productivity/n8n.yml             # Workflow automation
+  # - services/productivity/activepieces.yml    # Business automation
+  
+  # Communication
+  # - services/productivity/telegram.yml        # Telegram bot integration
 
-  # # Servicios de Gestión y Administración
-  # - services/management/portainer.yml
-  # - services/management/dockge.yml
-  # - services/management/watchtower.yml
-  # - services/management/homarr.yml
+  # =============================================================================
+  # MANAGEMENT & ADMINISTRATION
+  # =============================================================================
+  
+  # Container Management
+  # - services/management/portainer.yml         # Docker GUI management
+  # - services/management/dockge.yml            # Docker compose management
+  # - services/management/watchtower.yml        # Automatic container updates
+  
+  # Dashboard & Monitoring
+  # - services/management/homarr.yml            # Unified dashboard
 
-  # # Otros Servicios
-  # - services/others/code.yml
-  # - services/others/cosmos.yml
-  # - services/others/thingsboard.yml
-  # - services/others/romassistant.yml
-  # - services/others/qbittorrent.yml
-  # - services/others/proxy.yml
+  # =============================================================================
+  # ADDITIONAL SERVICES
+  # =============================================================================
+  
+  # Development & Tools
+  # - services/others/code.yml                  # VS Code server
+  # - services/others/cosmos.yml                # Application manager
+  # - services/others/qbittorrent.yml           # Torrent client
+  # - services/others/proxy.yml                 # Reverse proxy
+  
+  # Specialized Applications  
+  # - services/others/thingsboard.yml           # IoT platform
+  # - services/others/romassistant.yml          # ROM management
