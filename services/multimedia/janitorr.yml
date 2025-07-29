@@ -1,19 +1,40 @@
 services:
   janitorr:
     container_name: janitorr
-    restart: always
+    image: ghcr.io/schaka/janitorr:latest
+    restart: unless-stopped
     user: ${PUID}:${PGID}
     volumes:
       - ${VOLUMES_DIR}/janitorr-config/:/config
       - ${VOLUMES_DIR}/janitorr-logs:/logs
-      - ${MEDIA_DIR}:/BibliotecaMultimedia
+      - ${MEDIA_DIR}:/media # Media library for cleanup operations
     environment:
-      - LANG=es_ES.UTF-8
-      - LANGUAGE=es_ES:es
+      - TZ=${TIMEZONE}
+      - LANG=${LOCALE:-es_ES.UTF-8}
+      - LANGUAGE=${LOCALE_LANG:-es_ES:es}
+      - JANITORR_LOG_LEVEL=${JANITORR_LOG_LEVEL:-info}
       # - LC_ALL=es_ES.UTF-8
-    image: ghcr.io/schaka/janitorr:develop
+    ports:
+      - ${JANITORR_PORT:-8081}:8081
     healthcheck:
-      test: "wget -T5 -qO- http://localhost:8081/health | grep UP || exit 1"
+      test: ["CMD", "wget", "-T5", "-qO-", "http://localhost:8081/health"]
       start_period: 30s
-      interval: 5s
+      interval: 30s
+      timeout: 10s
       retries: 3
+    depends_on:
+      - sonarr
+      - radarr
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=media-maintenance"
+      - "raspiserver.description=Automated media library cleanup and maintenance"
