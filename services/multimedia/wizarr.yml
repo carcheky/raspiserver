@@ -2,6 +2,40 @@ services:
   wizarr:
     image: ghcr.io/wizarrrr/wizarr:latest
     container_name: wizarr
+    restart: unless-stopped
+    ports:
+      - ${WIZARR_PORT:-5690}:5690
+    volumes:
+      - ${VOLUMES_DIR}/wizarr-database:/data/database
+    environment:
+      - APP_URL=${WIZARR_APP_URL:-https://wizarr.${DOMAIN}} # URL at which you will access and share 
+      - DISABLE_BUILTIN_AUTH=${WIZARR_DISABLE_BUILTIN_AUTH:-false} # Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE} # Set your timezone here
+      - LOG_LEVEL=${WIZARR_LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5690/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - jellyfin
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=media-invites"
+      - "raspiserver.description=User invitation system for media servers"    image: ghcr.io/wizarrrr/wizarr:latest
+    container_name: wizarr
     restart: always
     ports:
       - ${WIZARR_PORT:-5690}:5690

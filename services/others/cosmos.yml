@@ -12,21 +12,44 @@ services:
   #     - '/var/lib/cosmos:/config'
   #   image: 'azukaar/cosmos-server:latest'
 
-
-
   cosmos-server:
     image: azukaar/cosmos-server:latest
     container_name: cosmos-server
     hostname: cosmos-server
-    restart: always
+    restart: unless-stopped
     privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket
-      - /:/mnt/host
-      - /var/lib/cosmos:/config
     network_mode: host
+    environment:
+      - TZ=${TIMEZONE}
+      - COSMOS_LOG_LEVEL=${COSMOS_LOG_LEVEL:-info}
+      - COSMOS_SERVER_COUNTRY=${COSMOS_SERVER_COUNTRY:-ES}
+      - COSMOS_HTTP_PORT=${COSMOS_HTTP_PORT:-8031}
+      - COSMOS_HTTPS_PORT=${COSMOS_HTTPS_PORT:-4431}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Read-only Docker socket
+      - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro
+      - /:/mnt/host:ro # Read-only host filesystem access
+      - ${VOLUMES_DIR}/cosmos-config:/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${COSMOS_HTTP_PORT:-8031}/cosmos/api/status"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.3'
+          memory: 512M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=infrastructure-management"
+      - "raspiserver.description=Comprehensive server management and reverse proxy"
+    # Alternative port configuration if not using host networking:
     # ports:
-    #   - 8031:80
-    #   - 4431:443
-    #   - 4242:4242/udp
+    #   - ${COSMOS_HTTP_PORT:-8031}:80
+    #   - ${COSMOS_HTTPS_PORT:-4431}:443
+    #   - ${COSMOS_UDP_PORT:-4242}:4242/udp

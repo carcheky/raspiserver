@@ -2,18 +2,36 @@ services:
   bazarr:
     image: linuxserver/bazarr:latest
     container_name: bazarr
-    restart: always
+    restart: unless-stopped
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
+      - UMASK=${UMASK:-022}
     volumes:
       - ${VOLUMES_DIR}/bazarr-config:/config
-      - ${MEDIA_DIR}:/BibliotecaMultimedia
+      - ${MEDIA_DIR}:/media:ro # Read-only media access
     ports:
       - '${BAZARR_PORT:-6767}:6767'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6767/api/system/status?apikey=$$(cat /config/config/config.ini | grep -oP '(?<=apikey = )[^\\n]+')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - sonarr
+      - radarr
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: '1'
           memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=subtitle-management"
+      - "raspiserver.description=Subtitle download manager for movies and TV shows"

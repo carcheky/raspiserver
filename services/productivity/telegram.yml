@@ -1,20 +1,47 @@
 services:
   telegram:
     container_name: telegram
-    build: jellyfin-telegram-notifier
-    image: fahmula/jellyfin-telegram-notifier
+    build: 
+      context: jellyfin-telegram-notifier
+      dockerfile: Dockerfile
+    image: fahmula/jellyfin-telegram-notifier:latest
+    restart: unless-stopped
     volumes:
       - ./jellyfin-telegram-notifier:/app
     ports:
       - "${TELEGRAM_PORT:-5000}:5000"  # Map host port 5000 to container port 5000
     environment:
+      - TZ=${TIMEZONE}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
       - JELLYFIN_BASE_URL=${JELLYFIN_BASE_URL}
       - JELLYFIN_API_KEY=${JELLYFIN_API_KEY}
       # - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
-      - SEASON_ADDED_WITHIN_X_DAYS=${SEASON_ADDED_WITHIN_X_DAYS}
-      - EPISODE_PREMIERED_WITHIN_X_DAYS=${EPISODE_PREMIERED_WITHIN_X_DAYS}
+      - SEASON_ADDED_WITHIN_X_DAYS=${SEASON_ADDED_WITHIN_X_DAYS:-7}
+      - EPISODE_PREMIERED_WITHIN_X_DAYS=${EPISODE_PREMIERED_WITHIN_X_DAYS:-1}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NOTIFICATION_DELAY=${NOTIFICATION_DELAY:-30}
     command: python main.py
     env_file:
       - .env
+    depends_on:
+      - jellyfin
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:5000/health', timeout=10)"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=notifications"
+      - "raspiserver.description=Telegram bot for Jellyfin media notifications"
