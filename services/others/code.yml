@@ -2,18 +2,39 @@ services:
   code:
     image: lscr.io/linuxserver/code-server:latest
     container_name: code-server
+    restart: unless-stopped
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
-      # - PASSWORD=
-      # - HASHED_PASSWORD=
-      # - SUDO_PASSWORD=
-      # - SUDO_PASSWORD_HASH=
-      # - PROXY_DOMAIN=code.examples.es
+      - PASSWORD=${CODE_PASSWORD:-}
+      - HASHED_PASSWORD=${CODE_HASHED_PASSWORD:-}
+      - SUDO_PASSWORD=${CODE_SUDO_PASSWORD:-}
+      - SUDO_PASSWORD_HASH=${CODE_SUDO_PASSWORD_HASH:-}
+      - PROXY_DOMAIN=${CODE_PROXY_DOMAIN:-code.examples.es}
+      - DEFAULT_WORKSPACE=${CODE_DEFAULT_WORKSPACE:-/config/workspace}
     volumes:
       - ${VOLUMES_DIR}/code-config:/config
       - ${VOLUMES_DIR}/code-workspace:/config/workspace
+      - ${CODE_PROJECTS_DIR:-./projects}:/projects # Additional projects directory
     ports:
       - '${CODE_PORT:-8448}:8443'
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://localhost:8443/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=development"
+      - "raspiserver.description=VS Code Server for web-based development"
