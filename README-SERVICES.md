@@ -5,7 +5,13 @@
 El proyecto está estructurado para permitir una gestión modular y eficiente de los servicios Docker:
 
 - **docker-compose.yml**: Archivo principal que incluye los servicios individuales
-- **apps/services/**: Directorio que contiene archivos YAML individuales para cada servicio
+- **services/**: Directorio que contiene archivos YAML organizados por categorías
+  - **multimedia/**: Servicios de entretenimiento (Jellyfin, Radarr, Sonarr, etc.)
+  - **network/**: Servicios de red (NordVPN, Proxy, etc.)
+  - **automation/**: Servicios de automatización (Home Assistant, N8N, etc.)
+  - **productivity/**: Servicios de productividad (Nextcloud, Code, etc.)
+  - **management/**: Servicios de gestión (Portainer, Dockge, etc.)
+  - **others/**: Otros servicios (Watchtower, etc.)
 - **volumes/**: Almacenamiento persistente para los servicios
 - **config/**: Directorio para archivos de configuración
 - **media/**: Directorio para archivos multimedia
@@ -121,6 +127,6 @@ docker-compose logs -f nombre_servicio
 
 ## Personalizar Servicios
 
-Si necesitas personalizar un servicio, puedes modificar su archivo correspondiente en `apps/services/`.
+Si necesitas personalizar un servicio, puedes modificar su archivo correspondiente en `services/categoria/`.
 
 Cada servicio está definido en su propio archivo para facilitar la gestión y mantenimiento.

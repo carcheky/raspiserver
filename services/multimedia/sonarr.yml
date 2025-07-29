@@ -13,7 +13,7 @@ services:
       - ${VOLUMES_DIR}/sonarr-config:/config
       - ${MEDIA_DIR}:/BibliotecaMultimedia
       - ${VOLUMES_DIR}/sonarr-custom-services.d:/custom-services.d
-      - ../../sonarr-arr-scripts:/custom-cont-init.d:rw
+      - ../../apps/mediaserver/sonarr-arr-scripts:/custom-cont-init.d:rw
       - ../../flags:/flags:rw
       - ${VOLUMES_DIR}/jellyfin-config/:/jellyfin-config:rw
     ports:
