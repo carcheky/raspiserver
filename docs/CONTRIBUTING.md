@@ -86,14 +86,14 @@ We welcome contributions in several areas:
 1. **Fork the Repository**
    ```bash
    # Fork on GitHub, then clone your fork
-   git clone https://github.com/YOUR-USERNAME/raspiserver.git
+   git clone https://github.com/carcheky/raspiserver.git
    cd raspiserver
    ```
 
 2. **Set Up Development Environment**
    ```bash
    # Add upstream remote
-   git remote add upstream https://github.com/original-owner/raspiserver.git
+   git remote add upstream https://github.com/carcheky/raspiserver.git
    
    # Copy configuration files
    cp .env.dist .env
