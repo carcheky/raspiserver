@@ -37,6 +37,9 @@ help: ## Show this help message
 
 setup: ## Initial setup - copy configuration templates
 	@echo "Setting up RaspiServer..."
+	@echo "🔄 Initializing git submodules..."
+	@git submodule update --init --recursive
+	@echo "✓ Git submodules initialized"
 	@if [ ! -f $(ENV_FILE) ]; then \
 		cp .env.dist $(ENV_FILE); \
 		echo "✓ Created .env file from template"; \

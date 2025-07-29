@@ -14,7 +14,7 @@ services:
       - ${MEDIA_DIR}:/media
       - ${DOWNLOADS_DIR:-./downloads}:/downloads
       - ${VOLUMES_DIR}/radarr-custom-services.d:/custom-services.d
-      - ./apps/mediaserver/radarr-arr-scripts:/custom-cont-init.d:ro
+      - ../../arr-scripts/radarr:/custom-cont-init.d:ro
       - ./flags:/flags:ro
     ports:
       - ${RADARR_PORT:-7878}:7878
