@@ -261,6 +261,7 @@ df -h
 - [Setup Guide](SETUP.md) - Complete installation guide
 - [Services Documentation](SERVICES.md) - Service-specific guides
 - [Architecture](ARCHITECTURE.md) - Technical architecture
+- [Submodule Sync](SUBMODULE_SYNC.md) - arr-scripts synchronization guide
 - [Troubleshooting](TROUBLESHOOTING.md) - Common issues & solutions
 - [Contributing](CONTRIBUTING.md) - Development guidelines
 
