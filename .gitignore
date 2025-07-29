@@ -31,3 +31,4 @@ apps/mediaserver/**/lang_flags-install_deps.sh
 apps/mediaserver/flags/data
 99-lang-flags-setup.sh
 volumes/
+volume-test.zip
