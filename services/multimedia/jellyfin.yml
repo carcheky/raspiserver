@@ -1,0 +1,33 @@
+services:
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: always
+    ports:
+      - ${JELLYFIN_PORT:-8096}:8096 # access port
+      # - ${JELLYFIN_HTTPS_PORT:-8920}:8920 # access port
+      # - ${JELLYFIN_UDP_PORT:-7359}:7359/udp # optional
+      # - ${JELLYFIN_UDP_PORT_1900:-1900}:1900/udp # optional
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - JELLYFIN_PublishedServerUrl=${DOMAIN}
+      - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
+      - JELLYFIN_FFmpeg__probesize=1G
+      - JELLYFIN_FFmpeg__analyzeduration=500M
+    volumes:
+      - ${VOLUMES_DIR}/jellyfin-config:/config
+      - ${MEDIA_DIR}:/BibliotecaMultimedia:rw
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "105"
+    deploy:
+      resources:
+        reservations:
+          cpus: '1'
+          memory: 2G
+        limits:
+          cpus: '3'
+          memory: 6G

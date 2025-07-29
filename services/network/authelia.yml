@@ -1,0 +1,10 @@
+services:
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    restart: always
+    user: "1000:1000"
+    environment:
+      TZ: ${TIMEZONE}
+    volumes:
+      - ${CONFIG_DIR}/authelia/config:/config

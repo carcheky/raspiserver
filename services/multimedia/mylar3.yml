@@ -1,0 +1,14 @@
+services:
+  mylar3:
+    image: lscr.io/linuxserver/mylar3:latest
+    container_name: mylar3
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_DIR}/mylar3-config:/config
+      - ${MEDIA_DIR}:/BibliotecaMultimedia
+    ports:
+      - ${MYLAR3_PORT:-8090}:8090
+    restart: always

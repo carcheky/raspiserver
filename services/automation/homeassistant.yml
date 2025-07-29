@@ -1,0 +1,19 @@
+services:
+  homeassistant:
+    image: lscr.io/linuxserver/homeassistant:latest
+    container_name: homeassistant
+    network_mode: host
+    privileged: true
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - DOCKER_MODS=linuxserver/mods:homeassistant-hacs
+    volumes:
+      - ${VOLUMES_DIR}/ha-config:/config
+      - /run/dbus:/run/dbus:ro # bluethooth
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+    cap_add:
+      - NET_ADMIN

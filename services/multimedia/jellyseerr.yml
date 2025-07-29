@@ -1,0 +1,17 @@
+services:
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_DIR}/jellyseerr-config:/app/config
+    ports:
+      - ${JELLYSEERR_PORT:-5055}:5055
+    deploy:
+      resources:
+        limits:
+          memory: 512M

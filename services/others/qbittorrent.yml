@@ -1,0 +1,24 @@
+services:
+  qbitorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+      - DOCKER_MODS=${DOCKER_MODS:-ghcr.io/vuetorrent/vuetorrent-lsio-mod:latest}
+    volumes:
+      - ${VOLUMES_DIR}/qbittorrent-config:/config:rw
+      - ${MEDIA_DIR}:/BibliotecaMultimedia:rw
+    ports:
+      - ${QB_WEBUI_PORT:-8080}:8080
+      - ${QB_TORRENTING_PORT:-6881}:6881
+      - ${QB_TORRENTING_PORT:-6881}:6881/udp
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G

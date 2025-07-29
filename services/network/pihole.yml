@@ -1,0 +1,21 @@
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: always
+    environment:
+      TZ: ${TIMEZONE}
+      WEBPASSWORD: ${PIHOLE_WEBPASSWORD}
+      DNSMASQ_LISTENING: all
+      CORS_HOSTS: pihole.mediacheky.es
+    volumes:
+      - '${CONFIG_DIR}/pihole/etc-pihole:/etc/pihole'
+      - '${CONFIG_DIR}/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+    cap_add:
+      - NET_ADMIN # Required if you are using Pi-hole as your DHCP server, else not needed
+    network_mode: host
+    # ports:
+    #   - "53:53/tcp"
+    #   - "53:53/udp"
+    #   - "67:67/udp" # Only required if you are using Pi-hole as your DHCP server
+    #   - "80:80/tcp"

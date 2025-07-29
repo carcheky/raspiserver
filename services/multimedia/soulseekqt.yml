@@ -1,0 +1,17 @@
+services:
+  soulseek:
+    image: realies/soulseek
+    container_name: soulseek
+    restart: unless-stopped
+    volumes:
+      - ${VOLUMES_DIR}/soulseek-appdata:/data/.SoulseekQt
+      - ${VOLUMES_DIR}/soulseek-logs:/data/Soulseek_Chat_Logs
+      - ${MEDIA_DIR}/Descargas/Musica/download:/data/Soulseek_Downloads
+      - ${MEDIA_DIR}/Descargas/Musica/shared:/data/Soulseek_Shared_Folder
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+    ports:
+      - ${SOULSEEK_WEB_PORT:-6080}:6080
+      - ${SOULSEEK_LISTEN_PORT:-61122}:61122 # example listening port, check Options -> Login
+      - ${SOULSEEK_OBS_PORT:-61123}:61123 # example obfuscated port, check Options -> Login

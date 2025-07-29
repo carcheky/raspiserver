@@ -1,0 +1,15 @@
+services:
+  thingsboard:
+    image: "thingsboard/tb-postgres"
+    container_name: thingsboard
+    restart: always
+    ports:
+      - "${THINGSBOARD_HTTP_PORT:-8080}:9090"
+      - "${THINGSBOARD_MQTT_PORT:-1883}:1883"
+      - "${THINGSBOARD_REST_PORT:-7070}:7070"
+      - "${THINGSBOARD_COAP_PORT:-5683-5688}:5683-5688/udp"
+    environment:
+      TB_QUEUE_TYPE: in-memory
+    volumes:
+      - ${CONFIG_DIR}/thingsboard/data:/data
+      - ${CONFIG_DIR}/thingsboard/logs:/var/log/thingsboard

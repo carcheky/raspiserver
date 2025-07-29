@@ -1,0 +1,25 @@
+services:
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - UMASK=${UMASK}
+      - LANG_FLAGS_WAIT_SECONDS=${LANG_FLAGS_WAIT_SECONDS:-30}
+    volumes:
+      - ${VOLUMES_DIR}/radarr-config:/config
+      - ${MEDIA_DIR}:/BibliotecaMultimedia
+      - ${VOLUMES_DIR}/radarr-custom-services.d:/custom-services.d
+      - ../../radarr-arr-scripts:/custom-cont-init.d
+      - ../../flags:/flags:rw
+      - ${VOLUMES_DIR}/jellyfin-config/:/jellyfin-config:rw
+    ports:
+      - ${RADARR_PORT:-7878}:7878
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G

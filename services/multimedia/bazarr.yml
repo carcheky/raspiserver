@@ -1,0 +1,19 @@
+services:
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_DIR}/bazarr-config:/config
+      - ${MEDIA_DIR}:/BibliotecaMultimedia
+    ports:
+      - '${BAZARR_PORT:-6767}:6767'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M

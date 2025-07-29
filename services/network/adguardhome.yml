@@ -1,0 +1,17 @@
+services:
+  adguardhome:
+    image: adguard/adguardhome
+    container_name: adguardhome
+    restart: always
+    environment:
+      TZ: ${TIMEZONE}
+    volumes:
+      - ${VOLUMES_DIR}/adguardhome-work:/opt/adguardhome/work
+      - ${VOLUMES_DIR}/adguardhome-conf:/opt/adguardhome/conf
+    # network_mode: host
+    ports:
+      - "${ADGUARDHOME_PORT:-84}:80"    # Cambio de puerto web
+      - "${ADGUARDHOME_DNS_PORT:-53}:53/udp"  # DNS principal
+      - "${ADGUARDHOME_DNS_PORT:-53}:53/tcp"  # DNS TCP (opcional)
+      # - "${ADGUARDHOME_ADMIN_PORT:-3000}:3000"
+      # - "${ADGUARDHOME_DNS_ALT_PORT:-54}:5353/udp"  # DNS alternativo si es necesario

@@ -1,0 +1,14 @@
+services:
+  roomassistant:
+    image: mkerix/room-assistant
+    container_name: romassistant
+    network_mode: host
+    privileged: true
+    volumes:
+      - ${VOLUMES_DIR}/romassistant-config:/room-assistant/config
+      - /var/run/dbus:/var/run/dbus
+    cap_add:
+      - NET_ADMIN
+    user: 1000:100
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0

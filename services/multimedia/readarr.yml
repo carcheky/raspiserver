@@ -1,0 +1,19 @@
+services:
+  readarr:
+    image: linuxserver/readarr:nightly
+    container_name: readarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_DIR}/readarr-config:/config
+      - ${MEDIA_DIR}:/BibliotecaMultimedia
+    ports:
+      - ${READARR_PORT:-8787}:8787
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M

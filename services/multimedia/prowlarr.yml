@@ -1,0 +1,18 @@
+services:
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: always
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_DIR}/prowlarr-config:/config
+    ports:
+      - ${PROWLARR_PORT:-9696}:9696
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M

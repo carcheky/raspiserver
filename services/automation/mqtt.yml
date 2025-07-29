@@ -1,0 +1,16 @@
+services:
+  mqtt:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt
+    restart: always
+    network_mode: host
+    user: 1000:1000
+    # ports:
+    #   - ${MQTT_PORT:-1883}:1883
+    #   - ${MQTT_WS_PORT:-9001}:9001
+    volumes:
+      - ${VOLUMES_DIR}/mqtt-config/config:/mosquitto/config
+      - ${VOLUMES_DIR}/mqtt-config/data:/mosquitto/data
+      - ${VOLUMES_DIR}/mqtt-config/log:/mosquitto/log
+    cap_add:
+      - NET_ADMIN

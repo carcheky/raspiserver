@@ -1,0 +1,22 @@
+services:
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    restart: always
+    environment:
+      - PASSWORD=${HOMARR_PASSWORD}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - BASE_URL=homarr.${DOMAIN}
+    volumes:
+      - ${VOLUMES_DIR}/homarr-config:/app/data/configs
+      - ${VOLUMES_DIR}/homarr-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - '${HOMARR_PORT:-7575}:7575'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 1G

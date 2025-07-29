@@ -1,27 +1,67 @@
 # 1 copy this file to docker-compose.yml
-# 2 copy .env.dist to .env an edit 
-# 3 uncoment apps and run
+# 2 copy .env.dist to .env and edit 
+# 3 uncomment services and run
 # 4 docker-compose up -d
 
 include:
-# - apps/mediaserver/MEDIASERVER.yml
-# - apps/homeassistant/docker-compose.homeassistant.yml
-# - apps/tunnel/docker-compose.tunnel.yml
-# - apps/dashboard/docker-compose.homarr.yml
-# - apps/adguard/docker-compose.adguardhome.yml
-# - apps/nginx/docker-compose.nginx.yml
-# - apps/nextcloud/docker-compose.nextcloud.yml
-# - apps/wireward/docker-compose.wireward.yml
+  # # Dev Pack
+  # - services/multimedia/jellyfin.yml
+  # - services/multimedia/sonarr.yml
+  # - services/multimedia/radarr.yml
+  # - services/multimedia/jellyseerr.yml
+  # - services/multimedia/jellystat.yml
+  # - services/others/qbittorrent.yml
 
-# - apps/pending/docker-compose.activepieces.yml
-# - apps/pending/docker-compose.authelia.yml
-# - apps/pending/docker-compose.emby.yml
-# - apps/pending/docker-compose.n8n.yml
-# - apps/pending/docker-compose.nextcloud.yml
-# - apps/pending/docker-compose.plex.yml
-# - apps/pending/docker-compose.swag.yml
-# - apps/pending/docker-compose.thingsboard.yml
-# - apps/pending/docker-compose.netdata.yml
-# - apps/pending/docker-compose.pihole.yml
-# - apps/pending/docker-compose.portainer.yml
-# - apps/pending/docker-compose.telegram.yml
+  # # Servicios Multimedia
+  # - services/multimedia/jellyfin.yml
+  # - services/multimedia/plex.yml
+  # - services/multimedia/sonarr.yml
+  # - services/multimedia/radarr.yml
+  # - services/multimedia/bazarr.yml
+  # - services/multimedia/prowlarr.yml
+  # - services/multimedia/readarr.yml
+  # - services/multimedia/mylar3.yml
+  # - services/multimedia/lidarr.yml
+  # - services/multimedia/jellyseerr.yml
+  # - services/multimedia/wizarr.yml
+  # - services/multimedia/jellystat.yml
+  # - services/multimedia/janitorr.yml
+  # - services/multimedia/soulseekqt.yml
+
+  # # Servicios de Red y Seguridad
+  # - services/network/pihole.yml
+  # - services/network/adguardhome.yml
+  # - services/network/nordvpn.yml
+  # - services/network/cloudflared.yml
+  # - services/network/meshnet.yml
+  # - services/network/wireward.yml
+  # - services/network/authelia.yml
+
+  # # Servicios de Automatización y Monitoreo
+  # - services/automation/homeassistant.yml
+  # - services/automation/esphome.yml
+  # - services/automation/netdata.yml
+  # - services/automation/uptime-kuma.yml
+  # - services/automation/kener.yml
+  # - services/automation/mqtt.yml
+
+  # # Servicios de Productividad
+  # - services/productivity/nextcloud.yml
+  # - services/productivity/nextcloud-docker-socket-proxy.yml
+  # - services/productivity/telegram.yml
+  # - services/productivity/n8n.yml
+  # - services/productivity/activepieces.yml
+
+  # # Servicios de Gestión y Administración
+  # - services/management/portainer.yml
+  # - services/management/dockge.yml
+  # - services/management/watchtower.yml
+  # - services/management/homarr.yml
+
+  # # Otros Servicios
+  # - services/others/code.yml
+  # - services/others/cosmos.yml
+  # - services/others/thingsboard.yml
+  # - services/others/romassistant.yml
+  # - services/others/qbittorrent.yml
+  # - services/others/proxy.yml
