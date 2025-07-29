@@ -42,13 +42,14 @@ sudo systemctl enable docker
 
 #### Install Docker Compose
 ```bash
-# For ARM64 (Raspberry Pi)
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
+# Docker Compose V2 is now included with Docker
 # Verify installation
 docker --version
-docker-compose --version
+docker compose version
+
+# If you need the legacy docker-compose command for compatibility:
+# sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+# sudo chmod +x /usr/local/bin/docker-compose
 ```
 
 ### Step 2: Clone Repository
