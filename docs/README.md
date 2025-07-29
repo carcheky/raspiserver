@@ -6,7 +6,7 @@ A comprehensive Docker-based server solution featuring multimedia streaming, hom
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/raspiserver.git
+git clone https://github.com/carcheky/raspiserver.git
 cd raspiserver
 
 # 2. Copy and configure environment
@@ -116,7 +116,7 @@ For detailed installation instructions, see:
 
 - Linux system (Raspberry Pi 4+ recommended)
 - Docker & Docker Compose
-- 16GB+ storage (32GB+ recommended)
+- 32GB+ storage (SSD recommended)
 - Static IP address (recommended)
 
 ### Basic Setup
