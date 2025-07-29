@@ -18,6 +18,7 @@ include:
   # - services/multimedia/sonarr.yml            # TV series management
   # - services/multimedia/radarr.yml            # Movie management
   # - services/multimedia/jellyseerr.yml        # Media request interface
+  # - services/multimedia/jellystat.yml         # Jellyfin analytics
   # - services/others/qbittorrent.yml           # Torrent client (VPN protected)
 
   # =============================================================================
