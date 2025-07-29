@@ -1,14 +1,37 @@
 services:
   watchtower:
-    image: containrrr/watchtower
+    image: containrrr/watchtower:latest
     container_name: watchtower
+    restart: unless-stopped
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: --interval 21600 --cleanup --remove-volumes --revive-stopped
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Read-only Docker socket
+    command: --interval ${WATCHTOWER_INTERVAL:-21600} --cleanup --remove-volumes --revive-stopped --include-restarting --label-enable
     environment:
       - TZ=${TIMEZONE}
+      - WATCHTOWER_POLL_INTERVAL=${WATCHTOWER_POLL_INTERVAL:-21600}
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_REMOVE_VOLUMES=true
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+      - WATCHTOWER_REVIVE_STOPPED=true
+      - WATCHTOWER_LABEL_ENABLE=true
+      - WATCHTOWER_SCHEDULE=${WATCHTOWER_SCHEDULE:-0 0 4 * * *}
+      - WATCHTOWER_NOTIFICATIONS_LEVEL=${WATCHTOWER_NOTIFICATIONS_LEVEL:-info}
+      - WATCHTOWER_NOTIFICATION_URL=${WATCHTOWER_NOTIFICATION_URL:-}
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps aux | grep -v grep | grep watchtower || exit 1"]
+      interval: 300s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: '0.5'
           memory: 512M
+        reservations:
+          cpus: '0.05'
+          memory: 64M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=management"
+      - "raspiserver.description=Automatic Docker container updater"
