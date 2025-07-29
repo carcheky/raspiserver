@@ -1,15 +1,20 @@
 services:
   netdata:
-    image: netdata/netdata
+    image: netdata/netdata:latest
     container_name: netdata
     pid: host
     network_mode: host
-    restart: always
+    restart: unless-stopped
     cap_add:
       - SYS_PTRACE
       - SYS_ADMIN
     security_opt:
       - apparmor:unconfined
+    environment:
+      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN:-}
+      - NETDATA_CLAIM_URL=${NETDATA_CLAIM_URL:-https://app.netdata.cloud}
+      - NETDATA_CLAIM_ROOMS=${NETDATA_CLAIM_ROOMS:-}
+      - PGID=${PGID}
     volumes:
       - ${CONFIG_DIR}/netdata/config:/etc/netdata
       - ${CONFIG_DIR}/netdata/lib:/var/lib/netdata
@@ -22,3 +27,22 @@ services:
       - /etc/os-release:/host/etc/os-release:ro
       - /var/log:/host/var/log:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=monitoring"
+      - "raspiserver.description=Real-time system performance monitoring and alerting"
