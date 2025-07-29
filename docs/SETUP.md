@@ -42,13 +42,14 @@ sudo systemctl enable docker
 
 #### Install Docker Compose
 ```bash
-# For ARM64 (Raspberry Pi)
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
+# Docker Compose V2 is now included with Docker
 # Verify installation
 docker --version
-docker-compose --version
+docker compose version
+
+# If you need the legacy docker-compose command for compatibility:
+# sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+# sudo chmod +x /usr/local/bin/docker-compose
 ```
 
 ### Step 2: Clone Repository
@@ -362,9 +363,9 @@ Service logs: ./volumes/service-name/logs/
 After installation:
 
 1. [Configure individual services](SERVICES.md)
-2. [Set up automation](AUTOMATION.md)
-3. [Configure monitoring](MONITORING.md)
-4. [Implement backups](BACKUP.md)
+2. [Set up home automation](SERVICES.md#home-automation)
+3. [Configure monitoring tools](SERVICES.md#monitoring--management)
+4. [Review backup procedures](TROUBLESHOOTING.md#backup-recovery)
 
 ## 🆘 Getting Help
 

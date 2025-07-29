@@ -116,7 +116,7 @@ For detailed installation instructions, see:
 
 - Linux system (Raspberry Pi 4+ recommended)
 - Docker & Docker Compose
-- 16GB+ storage (32GB+ recommended)
+- 32GB+ storage (SSD recommended)
 - Static IP address (recommended)
 
 ### Basic Setup
