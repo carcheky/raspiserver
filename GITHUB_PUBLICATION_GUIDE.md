@@ -40,10 +40,10 @@ git commit -m "docs: add comprehensive service configuration guide
 
 ```bash
 # Agregar GitHub como segundo remote
-git remote add github https://github.com/TU_USUARIO/raspiserver.git
+git remote add github https://github.com/carcheky/raspiserver.git
 
 # O si prefieres usar SSH (recomendado si tienes SSH keys configuradas):
-git remote add github git@github.com:TU_USUARIO/raspiserver.git
+git remote add github git@github.com:carcheky/raspiserver.git
 
 # Verificar remotos
 git remote -v
@@ -92,7 +92,7 @@ git push github --all
      
      ### 🔧 Quick Start
      ```bash
-     git clone https://github.com/TU_USUARIO/raspiserver.git
+     git clone https://github.com/carcheky/raspiserver.git
      cd raspiserver
      cp docker-compose.example.yml docker-compose.yml
      cp .env.dist .env
@@ -138,8 +138,8 @@ Aquí tienes todos los comandos que necesitas ejecutar:
 git add CONFIGURACION_SERVICIOS.md
 git commit -m "docs: add comprehensive service configuration guide"
 
-# 2. Agregar remote de GitHub (reemplaza TU_USUARIO)
-git remote add github git@github.com:TU_USUARIO/raspiserver.git
+# 2. Agregar remote de GitHub
+git remote add github git@github.com:carcheky/raspiserver.git
 
 # 3. Subir a GitHub
 git push github delta

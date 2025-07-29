@@ -6,7 +6,7 @@ A comprehensive Docker-based server solution featuring multimedia streaming, hom
 
 ```bash
 # Clone and setup
-git clone https://github.com/your-username/raspiserver.git
+git clone https://github.com/carcheky/raspiserver.git
 cd raspiserver
 cp .env.dist .env && cp docker-compose.example.yml docker-compose.yml
 
@@ -57,7 +57,7 @@ docker-compose down
 ## 🆘 Support
 
 - 📖 Check the [documentation](docs/)
-- 🐛 Open an [issue](https://github.com/your-username/raspiserver/issues)
+- 🐛 Open an [issue](https://github.com/carcheky/raspiserver/issues)
 - 💬 Join the discussion
 
 ---

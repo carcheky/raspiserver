@@ -59,7 +59,7 @@ mkdir -p ~/mediacheky
 cd ~/mediacheky
 
 # Clone repository
-git clone https://github.com/your-username/raspiserver.git
+git clone https://github.com/carcheky/raspiserver.git
 cd raspiserver
 
 # Initialize submodules (required for arr-scripts)
