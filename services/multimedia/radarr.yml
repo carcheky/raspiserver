@@ -10,12 +10,13 @@ services:
       - UMASK=${UMASK:-022}
       - LANG_FLAGS_WAIT_SECONDS=${LANG_FLAGS_WAIT_SECONDS:-30}
     volumes:
-      - ${VOLUMES_DIR}/radarr-config:/config
       - ${MEDIA_DIR}:/media
-      - ${DOWNLOADS_DIR:-./downloads}:/downloads
+      - ${VOLUMES_DIR}/radarr-config:/config
       - ${VOLUMES_DIR}/radarr-custom-services.d:/custom-services.d
-      - ../../arr-scripts/radarr:/custom-cont-init.d:ro
-      - ./flags:/flags:ro
+      - ${VOLUMES_DIR}/radarr-custom-cont-init.d:/custom-cont-init.d
+      - ../../flags:/flags
+      - ../../arr-scripts/radarr/scripts_init.bash:/custom-cont-init.d/scripts_init.bash
+      - ../../flags/lang-flags-ini.bash:/custom-cont-init.d/lang-flags-ini.bash
     ports:
       - ${RADARR_PORT:-7878}:7878
     healthcheck:
@@ -24,8 +25,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    depends_on:
-      - qbittorrent
     deploy:
       resources:
         limits:
