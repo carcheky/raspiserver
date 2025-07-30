@@ -14,8 +14,8 @@ services:
       - ${VOLUMES_DIR}/radarr-config:/config
       - ${VOLUMES_DIR}/radarr-custom-services.d:/custom-services.d
       - ${VOLUMES_DIR}/radarr-custom-cont-init.d:/custom-cont-init.d
-      - ../../flags:/flags
       - ../../arr-scripts/radarr/scripts_init.bash:/custom-cont-init.d/scripts_init.bash
+      - ../../flags:/flags
       - ../../flags/lang-flags-ini.bash:/custom-cont-init.d/lang-flags-ini.bash
     ports:
       - ${RADARR_PORT:-7878}:7878

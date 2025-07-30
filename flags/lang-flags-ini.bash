@@ -1,0 +1,1 @@
+bash /flags/lang-flags.sh setup
