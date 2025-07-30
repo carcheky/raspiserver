@@ -6,7 +6,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - TZ=${TIMEZONE}    
+      - TZ=${TIMEZONE}
       - UMASK=${UMASK:-022}
       - LANG_FLAGS_WAIT_SECONDS=${LANG_FLAGS_WAIT_SECONDS:-30}
     volumes:
