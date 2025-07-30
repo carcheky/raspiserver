@@ -13,8 +13,8 @@ services:
       - ${MEDIA_DIR}:/media
       - ${VOLUMES_DIR}/radarr-config:/config
       - ${VOLUMES_DIR}/radarr-custom-services.d:/custom-services.d
-      - ${VOLUMES_DIR}/radarr-custom-cont-init.d:/custom-cont-init.d
-      - ../../arr-scripts/radarr/scripts_init.bash:/custom-cont-init.d/scripts_init.bash
+      # - ${VOLUMES_DIR}/radarr-custom-cont-init.d:/custom-cont-init.d
+      # - ../../arr-scripts/radarr/raspiserver_init.bash:/custom-cont-init.d/raspiserver_init.bash
       - ../../flags:/flags
       - ../../flags/lang-flags-ini.bash:/custom-cont-init.d/lang-flags-ini.bash
     ports:

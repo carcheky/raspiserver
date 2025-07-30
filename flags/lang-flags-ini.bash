@@ -1,1 +1,1 @@
-bash /flags/lang-flags.sh setup
+bash /flags/lang-flags.bash setup
