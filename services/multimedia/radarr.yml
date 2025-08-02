@@ -13,8 +13,8 @@ services:
       - ${MEDIA_DIR}:/media
       - ${VOLUMES_DIR}/radarr-config:/config
       - ${VOLUMES_DIR}/radarr-custom-services.d:/custom-services.d
-      # - ${VOLUMES_DIR}/radarr-custom-cont-init.d:/custom-cont-init.d
-      # - ../../arr-scripts/radarr/raspiserver_init.bash:/custom-cont-init.d/raspiserver_init.bash
+      - ../../arr-scripts/radarr/raspiserver_init.bash:/custom-cont-init.d/raspiserver_init.bash
+      - ../../apps:/apps
       - ../../flags:/flags
       - ../../flags/lang-flags-ini.bash:/custom-cont-init.d/lang-flags-ini.bash
     ports:
@@ -25,14 +25,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 2G
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 512M
     labels:
       - "traefik.enable=true"
       - "com.centurylinklabs.watchtower.enable=true"

@@ -10,12 +10,13 @@ services:
       - UMASK=${UMASK:-022}
       - LANG_FLAGS_WAIT_SECONDS=${LANG_FLAGS_WAIT_SECONDS:-30}
     volumes:
-      - ${VOLUMES_DIR}/sonarr-config:/config
       - ${MEDIA_DIR}:/media
-      - ${DOWNLOADS_DIR:-./downloads}:/downloads
+      - ${VOLUMES_DIR}/sonarr-config:/config
       - ${VOLUMES_DIR}/sonarr-custom-services.d:/custom-services.d
-      - ../../arr-scripts/sonarr:/custom-cont-init.d:ro
-      - ./flags:/flags:ro
+      - ../../arr-scripts/sonajrr/raspiserver_init.bash:/custom-cont-init.d/raspiserver_init.bash
+      - ../../apps:/apps
+      - ../../flags:/flags
+      - ../../flags/lang-flags-ini.bash:/custom-cont-init.d/lang-flags-ini.bash
     ports:
       - ${SONARR_PORT:-8989}:8989
     healthcheck:
@@ -24,16 +25,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    depends_on:
-      - qbittorrent
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 2G
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 512M
     labels:
       - "traefik.enable=true"
       - "com.centurylinklabs.watchtower.enable=true"
