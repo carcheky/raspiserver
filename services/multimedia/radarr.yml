@@ -20,7 +20,7 @@ services:
     ports:
       - ${RADARR_PORT:-7878}:7878
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7878/api/v3/system/status?apikey=$$(cat /config/config.xml | grep -oP '(?<=<ApiKey>)[^<]+')"]
+      test: ["CMD", "sh", "-c", "curl -f \"http://localhost:7878/api/v3/system/status?apikey=$$(grep ApiKey /config/config.xml | sed 's/.*<ApiKey>\\(.*\\)<\\/ApiKey>.*/\\1/')\""]
       interval: 30s
       timeout: 10s
       retries: 3
