@@ -1,0 +1,88 @@
+# RaspiServer - Docker Compose Override Example
+#
+# Este archivo muestra ejemplos de personalizaciones comunes para los servicios.
+# Para usar:
+# 1. Copia este archivo: cp docker-compose.override.example.yml docker-compose.override.yml
+# 2. Descomenta y personaliza las secciones que necesites
+# 3. Los overrides se aplican automáticamente cuando ejecutas docker-compose up
+#
+# Nota: docker-compose.override.yml se aplica automáticamente sobre docker-compose.yml
+
+services:
+  # =============================================================================
+  # JELLYFIN - Aceleración por Hardware GPU
+  # =============================================================================
+  # Descomenta esta sección para habilitar aceleración por hardware en Jellyfin
+  # Requiere GPU Intel con soporte OpenCL/VAAPI o GPU NVIDIA
+  
+  # jellyfin:
+  #   devices:
+  #     - /dev/dri:/dev/dri # GPU hardware acceleration (Intel/AMD)
+  #     # Para NVIDIA, usar en su lugar:
+  #     # - /dev/nvidia0:/dev/nvidia0
+  #     # - /dev/nvidiactl:/dev/nvidiactl
+  #     # - /dev/nvidia-modeset:/dev/nvidia-modeset
+  #     # - /dev/nvidia-uvm:/dev/nvidia-uvm
+  #     # - /dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools
+  #   group_add:
+  #     - "105" # Grupo render (puede variar según el sistema)
+  #     # Para verificar el grupo correcto: getent group render
+  #     # Alternativamente, usar el grupo video: "44"
+
+  # =============================================================================
+  # CONFIGURACIONES ADICIONALES COMUNES
+  # =============================================================================
+  
+  # Ejemplo: Aumentar recursos para Jellyfin
+  # jellyfin:
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '4'
+  #         memory: 8G
+  #       reservations:
+  #         cpus: '2'
+  #         memory: 4G
+
+  # Ejemplo: Configuración personalizada para qBittorrent
+  # qbittorrent:
+  #   ports:
+  #     - "8080:8080" # Puerto personalizado para WebUI
+  #   environment:
+  #     - WEBUI_PORT=8080
+  #   volumes:
+  #     - ./custom-configs/qbittorrent.conf:/config/qBittorrent/qBittorrent.conf
+
+  # Ejemplo: Configuración de red personalizada
+  # sonarr:
+  #   networks:
+  #     - custom_network
+  #   extra_hosts:
+  #     - "custom.host:192.168.1.100"
+
+  # Ejemplo: Variables de entorno adicionales
+  # radarr:
+  #   environment:
+  #     - DOCKER_MODS=linuxserver/mods:universal-cron
+  #     - CUSTOM_VAR=value
+
+# =============================================================================
+# REDES PERSONALIZADAS (si es necesario)
+# =============================================================================
+# networks:
+#   custom_network:
+#     driver: bridge
+#     ipam:
+#       config:
+#         - subnet: 172.20.0.0/16
+
+# =============================================================================
+# VOLÚMENES ADICIONALES (si es necesario)
+# =============================================================================
+# volumes:
+#   custom_volume:
+#     driver: local
+#     driver_opts:
+#       type: none
+#       o: bind
+#       device: /path/to/custom/directory

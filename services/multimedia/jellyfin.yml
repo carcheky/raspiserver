@@ -21,10 +21,10 @@ services:
       - ${VOLUMES_DIR}/jellyfin-config:/config
       - ${MEDIA_DIR}:/media:ro # Read-only media access for security
       - /tmp/jellyfin-cache:/cache # Temporary transcoding cache
-    devices:
-      - /dev/dri:/dev/dri # GPU hardware acceleration
-    group_add:
-      - "105" # Required for GPU access (render group)
+    # devices:
+    #   - /dev/dri:/dev/dri # GPU hardware acceleration
+    # group_add:
+    #   - "105" # Required for GPU access (render group)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
       interval: 30s
