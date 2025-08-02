@@ -32,3 +32,4 @@ apps/mediaserver/flags/data
 99-lang-flags-setup.sh
 volumes/
 volume-test.zip
+volumes.zip
