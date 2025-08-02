@@ -13,7 +13,7 @@ services:
       - ${MEDIA_DIR}:/media
       - ${VOLUMES_DIR}/sonarr-config:/config
       - ${VOLUMES_DIR}/sonarr-custom-services.d:/custom-services.d
-      - ../../arr-scripts/sonajrr/raspiserver_init.bash:/custom-cont-init.d/raspiserver_init.bash
+      - ../../arr-scripts/sonarr/raspiserver_init.bash:/custom-cont-init.d/raspiserver_init.bash
       - ../../apps:/apps
       - ../../flags:/flags
       - ../../flags/lang-flags-ini.bash:/custom-cont-init.d/lang-flags-ini.bash
