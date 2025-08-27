@@ -4,6 +4,7 @@ services:
     container_name: homarr
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - PASSWORD=${HOMARR_PASSWORD}
       - PUID=${PUID}
       - PGID=${PGID}
@@ -34,7 +35,10 @@ services:
           cpus: '0.2'
           memory: 256M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=homarr.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 7575}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=dashboard"
       - "raspiserver.description=Modern dashboard for homelab services"

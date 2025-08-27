@@ -6,6 +6,7 @@ services:
     ports:
       - ${N8N_PORT:-5678}:5678
     environment:
+      # RaspiServer reverse proxy configuration
       - N8N_PROTOCOL=${N8N_PROTOCOL:-https}
       - N8N_HOST=${N8N_HOST:-n8n.mediacheky.es}
       - N8N_PORT=${N8N_PORT:-5678}
@@ -37,7 +38,10 @@ services:
           cpus: '0.3'
           memory: 512M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=n8n.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=automation-workflows"
       - "raspiserver.description=Workflow automation platform for complex integrations"

@@ -9,6 +9,7 @@ services:
       - "${THINGSBOARD_REST_PORT:-7070}:7070"
       - "${THINGSBOARD_COAP_PORT:-5683}:5683/udp"
     environment:
+      # RaspiServer reverse proxy configuration
       TB_QUEUE_TYPE: ${TB_QUEUE_TYPE:-in-memory}
       TB_HOST: ${TB_HOST:-thingsboard}
       TB_PORT: ${TB_PORT:-9090}
@@ -34,7 +35,10 @@ services:
           cpus: '0.5'
           memory: 512M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=thingsboard.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=iot-platform"
       - "raspiserver.description=IoT data collection and device management platform"

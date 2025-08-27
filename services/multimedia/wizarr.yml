@@ -8,6 +8,7 @@ services:
     volumes:
       - ${VOLUMES_DIR}/wizarr-database:/data/database
     environment:
+      # RaspiServer reverse proxy configuration
       - APP_URL=${WIZARR_APP_URL:-https://wizarr.${DOMAIN}} # URL at which you will access and share 
       - DISABLE_BUILTIN_AUTH=${WIZARR_DISABLE_BUILTIN_AUTH:-false} # Set to true ONLY if you are using another auth provider (Authelia, Authentik, etc)
       - PUID=${PUID}
@@ -31,7 +32,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=wizarr.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=media-invites"
       - "raspiserver.description=User invitation system for media servers"

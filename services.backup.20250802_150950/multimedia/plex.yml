@@ -1,0 +1,38 @@
+services:
+  plex:
+    container_name: plex
+    image: plexinc/pms-docker:latest
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - TZ=${TIMEZONE}
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_UID=${PUID:-1000}
+      - PLEX_GID=${PGID:-1000}
+      - PLEX_PREFERENCE_1=${PLEX_PREFERENCE_1:-}
+      - PLEX_PREFERENCE_2=${PLEX_PREFERENCE_2:-}
+      - CHANGE_CONFIG_DIR_OWNERSHIP=${CHANGE_CONFIG_DIR_OWNERSHIP:-true}
+    volumes:
+      - ${CONFIG_DIR}/plex/database:/config
+      - ${CONFIG_DIR}/plex/transcode:/transcode
+      - ${MEDIA_DIR}:/data:ro # Read-only media access
+    devices:
+      - /dev/dri:/dev/dri # GPU hardware acceleration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32400/identity"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=media-streaming"
+      - "raspiserver.description=Plex Media Server for streaming and transcoding"

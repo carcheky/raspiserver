@@ -4,6 +4,7 @@ services:
     container_name: jellyseerr
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
@@ -30,7 +31,10 @@ services:
           cpus: '0.25'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=jellyseerr.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 5055}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=media-requests"
       - "raspiserver.description=Media request management for Jellyfin"

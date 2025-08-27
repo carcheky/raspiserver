@@ -347,6 +347,31 @@ clean:
 	@git branch | grep -v "master" | xargs git branch -D
 
 
+# =============================================================================
+# REVERSE PROXY MANAGEMENT
+# =============================================================================
+
+migrate-nginx: ## Migrate from Traefik to docker-gen + nginx
+	@echo "🔄 Migrating from Traefik to docker-gen + nginx..."
+	@./scripts/migrate-to-nginx-proxy.sh
+
+setup-nginx: ## Setup directories for nginx reverse proxy
+	@echo "📁 Setting up nginx directories..."
+	@mkdir -p volumes/nginx/{conf.d,certs,vhost.d,html,acme}
+	@echo "✅ Nginx directories created"
+
+nginx-config: check-env ## Generate nginx configuration (trigger docker-gen)
+	@echo "🔧 Regenerating nginx configuration..."
+	@docker-compose kill -s HUP docker-gen || echo "docker-gen not running"
+	@echo "✅ Configuration regenerated"
+
+nginx-logs: check-env ## Show nginx logs
+	@docker-compose logs --tail=50 --timestamps nginx docker-gen
+
+# =============================================================================
+# SPECIAL TARGETS
+# =============================================================================
+
 sv:
 	ifneq ($(service),)
 		docker compose up -d --remove-orphans --force-recrate $(service)

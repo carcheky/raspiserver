@@ -17,6 +17,7 @@ services:
       - JELLYFIN_FFmpeg__probesize=1G
       - JELLYFIN_FFmpeg__analyzeduration=500M
       - JELLYFIN_LOG_DIR=/config/log
+      # RaspiServer reverse proxy configuration
     volumes:
       - ${VOLUMES_DIR}/jellyfin-config:/config
       - ${MEDIA_DIR}:/media:ro # Read-only media access for security
@@ -40,7 +41,15 @@ services:
           cpus: '3'
           memory: 6G
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=jellyfin.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8096}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
+      # Caddy reverse proxy configuration
+      - "caddy=jellyfin.${DOMAIN}"
+      - "caddy.handle_path=/jellyfin*"
+      - "caddy.handle_path.0_reverse_proxy={{upstreams 8096}}"
+      - "caddy.handle_path.1_rewrite=* /jellyfin{path}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=media-streaming"
       - "raspiserver.description=Media server for streaming movies, TV shows, and music"

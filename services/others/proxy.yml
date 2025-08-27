@@ -14,6 +14,7 @@ services:
       - ${VOLUMES_DIR}/nginx-data:/data
       - ${VOLUMES_DIR}/nginx-letsencrypt:/etc/letsencrypt
     environment:
+      # RaspiServer reverse proxy configuration
       - TZ=${TIMEZONE}
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -38,7 +39,10 @@ services:
           cpus: '0.2'
           memory: 256M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=proxy.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 80}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=reverse-proxy"
       - "raspiserver.description=Nginx Proxy Manager for SSL and reverse proxy"

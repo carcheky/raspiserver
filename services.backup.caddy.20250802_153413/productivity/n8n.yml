@@ -1,0 +1,49 @@
+services:
+  n8n:
+    container_name: n8n
+    image: docker.n8n.io/n8nio/n8n:latest
+    restart: unless-stopped
+    ports:
+      - ${N8N_PORT:-5678}:5678
+    environment:
+      # RaspiServer reverse proxy configuration
+      - RASPISERVER_ENABLE=true
+      - RASPISERVER_SUBDOMAIN=n8n
+      - RASPISERVER_PORT=8080
+      - RASPISERVER_PROTOCOL=http
+      - RASPISERVER_WEBSOCKET=false
+      - RASPISERVER_MAX_BODY_SIZE=100M
+      - N8N_PROTOCOL=${N8N_PROTOCOL:-https}
+      - N8N_HOST=${N8N_HOST:-n8n.mediacheky.es}
+      - N8N_PORT=${N8N_PORT:-5678}
+      - NODE_ENV=${NODE_ENV:-production}
+      - WEBHOOK_URL=${N8N_PROTOCOL}://${N8N_HOST}/
+      - GENERIC_TIMEZONE=${TIMEZONE}
+      - TZ=${TIMEZONE}
+      - N8N_BASIC_AUTH_ACTIVE=${N8N_BASIC_AUTH_ACTIVE:-true}
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD:-}
+      - N8N_LOG_LEVEL=${N8N_LOG_LEVEL:-info}
+      - EXECUTIONS_DATA_PRUNE=${N8N_EXECUTIONS_DATA_PRUNE:-true}
+      - EXECUTIONS_DATA_MAX_AGE=${N8N_EXECUTIONS_DATA_MAX_AGE:-168}
+    volumes:
+      - ${CONFIG_DIR}/n8n/data:/home/node/.n8n
+      - ${CONFIG_DIR}/n8n/local_files:/files
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.3'
+          memory: 512M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=automation-workflows"
+      - "raspiserver.description=Workflow automation platform for complex integrations"

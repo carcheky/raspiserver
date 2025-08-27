@@ -1,0 +1,78 @@
+services:
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - DOCKER_MODS=linuxserver/mods:nextcloud-memories
+      - NEXTCLOUD_TRUSTED_DOMAINS=${DOMAIN:-localhost}
+      - OVERWRITEPROTOCOL=${NEXTCLOUD_PROTOCOL:-https}
+      - OVERWRITEHOST=${NEXTCLOUD_HOST:-${DOMAIN}}
+    volumes:
+      - ${VOLUMES_DIR}/nextcloud-config:/config
+      - ${VOLUMES_DIR}/nextcloud-upload-tmp-dir:/nextcloud-upload-tmp-dir
+      - ${NEXTCLOUD_PATH_DATA}:/data
+      - ${NEXTCLOUD_PATH_APPS:-./apps/nextcloud/nextcloud-custom-cont-init.d}:/custom-cont-init.d:ro
+    ports:
+      - ${NEXTCLOUD_PORT:-8034}:80
+      - ${NEXTCLOUD_SSL_PORT:-4434}:443
+    devices:
+      - /dev/dri:/dev/dri # GPU acceleration for image processing
+    group_add:
+      - "105" # GPU access group
+    depends_on:
+      - nextclouddb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/status.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=productivity"
+      - "raspiserver.description=Self-hosted cloud storage and collaboration platform"
+
+  nextclouddb:
+    image: mariadb:11.4
+    container_name: nextclouddb
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
+      - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+      - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
+      - MARIADB_AUTO_UPGRADE=1
+      - MARIADB_DISABLE_UPGRADE_BACKUP=1
+    volumes:
+      - ${VOLUMES_DIR}/nextclouddb-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=database"
+      - "raspiserver.description=MariaDB database for Nextcloud"

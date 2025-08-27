@@ -4,6 +4,7 @@ services:
     container_name: portainer
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
@@ -28,7 +29,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=portainer.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 9000}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=management"
       - "raspiserver.description=Docker container management interface"
@@ -38,6 +42,7 @@ services:
     container_name: portainer_agent
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - AGENT_CLUSTER_ADDR=tasks.portainer_agent
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
@@ -61,6 +66,10 @@ services:
           cpus: '0.05'
           memory: 64M
     labels:
+      # Caddy reverse proxy configuration
+      - "caddy=portainer.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 9000}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=management"
       - "raspiserver.description=Portainer edge agent for remote management"

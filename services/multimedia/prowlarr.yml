@@ -4,6 +4,7 @@ services:
     container_name: prowlarr
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
@@ -27,7 +28,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=prowlarr.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 9696}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=indexer-management"
       - "raspiserver.description=Indexer manager for *arr applications"

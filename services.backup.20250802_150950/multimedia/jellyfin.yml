@@ -1,0 +1,53 @@
+services:
+  jellyfin:
+    image: linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    ports:
+      - ${JELLYFIN_PORT:-8096}:8096 # HTTP access port
+      # - ${JELLYFIN_HTTPS_PORT:-8920}:8920 # HTTPS access port
+      # - ${JELLYFIN_UDP_PORT:-7359}:7359/udp # Service discovery
+      # - ${JELLYFIN_UDP_PORT_1900:-1900}:1900/udp # UPnP discovery
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - JELLYFIN_PublishedServerUrl=${DOMAIN}
+      - DOCKER_MODS=linuxserver/mods:jellyfin-opencl-intel
+      - JELLYFIN_FFmpeg__probesize=1G
+      - JELLYFIN_FFmpeg__analyzeduration=500M
+      - JELLYFIN_LOG_DIR=/config/log
+      # RaspiServer reverse proxy configuration
+      - RASPISERVER_ENABLE=true
+      - RASPISERVER_SUBDOMAIN=jellyfin
+      - RASPISERVER_PORT=8096
+      - RASPISERVER_PROTOCOL=http
+      - RASPISERVER_WEBSOCKET=true
+      - RASPISERVER_MAX_BODY_SIZE=100M
+    volumes:
+      - ${VOLUMES_DIR}/jellyfin-config:/config
+      - ${MEDIA_DIR}:/media:ro # Read-only media access for security
+      - /tmp/jellyfin-cache:/cache # Temporary transcoding cache
+    # devices:
+    #   - /dev/dri:/dev/dri # GPU hardware acceleration
+    # group_add:
+    #   - "105" # Required for GPU access (render group)
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8096/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          cpus: '1'
+          memory: 2G
+        limits:
+          cpus: '3'
+          memory: 6G
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=media-streaming"
+      - "raspiserver.description=Media server for streaming movies, TV shows, and music"

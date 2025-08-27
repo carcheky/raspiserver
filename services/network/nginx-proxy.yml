@@ -1,0 +1,40 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:latest
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ${VOLUMES_DIR}/nginx-proxy/certs:/etc/nginx/certs
+      - ${VOLUMES_DIR}/nginx-proxy/vhost:/etc/nginx/vhost.d
+      - ${VOLUMES_DIR}/nginx-proxy/html:/usr/share/nginx/html
+      - ${VOLUMES_DIR}/nginx-proxy/conf:/etc/nginx/conf.d
+    environment:
+      - DEFAULT_HOST=${DEFAULT_HOST:-localhost}
+      - TRUST_DOWNSTREAM_PROXY=true
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=reverse-proxy"
+      - "raspiserver.description=Automatic nginx reverse proxy for Docker containers"
+
+  acme-companion:
+    image: nginxproxy/acme-companion:latest
+    container_name: nginx-proxy-acme
+    restart: unless-stopped
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${VOLUMES_DIR}/nginx-proxy/acme:/etc/acme.sh
+    environment:
+      - DEFAULT_EMAIL=${LETSENCRYPT_EMAIL}
+      - NGINX_PROXY_CONTAINER=nginx-proxy
+    depends_on:
+      - nginx-proxy
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=reverse-proxy"
+      - "raspiserver.description=Automatic SSL certificate management with Let's Encrypt"

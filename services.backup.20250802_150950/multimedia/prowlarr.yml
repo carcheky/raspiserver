@@ -1,0 +1,33 @@
+services:
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - UMASK=${UMASK:-022}
+    volumes:
+      - ${VOLUMES_DIR}/prowlarr-config:/config
+    ports:
+      - ${PROWLARR_PORT:-9696}:9696
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9696/api/v1/system/status?apikey=$$(cat /config/config.xml | grep -oP '(?<=<ApiKey>)[^<]+')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=indexer-management"
+      - "raspiserver.description=Indexer manager for *arr applications"

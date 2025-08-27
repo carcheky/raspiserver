@@ -1,0 +1,40 @@
+services:
+  homarr:
+    image: ghcr.io/ajnart/homarr:latest
+    container_name: homarr
+    restart: unless-stopped
+    environment:
+      - PASSWORD=${HOMARR_PASSWORD}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - BASE_URL=${HOMARR_BASE_URL:-homarr.${DOMAIN}}
+      - NEXTAUTH_URL=${HOMARR_NEXTAUTH_URL:-http://localhost:7575}
+      - NEXTAUTH_SECRET=${HOMARR_NEXTAUTH_SECRET:-}
+      - AUTH_PROVIDER=${HOMARR_AUTH_PROVIDER:-credentials}
+    volumes:
+      - ${VOLUMES_DIR}/homarr-config:/app/data/configs
+      - ${VOLUMES_DIR}/homarr-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Read-only Docker socket
+      - ${VOLUMES_DIR}/homarr-icons:/app/public/icons # Custom icons
+    ports:
+      - '${HOMARR_PORT:-7575}:7575'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7575/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 256M
+    labels:
+      - "traefik.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=dashboard"
+      - "raspiserver.description=Modern dashboard for homelab services"

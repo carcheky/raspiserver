@@ -11,6 +11,7 @@ services:
       - postgres
       - redis
     environment:
+      # RaspiServer reverse proxy configuration
       - TZ=${TIMEZONE}
       - AP_POSTGRES_DATABASE=${AP_POSTGRES_DATABASE}
       - AP_POSTGRES_PASSWORD=${AP_POSTGRES_PASSWORD}
@@ -35,7 +36,10 @@ services:
           cpus: '0.5'
           memory: 512M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=activepieces.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=automation-workflows"
       - "raspiserver.description=No-code automation platform for business workflows"
@@ -45,6 +49,7 @@ services:
     container_name: activepieces_postgres
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - TZ=${TIMEZONE}
       - POSTGRES_DB=${AP_POSTGRES_DATABASE}
       - POSTGRES_PASSWORD=${AP_POSTGRES_PASSWORD}
@@ -67,6 +72,10 @@ services:
           cpus: '0.2'
           memory: 256M
     labels:
+      # Caddy reverse proxy configuration
+      - "caddy=activepieces.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=database"
       - "raspiserver.description=PostgreSQL database for Activepieces"
@@ -76,6 +85,7 @@ services:
     container_name: activepieces_redis
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - TZ=${TIMEZONE}
     volumes:
       - ${VOLUMES_DIR}/activepieces-redis_data:/data
@@ -94,6 +104,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
+      # Caddy reverse proxy configuration
+      - "caddy=activepieces.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=cache"
       - "raspiserver.description=Redis cache for Activepieces"

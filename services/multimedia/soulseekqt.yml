@@ -9,6 +9,7 @@ services:
       - ${MEDIA_DIR}/Descargas/Musica/download:/data/Soulseek_Downloads
       - ${MEDIA_DIR}/Descargas/Musica/shared:/data/Soulseek_Shared_Folder
     environment:
+      # RaspiServer reverse proxy configuration
       - PGID=${PGID}
       - PUID=${PUID}
       - TZ=${TIMEZONE}
@@ -33,7 +34,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=soulseekqt.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=p2p-sharing"
       - "raspiserver.description=Soulseek music sharing and download client"

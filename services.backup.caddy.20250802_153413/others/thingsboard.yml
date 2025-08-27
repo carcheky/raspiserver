@@ -1,0 +1,46 @@
+services:
+  thingsboard:
+    image: "thingsboard/tb-postgres:latest"
+    container_name: thingsboard
+    restart: unless-stopped
+    ports:
+      - "${THINGSBOARD_HTTP_PORT:-9090}:9090"
+      - "${THINGSBOARD_MQTT_PORT:-1883}:1883"
+      - "${THINGSBOARD_REST_PORT:-7070}:7070"
+      - "${THINGSBOARD_COAP_PORT:-5683}:5683/udp"
+    environment:
+      # RaspiServer reverse proxy configuration
+      - RASPISERVER_ENABLE=true
+      - RASPISERVER_SUBDOMAIN=thingsboard
+      - RASPISERVER_PORT=8080
+      - RASPISERVER_PROTOCOL=http
+      - RASPISERVER_WEBSOCKET=false
+      - RASPISERVER_MAX_BODY_SIZE=100M
+      TB_QUEUE_TYPE: ${TB_QUEUE_TYPE:-in-memory}
+      TB_HOST: ${TB_HOST:-thingsboard}
+      TB_PORT: ${TB_PORT:-9090}
+      SPRING_DATASOURCE_URL: ${TB_DATASOURCE_URL:-}
+      SPRING_DATASOURCE_USERNAME: ${TB_DATASOURCE_USERNAME:-}
+      SPRING_DATASOURCE_PASSWORD: ${TB_DATASOURCE_PASSWORD:-}
+      TZ: ${TIMEZONE}
+    volumes:
+      - ${CONFIG_DIR}/thingsboard/data:/data
+      - ${CONFIG_DIR}/thingsboard/logs:/var/log/thingsboard
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/login"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=iot-platform"
+      - "raspiserver.description=IoT data collection and device management platform"

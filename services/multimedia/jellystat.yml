@@ -6,6 +6,7 @@ services:
     container_name: jellystat-db
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       POSTGRES_USER: ${JELLYSTAT_DB_USER:-postgres}
       POSTGRES_PASSWORD: ${JELLYSTAT_DB_PASSWORD:-mypassword}
       POSTGRES_DB: ${JELLYSTAT_DB_NAME:-jellystat}
@@ -28,6 +29,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
+      # Caddy reverse proxy configuration
+      - "caddy=jellystat.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=database"
       - "raspiserver.description=PostgreSQL database for Jellystat analytics"
@@ -37,6 +42,7 @@ services:
     container_name: jellystat
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       POSTGRES_USER: ${JELLYSTAT_DB_USER:-postgres}
       POSTGRES_PASSWORD: ${JELLYSTAT_DB_PASSWORD:-mypassword}
       POSTGRES_IP: jellystat-db
@@ -68,7 +74,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=jellystat.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=media-analytics"
       - "raspiserver.description=Jellyfin usage statistics and analytics dashboard"

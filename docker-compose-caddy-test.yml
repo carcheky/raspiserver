@@ -1,0 +1,19 @@
+version: '3.8'
+
+networks:
+  default:
+    name: ${COMPOSE_PROJECT_NAME}_default
+    driver: bridge
+
+services:
+  # Include Caddy reverse proxy
+  caddy:
+    extends:
+      file: services/network/caddy-auto.yml
+      service: caddy
+
+  # Include Jellyfin for testing
+  jellyfin:
+    extends:
+      file: services/multimedia/jellyfin.yml
+      service: jellyfin

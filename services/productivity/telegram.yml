@@ -11,6 +11,7 @@ services:
     ports:
       - "${TELEGRAM_PORT:-5000}:5000"  # Map host port 5000 to container port 5000
     environment:
+      # RaspiServer reverse proxy configuration
       - TZ=${TIMEZONE}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
@@ -41,7 +42,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=telegram.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=notifications"
       - "raspiserver.description=Telegram bot for Jellyfin media notifications"

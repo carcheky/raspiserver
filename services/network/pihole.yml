@@ -4,6 +4,7 @@ services:
     container_name: pihole
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       TZ: ${TIMEZONE}
       WEBPASSWORD: ${PIHOLE_WEBPASSWORD}
       DNSMASQ_LISTENING: all
@@ -33,7 +34,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=pihole.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 80}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=network-security"
       - "raspiserver.description=Network-wide ad blocking and DNS filtering"

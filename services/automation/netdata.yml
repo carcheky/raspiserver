@@ -11,6 +11,7 @@ services:
     security_opt:
       - apparmor:unconfined
     environment:
+      # RaspiServer reverse proxy configuration
       - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN:-}
       - NETDATA_CLAIM_URL=${NETDATA_CLAIM_URL:-https://app.netdata.cloud}
       - NETDATA_CLAIM_ROOMS=${NETDATA_CLAIM_ROOMS:-}
@@ -42,7 +43,10 @@ services:
           cpus: '0.2'
           memory: 256M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=netdata.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 19999}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=monitoring"
       - "raspiserver.description=Real-time system performance monitoring and alerting"

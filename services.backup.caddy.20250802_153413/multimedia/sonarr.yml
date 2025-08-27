@@ -1,0 +1,46 @@
+services:
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    environment:
+      # RaspiServer reverse proxy configuration
+      - RASPISERVER_ENABLE=true
+      - RASPISERVER_SUBDOMAIN=sonarr
+      - RASPISERVER_PORT=8989
+      - RASPISERVER_PROTOCOL=http
+      - RASPISERVER_WEBSOCKET=false
+      - RASPISERVER_MAX_BODY_SIZE=100M
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}    
+      - UMASK=${UMASK:-022}
+      - LANG_FLAGS_WAIT_SECONDS=${LANG_FLAGS_WAIT_SECONDS:-30}
+    volumes:
+      - ${MEDIA_DIR}:/media
+      - ${VOLUMES_DIR}/sonarr-config:/config
+      - ${VOLUMES_DIR}/sonarr-custom-services.d:/custom-services.d
+      - ../../arr-scripts/sonarr/raspiserver_init.bash:/custom-cont-init.d/raspiserver_init.bash
+      - ../../apps:/apps
+      - ../../flags:/flags
+      - ../../flags/lang-flags-ini.bash:/custom-cont-init.d/lang-flags-ini.bash
+    ports:
+      - ${SONARR_PORT:-8989}:8989
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f \"http://localhost:8989/api/v3/system/status?apikey=$$(grep ApiKey /config/config.xml | sed 's/.*<ApiKey>\\(.*\\)<\\/ApiKey>.*/\\1/')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "raspiserver.category=media-management"
+      - "raspiserver.description=TV series automation and management"

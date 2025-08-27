@@ -6,6 +6,7 @@ services:
     privileged: true
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
@@ -34,7 +35,10 @@ services:
           cpus: '0.5'
           memory: 512M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=homeassistant.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8123}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=home-automation"
       - "raspiserver.description=Home automation and IoT management platform"

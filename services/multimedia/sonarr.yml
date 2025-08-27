@@ -4,6 +4,7 @@ services:
     container_name: sonarr
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}    
@@ -34,7 +35,10 @@ services:
           cpus: '0.5'
           memory: 512M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=sonarr.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8989}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=media-management"
       - "raspiserver.description=TV series automation and management"

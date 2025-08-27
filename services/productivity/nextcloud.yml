@@ -4,6 +4,7 @@ services:
     container_name: nextcloud
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - PUID=${PUID}
       - PGID=${PGID}
       - TZ=${TIMEZONE}
@@ -40,7 +41,10 @@ services:
           cpus: '0.5'
           memory: 512M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=nextcloud.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=productivity"
       - "raspiserver.description=Self-hosted cloud storage and collaboration platform"
@@ -50,6 +54,7 @@ services:
     container_name: nextclouddb
     restart: unless-stopped
     environment:
+      # RaspiServer reverse proxy configuration
       - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
       - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
@@ -73,6 +78,10 @@ services:
           cpus: '0.2'
           memory: 256M
     labels:
+      # Caddy reverse proxy configuration
+      - "caddy=nextcloud.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=database"
       - "raspiserver.description=MariaDB database for Nextcloud"

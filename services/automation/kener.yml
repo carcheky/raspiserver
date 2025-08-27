@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     # env_file: custom.env              # Uncomment this if you are needing to export environment variables from a custom environment file. By default, Docker will import any variables that exist in `.env`
     environment:
+      # RaspiServer reverse proxy configuration
       TZ: ${TIMEZONE}
       KENER_SECRET_KEY: ${KENER_SECRET_KEY}   # Keep private!! - best to define in `.env` file or through Docker Secret
       ORIGIN: ${KENER_ORIGIN}
@@ -42,7 +43,10 @@ services:
           cpus: '0.1'
           memory: 128M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=kener.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=status-monitoring"
       - "raspiserver.description=Modern status page and uptime monitoring"

@@ -6,6 +6,7 @@ services:
     privileged: true
     network_mode: host
     environment:
+      # RaspiServer reverse proxy configuration
       - TZ=${TIMEZONE}
       - ESPHOME_DASHBOARD_USE_PING=${ESPHOME_DASHBOARD_USE_PING:-true}
       - ESPHOME_LOGGING_LEVEL=${ESPHOME_LOGGING_LEVEL:-INFO}
@@ -33,7 +34,10 @@ services:
           cpus: '0.2'
           memory: 256M
     labels:
-      - "traefik.enable=true"
+      # Caddy reverse proxy configuration
+      - "caddy=esphome.${RASPISERVER_DOMAINS:-cckdev.es,localhost}"
+      - "caddy.reverse_proxy={{upstreams 8080}}"
+      - "caddy.header=/ X-Forwarded-Proto {scheme}"
       - "com.centurylinklabs.watchtower.enable=true"
       - "raspiserver.category=iot-automation"
       - "raspiserver.description=ESPHome dashboard for IoT device management"
