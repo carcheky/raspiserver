@@ -1,3 +1,0 @@
-include:
-  - services/network/nginx-auto.yml
-  - services/multimedia/jellyfin.yml
