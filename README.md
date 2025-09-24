@@ -47,6 +47,26 @@ docker-compose logs -f service-name
 docker-compose down
 ```
 
+## 🔍 Service Validation
+
+RaspiServer includes a comprehensive validation system for all 42 services:
+
+```bash
+# Validate individual service
+make validate-service SERVICE=jellyfin
+
+# Validate all services
+make validate-all
+
+# Generate GitHub issues for systematic validation
+make generate-issues
+
+# List all available services
+make list-services
+```
+
+For detailed validation procedures, see [📋 Service Validation Guide](docs/SERVICE_VALIDATION_GUIDE.md).
+
 ## 📊 System Requirements
 
 - **Minimum**: Raspberry Pi 4 (4GB RAM)
