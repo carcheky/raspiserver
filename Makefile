@@ -213,35 +213,6 @@ reset: ## Reset to clean state (stops services, removes containers)
 	@echo "✅ Reset completed"
 
 # =============================================================================
-# SERVICE VALIDATION
-# =============================================================================
-
-validate-service: ## Validate a specific service (usage: make validate-service SERVICE=jellyfin)
-	@if [ -z "$(SERVICE)" ]; then \
-		echo "❌ Please specify SERVICE. Example: make validate-service SERVICE=jellyfin"; \
-		exit 1; \
-	fi
-	@echo "🔍 Validating service: $(SERVICE)"
-	@./scripts/validate-service.sh $(SERVICE)
-
-validate-all: ## Validate all services
-	@echo "🔍 Validating all services..."
-	@./scripts/validate-all-services.sh
-
-generate-issues: ## Generate GitHub issues for service validation
-	@echo "📋 Generating service validation issues..."
-	@./scripts/generate-service-issues.sh
-
-list-services: ## List all available services
-	@echo "📋 Available services by category:"
-	@echo "=================================="
-	@for category in automation management multimedia network others productivity; do \
-		echo ""; \
-		echo "📁 $$category:"; \
-		ls services/$$category/*.yml 2>/dev/null | sed 's|services/.*/||' | sed 's|\.yml||' | sed 's/^/  - /' || echo "  (no services)"; \
-	done
-
-# =============================================================================
 # DOCUMENTATION
 # =============================================================================
 

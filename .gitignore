@@ -28,12 +28,7 @@ apps/mediaserver/flags/cache
 apps/mediaserver/flags/sonarr_queue_process_603.txt
 apps/mediaserver/flags/*.lock
 apps/mediaserver/**/lang_flags-install_deps.sh
-
-# Service validation system
-validation-reports/
-/tmp/raspiserver-validation.env
 apps/mediaserver/flags/data
 99-lang-flags-setup.sh
 volumes/
 volume-test.zip
-generated-issues/
