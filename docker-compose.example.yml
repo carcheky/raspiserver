@@ -101,6 +101,7 @@ include:
   # - services/management/portainer.yml         # Docker GUI management
   # - services/management/dockge.yml            # Docker compose management
   # - services/management/watchtower.yml        # Automatic container updates
+  # - services/management/raspiserver-admin.yml # RaspiServer web admin interface
   
   # Dashboard & Monitoring
   # - services/management/homarr.yml            # Unified dashboard

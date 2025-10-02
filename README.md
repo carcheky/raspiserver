@@ -25,6 +25,7 @@ Complete documentation is available in the [`docs/`](docs/) directory:
 
 ## 🎬 Featured Services
 
+- **RaspiServer Admin** - Web-based management interface  
 - **Jellyfin** - Media streaming server
 - **Sonarr/Radarr** - Automated media management
 - **Home Assistant** - Smart home automation
