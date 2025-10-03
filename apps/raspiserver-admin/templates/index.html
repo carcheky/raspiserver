@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RaspiServer Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tab:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .content-section {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .service-category {
+            margin-bottom: 30px;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .service-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .service-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .service-card.active {
+            background: #e7f3ff;
+            border-color: #28a745;
+        }
+
+        .service-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .service-file {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #28a745;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 32px;
+        }
+
+        .env-var {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .env-var-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+
+        .env-var-comment {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .env-var-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .env-var-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .system-info {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .system-info-item {
+            margin-bottom: 8px;
+        }
+
+        .system-info-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .system-info-value {
+            color: #666;
+            font-family: monospace;
+        }
+
+        .section-filter {
+            margin-bottom: 20px;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .env-section {
+            margin-bottom: 30px;
+        }
+
+        .env-section-header {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎛️ RaspiServer Admin</h1>
+            <p>Gestión visual de servicios y configuración</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('services')">📦 Servicios</button>
+            <button class="tab" onclick="showTab('env')">⚙️ Variables de Entorno</button>
+            <button class="tab" onclick="showTab('info')">ℹ️ Información del Sistema</button>
+        </div>
+
+        <div id="services-content" class="content-section active">
+            <div class="loading">Cargando servicios...</div>
+        </div>
+
+        <div id="env-content" class="content-section">
+            <div class="section-filter">
+                <input type="text" class="filter-input" id="env-filter" placeholder="🔍 Buscar variables...">
+            </div>
+            <div id="env-vars-container">
+                <div class="loading">Cargando variables de entorno...</div>
+            </div>
+            <button class="btn btn-success" onclick="saveEnvVars()">💾 Guardar Cambios</button>
+        </div>
+
+        <div id="info-content" class="content-section">
+            <div class="loading">Cargando información del sistema...</div>
+        </div>
+    </div>
+
+    <script>
+        let servicesData = {};
+        let envData = {};
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-content').classList.add('active');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        async function loadServices() {
+            try {
+                const response = await fetch('/api/services');
+                servicesData = await response.json();
+                renderServices();
+            } catch (error) {
+                console.error('Error loading services:', error);
+                document.getElementById('services-content').innerHTML = 
+                    '<div class="loading">Error cargando servicios</div>';
+            }
+        }
+
+        function renderServices() {
+            const container = document.getElementById('services-content');
+            let html = '';
+
+            const categoryNames = {
+                'multimedia': '🎬 Multimedia',
+                'network': '🌐 Red y Seguridad',
+                'automation': '📊 Automatización y Monitoreo',
+                'management': '🔧 Gestión',
+                'productivity': '☁️ Productividad',
+                'others': '🔄 Otros'
+            };
+
+            for (const [category, services] of Object.entries(servicesData)) {
+                if (services.length === 0) continue;
+
+                html += `
+                    <div class="service-category">
+                        <div class="category-header">${categoryNames[category] || category}</div>
+                        <div class="service-grid">
+                `;
+
+                services.forEach(service => {
+                    html += `
+                        <div class="service-card ${service.active ? 'active' : ''}" data-service="${service.file}">
+                            <div class="service-name">${service.name}</div>
+                            <div class="service-file">${service.file}</div>
+                            <div class="toggle-switch ${service.active ? 'active' : ''}" 
+                                 onclick="toggleService('${service.file}', ${!service.active})">
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function toggleService(serviceFile, enable) {
+            try {
+                const response = await fetch('/api/services/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        service: serviceFile,
+                        enable: enable
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showNotification(`Servicio ${enable ? 'activado' : 'desactivado'} correctamente`);
+                    loadServices();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error toggling service:', error);
+                showNotification('Error al cambiar el servicio', 'error');
+            }
+        }
+
+        async function loadEnvVars() {
+            try {
+                const response = await fetch('/api/env');
+                envData = await response.json();
+                renderEnvVars();
+            } catch (error) {
+                console.error('Error loading env vars:', error);
+                document.getElementById('env-vars-container').innerHTML = 
+                    '<div class="loading">Error cargando variables de entorno</div>';
+            }
+        }
+
+        function renderEnvVars(filter = '') {
+            const container = document.getElementById('env-vars-container');
+            let html = '';
+
+            // Group by section
+            const sections = {};
+            for (const [key, data] of Object.entries(envData)) {
+                const section = data.section || 'General';
+                if (!sections[section]) {
+                    sections[section] = [];
+                }
+                sections[section].push([key, data]);
+            }
+
+            // Render by section
+            for (const [section, vars] of Object.entries(sections)) {
+                const filteredVars = vars.filter(([key]) => 
+                    key.toLowerCase().includes(filter.toLowerCase())
+                );
+
+                if (filteredVars.length === 0) continue;
+
+                html += `<div class="env-section">`;
+                html += `<div class="env-section-header">${section}</div>`;
+
+                filteredVars.forEach(([key, data]) => {
+                    html += `
+                        <div class="env-var">
+                            <div class="env-var-label">${key}</div>
+                            ${data.comment ? `<div class="env-var-comment">${data.comment}</div>` : ''}
+                            <input type="text" 
+                                   class="env-var-input" 
+                                   data-key="${key}" 
+                                   value="${data.value}"
+                                   placeholder="Valor de ${key}">
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            }
+
+            container.innerHTML = html || '<div class="loading">No se encontraron variables</div>';
+        }
+
+        async function saveEnvVars() {
+            const inputs = document.querySelectorAll('.env-var-input');
+            const updates = {};
+
+            inputs.forEach(input => {
+                updates[input.dataset.key] = input.value;
+            });
+
+            try {
+                const response = await fetch('/api/env', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updates)
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showNotification('Variables de entorno guardadas correctamente');
+                } else {
+                    showNotification('Error al guardar variables', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving env vars:', error);
+                showNotification('Error al guardar variables', 'error');
+            }
+        }
+
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch('/api/system/info');
+                const info = await response.json();
+                
+                const container = document.getElementById('info-content');
+                container.innerHTML = `
+                    <div class="system-info">
+                        <div class="system-info-item">
+                            <span class="system-info-label">Directorio Base:</span>
+                            <span class="system-info-value">${info.base_dir}</span>
+                        </div>
+                        <div class="system-info-item">
+                            <span class="system-info-label">Archivo .env:</span>
+                            <span class="system-info-value">${info.env_file_exists ? '✅ Existe' : '❌ No existe'}</span>
+                        </div>
+                        <div class="system-info-item">
+                            <span class="system-info-label">docker-compose.yml:</span>
+                            <span class="system-info-value">${info.compose_file_exists ? '✅ Existe' : '❌ No existe'}</span>
+                        </div>
+                        <div class="system-info-item">
+                            <span class="system-info-label">Directorio de servicios:</span>
+                            <span class="system-info-value">${info.services_dir_exists ? '✅ Existe' : '❌ No existe'}</span>
+                        </div>
+                    </div>
+                    
+                    <h2>📖 Instrucciones de Uso</h2>
+                    <div class="env-var">
+                        <h3>Gestión de Servicios</h3>
+                        <p>Activa o desactiva servicios haciendo clic en los switches. Los cambios se aplican inmediatamente al archivo docker-compose.yml.</p>
+                        <p>Para aplicar los cambios, ejecuta: <code>docker-compose up -d</code></p>
+                    </div>
+                    
+                    <div class="env-var">
+                        <h3>Variables de Entorno</h3>
+                        <p>Edita las variables de entorno según tus necesidades. Recuerda guardar los cambios haciendo clic en el botón "Guardar Cambios".</p>
+                        <p>Después de modificar las variables, reinicia los servicios afectados.</p>
+                    </div>
+                    
+                    <div class="env-var">
+                        <h3>Seguridad</h3>
+                        <p><strong>⚠️ IMPORTANTE:</strong> Cambia todas las contraseñas por defecto antes de poner los servicios en producción.</p>
+                        <p>Esta interfaz tiene acceso completo al sistema, asegúrala correctamente.</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading system info:', error);
+                document.getElementById('info-content').innerHTML = 
+                    '<div class="loading">Error cargando información del sistema</div>';
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            loadServices();
+            loadEnvVars();
+            loadSystemInfo();
+            
+            // Env filter
+            const envFilter = document.getElementById('env-filter');
+            if (envFilter) {
+                envFilter.addEventListener('input', (e) => {
+                    renderEnvVars(e.target.value);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

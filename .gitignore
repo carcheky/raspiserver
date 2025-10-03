@@ -37,3 +37,10 @@ apps/mediaserver/flags/data
 volumes/
 volume-test.zip
 generated-issues/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python

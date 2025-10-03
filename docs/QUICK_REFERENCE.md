@@ -62,6 +62,7 @@ docker inspect [container-name]
 ### 🔧 Management & Infrastructure  
 | Service | Port | Health Check | Purpose |
 |---------|------|--------------|---------|
+| **RaspiServer Admin** | 5000 | HTTP / | RaspiServer management interface |
 | **Portainer** | 9443 | HTTP /api/system/status | Docker management |
 | **Portainer Agent** | 9001 | TCP port check | Docker agent |
 | **Watchtower** | - | Process check | Automatic updates |
@@ -166,6 +167,7 @@ docker-compose up --timestamps
 - **Jellyseerr**: http://localhost:5055
 
 ### Management Dashboards
+- **RaspiServer Admin**: http://localhost:5000
 - **Homarr**: http://localhost:7575
 - **Dockge**: http://localhost:5001
 - **VS Code**: https://localhost:8443
