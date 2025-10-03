@@ -36,7 +36,7 @@ def parse_env_file(file_path):
             # Detect section headers
             if line.startswith('# ==='):
                 continue
-            elif line.startswith('#') and not '=' in line:
+            elif line.startswith('#') and '=' not in line:
                 # This is a comment or section header
                 if line.count('#') > 1:
                     current_section = line.strip('# ').strip()
